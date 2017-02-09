@@ -383,7 +383,7 @@ void KinematicLinearIsogeometric::CalculateOnIntegrationPoints(
         //calculating shape function values and local gradients
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
