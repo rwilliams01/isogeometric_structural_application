@@ -17,6 +17,7 @@
 
 // Project includes
 #include "includes/define.h"
+#include "add_utilities_to_python.h"
 #include "isogeometric_structural_application.h"
 
 namespace Kratos
@@ -31,6 +32,8 @@ namespace Python
 
         class_<KratosIsogeometricStructuralApplication, KratosIsogeometricStructuralApplication::Pointer, bases<KratosApplication>, boost::noncopyable>
         ("KratosIsogeometricStructuralApplication");
+
+        IsogeometricStructuralApplication_AddCustomUtilitiesToPython();
 
     }
 
