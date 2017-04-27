@@ -6,6 +6,7 @@ message("**** configuring KratosIsogeometricStructuralApplication ****")
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_SOURCE_DIR}/applications )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/isogeometric_application )
+include_directories( ${CMAKE_SOURCE_DIR}/applications/structural_application )
 #######################################################################
 
 ######### add compilation units here
@@ -18,6 +19,7 @@ set( KRATOS_APPNAME_APPLICATION_SOURCES
 #    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_nurbs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/total_lagrangian_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_kirchoff_love_isogeometric_shell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric_2d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_load_isogeometric.cpp
