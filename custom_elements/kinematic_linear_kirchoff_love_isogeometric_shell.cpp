@@ -268,15 +268,6 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
          noalias(rRightHandSideVector) = ZeroVector(mat_size);
      }
 
-     // integration points and weights used for thickness calculation
-     Vector IntegrationPoints1D(3);
-     IntegrationPoints1D(0) = -std::sqrt(3.00 / 5.00) ;
-     IntegrationPoints1D(1) = 0.00;
-     IntegrationPoints1D(2) = std::sqrt(3.00 / 5.00);
-     
-     Vector Weight1D(3); 
-     Weight1D(0) = Weight1D(2) = 5.00 / 9.00; Weight1D(1) = 8.00 / 9.00;
-     double DetJ1D = 0.5*GetProperties()[THICKNESS];
 
      // Current displacements
      Matrix CurrentDisp(number_of_ctrl_points, dim);
@@ -293,9 +284,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         // declare variables
         Vector MembraneStressVector = ZeroVector(strain_size);
         Vector BendingStressVector = ZeroVector(strain_size);
-        Matrix TanC0 = ZeroMatrix(strain_size, strain_size);
-        Matrix TanC1 = ZeroMatrix(strain_size, strain_size);
-        Matrix TanC2 = ZeroMatrix(strain_size, strain_size);
+
         Matrix DN_De;
         Vector Ncontainer;
 
@@ -305,6 +294,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         double lambda = E*NU /(1.0 +NU)/(1.0 - 2.0*NU);
         double mu = 0.5*E/(1.0 + NU);
         double kappa = GetProperties()[KAPPA];
+	double t = GetProperties()[THICKNESS];
 
         // local gradient values at an integration point
         DN_De = mpIsogeometricGeometry->ShapeFunctionsLocalGradients( DN_De, integration_points[PointNumber]);
@@ -350,124 +340,38 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         CalculateStrain(MembraneStrainVector, Bm, CurrentDisp);
         CalculateStrain(CurvatureChangeVector, Bb, CurrentDisp);
 
-//        for(unsigned int PointNumber1D = 0; PointNumber1D < IntegrationPoints1D.size(); PointNumber1D++)
-//        {
-//            double theta3i = 0.5*GetProperties()[THICKNESS]*IntegrationPoints1D(PointNumber1D);
-
-//            //////////////////////////////////////////////////////////////
-//            //////// membrane and bending stress resultants //////////////
-//            // 1. Total Strain tensor
-//            Vector TotalStrainVector = ZeroVector(strain_size);
-
-//            noalias(TotalStrainVector) += MembraneStrainVector;
-//            noalias(TotalStrainVector) += theta3i*CurvatureChangeVector; 
-
-//            // 2. Positive part of Cauchy stress
-//            //////// 2.1 Positive part of total strain tensor
-//            Vector e;
-//            std::vector<Matrix> E;
-//            SDParameters decomp_params;
-//            Matrix TotalStrainTensor(dim, dim);
-
-//            IsotropicTensorUtility<2>::StrainVectorToTensor(TotalStrainVector, TotalStrainTensor);
-//            decomp_params = IsotropicTensorUtility<2>::SpectralDecomposition(TotalStrainTensor, e, E);
-
-//            Matrix TotalStrainTensor_plus = ZeroMatrix(dim, dim);
-//            MyIsotropicTensorFunction<2> Phi;
-
-//            IsotropicTensorUtility<2>::Value(TotalStrainTensor, e, E, decomp_params, Phi, TotalStrainTensor_plus);
-
-//            //////// 2.2 positive part of trace strain
-//            double trace_total_strain = 0.0;
-//            for(unsigned int i=0; i< dim; i++)
-//                trace_total_strain += TotalStrainVector(i);
+	noalias(MembrainStressVector) = prod(D, t*MembraneStrainVector);
+	noalias(BendingStressVector) = prod(D, pow(t,3)/12*CurvatureChangeVector);
 
 
-//            /////// 2.3 calculate Positive part of Cauchy stress tensor
-//            Matrix CauchyStressTensor_plus = ZeroMatrix(dim, dim);
-//            Vector CauchyStressVector_plus (dim);
 
-//            if (trace_total_strain > 0)
-//             noalias(CauchyStressTensor_plus) += ( lambda - pow(lambda,2)/(2*(lambda+2*mu)) )*trace_total_strain*IdentityMatrix(dim);
+        //calculating weights for integration on the reference configuration
+        double Weight = integration_points[PointNumber].Weight();
 
-//            noalias(CauchyStressTensor_plus) += 2*mu*TotalStrainTensor_plus ;
-//            ///////////////////////////////////////////////////////////////
+        if (dim == 2)
+            Weight *= t;
 
-//            IsotropicTensorUtility<2>::StressTensorToVector(CauchyStressTensor_plus, CauchyStressVector_plus);
+        if (CalculateStiffnessMatrixFlag == true) //compute the contribution to LHS
+        {
+            noalias(rLeftHandSideMatrix) += prod(trans(Bm), (t*Weight * mDetJ0[PointNumber]) * Matrix(prod(D, Bm)));
+            noalias(rLeftHandSideMatrix) += prod(trans(Bb), (pow(t,3)/12*Weight * mDetJ0[PointNumber]) * Matrix(prod(D, Bb)));
+        } // compute the contribution to LHS
 
-//            // 3. degradation function g(c,kappa)
-//            double C = 0.0;
-//            for(unsigned int i=0; i< mpIsogeometricGeometry->size(); i++)
-//             C += Ncontainer(i)*(*mpIsogeometricGeometry)[i].GetSolutionStepValue(PHASE_FIELD);
-
-//            double g_ck = (1-kappa)*pow(C,2) +kappa -1 ;
-
-//            Vector CauchyStressVector = ZeroVector(strain_size);
-//            noalias(CauchyStressVector) += g_ck*CauchyStressVector_plus;
-//            noalias(CauchyStressVector) += prod(D, TotalStrainVector);
-
-//            // 3. membrane stress vector
-//            noalias(MembraneStressVector) += CauchyStressVector*Weight1D(PointNumber1D)*DetJ1D;
-
-//            // 4. bending stress vector
-//            BendingStressVector += MembraneStressVector*theta3i;
-
-//            //////// membrane and bending stress resultants //////////////
-//            //////////////////////////////////////////////////////////////
-
-//            //////////////////////////////////////////////////////////////
-//            ///////////// tangential material tensor TanC ////////////////
-//            Matrix TanC = ZeroMatrix(strain_size);
-//            Matrix Ct_Matrix;
-//            IsotropicTensorUtility<2>::Fourth_Order_Tensor Ct_Tensor;
-//            IsotropicTensorUtility<2>::InitializeFourthOrderTensor(Ct_Tensor);
-//            IsotropicTensorUtility<2>::Derivative(TotalStrainTensor, e, E, decomp_params, Phi, Ct_Tensor);
-//            IsotropicTensorUtility<2>::FourthOrderTensorToMatrix(Ct_Tensor, Ct_Matrix);
-
-//            if(trace_total_strain > 0)
-//            {
-//                for(unsigned int i=0; i< dim; ++i)
-//                    for(unsigned int j=0; j<dim; ++j)
-//                        TanC(i,j) += g_ck*( lambda - pow(lambda,2)/(2*(lambda + 2*mu)) );
-//            }
-
-//            noalias(TanC) += 2*g_ck*mu*Ct_Matrix;
-//            noalias(TanC) += D;
-
-//            TanC0 += TanC*Weight1D(PointNumber1D)*DetJ1D;
-//            TanC1 += TanC0*theta3i;
-//            TanC2 += TanC0*pow(theta3i,2);
-//        }// loop over 1d integration points
-
-//        //calculating weights for integration on the reference configuration
-//        double Weight = integration_points[PointNumber].Weight();
-
-//        if (dim == 2)
-//            Weight *= GetProperties()[THICKNESS];
-
-//        if (CalculateStiffnessMatrixFlag == true) //compute the contribution to LHS
-//        {
-//            noalias(rLeftHandSideMatrix) += prod(trans(Bm), (Weight * mDetJ0[PointNumber]) * Matrix(prod(TanC0, Bm)));
-//            noalias(rLeftHandSideMatrix) += prod(trans(Bm), (Weight * mDetJ0[PointNumber]) * Matrix(prod(TanC1, Bb)));
-//            noalias(rLeftHandSideMatrix) += prod(trans(Bb), (Weight * mDetJ0[PointNumber]) * Matrix(prod(TanC1, Bm)));
-//            noalias(rLeftHandSideMatrix) += prod(trans(Bb), (Weight * mDetJ0[PointNumber]) * Matrix(prod(TanC2, Bb)));
-//        } // compute the contribution to LHS
-
-//        // compute the contribution to RHS 
-//        if(CalculateResidualVectorFlag == true)
-//        {
-//            //contribution to external forces
-//            if(GetProperties().Has(BODY_FORCE))
-//                CalculateAndAddExtForceContribution(rRightHandSideVector, Ncontainer, Weight, mDetJ0[PointNumber] );  
+        // compute the contribution to RHS 
+        if(CalculateResidualVectorFlag == true)
+        {
+            //contribution to external forces
+            if(GetProperties().Has(BODY_FORCE))
+                CalculateAndAddExtForceContribution(rRightHandSideVector, Ncontainer, Weight, mDetJ0[PointNumber] );  
 
 
-//            if(GetProperties().Has(DENSITY) && GetProperties().Has(GRAVITY))
-//                AddBodyForcesToRHS(rRightHandSideVector, Ncontainer, Weight, mDetJ0[PointNumber]);
+            if(GetProperties().Has(DENSITY) && GetProperties().Has(GRAVITY))
+                AddBodyForcesToRHS(rRightHandSideVector, Ncontainer, Weight, mDetJ0[PointNumber]);
 
-//            // contribution of internal forces 
-//            AddInternalForcesToRHS( rRightHandSideVector, Bm, MembraneStressVector, Weight, mDetJ0[PointNumber] );
-//            AddInternalForcesToRHS( rRightHandSideVector, Bb, BendingStressVector, Weight, mDetJ0[PointNumber] );
-//        } // compute the contribution to RHS
+            // contribution of internal forces 
+            AddInternalForcesToRHS( rRightHandSideVector, Bm, MembraneStressVector, Weight, mDetJ0[PointNumber] );
+            AddInternalForcesToRHS( rRightHandSideVector, Bb, BendingStressVector, Weight, mDetJ0[PointNumber] );
+        } // compute the contribution to RHS
     }//loop over integration points
 
     if(CalculateResidualVectorFlag == true)
@@ -773,17 +677,20 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateHookeanMatrix(Matrix
 
     if (D.size1() != 3||D.size2() != 3)
         D.resize(3,3);
-//    noalias(D) = ZeroMatrix(3,3);
-    /*
+
+    
     D(0,0) = aux*pow(InvG_ab(0,0), 2);
     D(0,1) = aux*( NU*InvG_ab(0,0)*InvG_ab(1,1) + (1-NU)*pow(InvG_ab(0,1), 2) ); 
     D(0,2) = aux*InvG_ab(0,0)*InvG_ab(0,1);
+    D(1,0) = D(0,1);
     D(1,1) = aux*pow(InvG_ab(1,1), 2); 
     D(1,2) = aux*InvG_ab(1,1)*InvG_ab(0,1);
+    D(2,0) = D(0,2);
+    D(2,1) = D(1,2);
     D(2,2) = aux*0.5*( (1-NU)*InvG_ab(0,0)*InvG_ab(1,1) + (1+NU)*pow(InvG_ab(0,1), 2) ) ;
-    */
+    
 
-    D(0, 0) = aux*pow(G_11, 2);
+    /* D(0, 0) = aux*pow(G_11, 2);
     D(0, 1) = aux*( NU*G_11*G_22 + (1-NU)*pow(G_12, 2) ); 
     D(0, 2) = aux*G_11*G_12;
     D(1, 1) = aux*pow(G_22, 2); 
@@ -793,6 +700,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateHookeanMatrix(Matrix
     D(1, 0) = D(0, 1);
     D(2, 0) = D(0, 2);
     D(2, 1) = D(1, 2);
+    */
 
     //KRATOS_WATCH(aux)
     //KRATOS_WATCH(D)
@@ -973,4 +881,3 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateOnIntegrationPoints(
 }
 
 } // Namespace Kratos
-
