@@ -564,10 +564,10 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateBendingBOperator(
     unsigned int mat_size = number_of_ctrl_points*dim;
     unsigned int strain_size = dim * (dim + 1) / 2;
 
-    if( Bb.size1() != strain_size || Bb.size2() != mat_size)
-        Bb.resize(strain_size, mat_size);
+    if( Bb.size1() != 3 || Bb.size2() != mat_size)
+        Bb.resize(3, mat_size);
 
-    noalias(Bb) = ZeroMatrix(strain_size, mat_size);
+    noalias(Bb) = ZeroMatrix(3, mat_size);
     
      // bending Bb operator
      //////// covariant of unit normal base vector
@@ -638,8 +638,8 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateMembraneBOperator(
     unsigned int strain_size = dim*(dim+1)/2;
     unsigned int mat_size = dim*number_of_ctrl_points;
 
-    if( Bm.size1() != strain_size || Bm.size2() != mat_size)
-        Bm.resize(strain_size, mat_size);
+    if( Bm.size1() != 3 || Bm.size2() != mat_size)
+        Bm.resize(3, mat_size);
 
     for(unsigned int i=0 ; i< number_of_ctrl_points; i++)
     {
