@@ -135,6 +135,53 @@ void KinematicLinearKirchoffLoveIsogeometricShell::Initialize()
     KRATOS_CATCH("")
 }
 
+void KinematicLinearKirchoffLoveIsogeometricShell::InitializeJacobian()
+{
+    unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
+
+    //number of integration points used, mThisIntegrationMethod refers to the
+    //integration method defined in the constructor
+    const GeometryType::IntegrationPointsArrayType& integration_points =
+            mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
+
+    //initializing the Jacobian, the inverse Jacobian and Jacobians determinant in the reference
+    // configuration
+    GeometryType::JacobiansType J0(integration_points.size());
+
+    mInvJ0.resize(integration_points.size());
+
+    mTotalDomainInitialSize = 0.00;
+
+    for (unsigned int i = 0; i < integration_points.size(); ++i)
+    {
+        mInvJ0[i].resize(dim, dim, false);
+        noalias(mInvJ0[i]) = ZeroMatrix(dim, dim);
+    }
+
+    mDetJ0.resize(integration_points.size(), false);
+
+    noalias(mDetJ0) = ZeroVector(integration_points.size());
+
+    //calculating the Jacobian
+    J0 = mpIsogeometricGeometry->Jacobian(J0, mThisIntegrationMethod);
+
+    //calculating the inverse Jacobian
+    for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber)
+    {
+        //getting informations for integration
+        double IntegrationWeight = integration_points[PointNumber].Weight();
+        //calculating and storing inverse of the jacobian and the parameters needed
+        MathUtils<double>::InvertMatrix(J0[PointNumber], mInvJ0[PointNumber], mDetJ0[PointNumber]);
+        //calculating the total area
+        #ifdef IGNORE_NEGATIVE_JACOBIAN
+        mTotalDomainInitialSize += fabs(mDetJ0[PointNumber]) * IntegrationWeight;
+        #else
+        mTotalDomainInitialSize += mDetJ0[PointNumber] * IntegrationWeight;
+        #endif
+    }
+}
+
+
 void KinematicLinearKirchoffLoveIsogeometricShell::InitializeMaterial()
 {
     KRATOS_TRY
@@ -302,6 +349,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         // shape function values at an integration point
         Ncontainer = mpIsogeometricGeometry->ShapeFunctionsValues( Ncontainer , integration_points[PointNumber]);
 
+
         // calculate covariant base vector
         array_1d<double,3> G1; G1[2] = 0.0;
         array_1d<double,3> G2; G2[2] = 0.0;
@@ -445,22 +493,17 @@ KinematicLinearKirchoffLoveIsogeometricShell::IntegrationMethod KinematicLinearK
 /**
 * Setting up the EquationIdVector
 */
-void KinematicLinearKirchoffLoveIsogeometricShell::EquationIdVector( EquationIdVectorType& rResult, 
-                                      ProcessInfo& CurrentProcessInfo)
+void KinematicLinearKirchoffLoveIsogeometricShell::EquationIdVector( EquationIdVectorType& rResult,
+                                     ProcessInfo& rCurrentProcessInfo)
 {
-    unsigned int dofs_per_node = 6;
-    unsigned int mat_size = GetGeometry().size() * dofs_per_node;
+    DofsVectorType ElementalDofList;
+    GetDofList(ElementalDofList, rCurrentProcessInfo);
+    
+    if (rResult.size() != ElementalDofList.size())
+        rResult.resize(ElementalDofList.size(), false);
 
-    if ( rResult.size() != mat_size )
-        rResult.resize( mat_size, false );
-
-    for ( unsigned int i = 0 ; i < GetGeometry().size() ; ++i )
-    {
-        int index = i * dofs_per_node;
-        rResult[index    ] = GetGeometry()[i].GetDof( DISPLACEMENT_X ).EquationId();
-        rResult[index + 1] = GetGeometry()[i].GetDof( DISPLACEMENT_Y ).EquationId();
-        rResult[index + 2] = GetGeometry()[i].GetDof( DISPLACEMENT_Z ).EquationId();
-    }
+    for(unsigned int i = 0; i < ElementalDofList.size(); ++i)
+        rResult[i] = ElementalDofList[i]->EquationId();
 }
 
 //************************************************************************************
@@ -560,14 +603,14 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateBendingBOperator(
     const ShapeFunctionsSecondDerivativesType& D2N_De2 )
 {
     unsigned int number_of_ctrl_points = mpIsogeometricGeometry->size();
-    unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
+    unsigned int dim = 3;
     unsigned int mat_size = number_of_ctrl_points*dim;
-    unsigned int strain_size = dim * (dim + 1) / 2;
+    unsigned int strain_size = 3;
 
-    if( Bb.size1() != 3 || Bb.size2() != mat_size)
-        Bb.resize(3, mat_size);
+    if( Bb.size1() != strain_size || Bb.size2() != mat_size)
+        Bb.resize(strain_size, mat_size);
 
-    noalias(Bb) = ZeroMatrix(3, mat_size);
+    noalias(Bb) = ZeroMatrix(strain_size, mat_size);
     
      // bending Bb operator
      //////// covariant of unit normal base vector
@@ -633,13 +676,13 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateMembraneBOperator(
     const array_1d<double,3>& G2,
     const Matrix& DN_De)
 {
-    unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
+    unsigned int dim = 3;
     unsigned int number_of_ctrl_points = mpIsogeometricGeometry->size();
-    unsigned int strain_size = dim*(dim+1)/2;
+    unsigned int strain_size = 3;
     unsigned int mat_size = dim*number_of_ctrl_points;
 
-    if( Bm.size1() != 3 || Bm.size2() != mat_size)
-        Bm.resize(3, mat_size);
+    if( Bm.size1() != strain_size || Bm.size2() != mat_size)
+        Bm.resize(strain_size, mat_size);
 
     for(unsigned int i=0 ; i< number_of_ctrl_points; i++)
     {
