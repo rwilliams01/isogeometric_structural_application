@@ -70,6 +70,8 @@ public:
 
     void Initialize();
 
+    void InitializeJacobian();
+
     void ResetConstitutiveLaw();
 
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
@@ -131,6 +133,10 @@ private:
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
     std::vector<ConstitutiveLaw::Pointer> mConstitutiveLawVector;
+
+    std::vector< Matrix > mInvJ0;
+    Vector mDetJ0;
+    double mTotalDomainInitialSize;
 
     friend class Serializer;
 
