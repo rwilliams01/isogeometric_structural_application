@@ -41,14 +41,15 @@ namespace Kratos
     , mFaceLoadNURBS( 0, Condition::GeometryType::Pointer( new Geo2dNURBS<Node<3> >() ) )
     , mFaceLoadBezier( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
     , mFacePressureNURBS( 0, Condition::GeometryType::Pointer( new Geo2dNURBS<Node<3> >() ) )
-    , mFacePressureBezier( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
-    , mMasterContactFace3DBezier( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
-    , mSlaveContactFace3DBezier( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mFacePressureBezier2D3( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mMasterContactFaceBezier2D3( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mSlaveContactFaceBezier2D3( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
     , mKinematicLinearBezier2D( 0, Element::GeometryType::Pointer( new Geo2dBezier<Node<3> >() ) )
     , mKinematicLinearBezier3D( 0, Element::GeometryType::Pointer( new Geo3dBezier<Node<3> >() ) )
     , mTotalLagrangianBezier2D( 0, Element::GeometryType::Pointer( new Geo2dBezier<Node<3> >() ) )
     , mTotalLagrangianBezier3D( 0, Element::GeometryType::Pointer( new Geo3dBezier<Node<3> >() ) )
     , mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D( 0, Element::GeometryType::Pointer( new Geo3dBezier<Node<3> >() ) )
+    , mKinematicLinearKirchoffLoveIsogeometricShellBezier2D3( 0, Element::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
     {}
 
     void KratosIsogeometricStructuralApplication::Register()
@@ -72,6 +73,7 @@ namespace Kratos
         KRATOS_REGISTER_ELEMENT( "TotalLagrangianBezier2D", mTotalLagrangianBezier2D )
         KRATOS_REGISTER_ELEMENT( "TotalLagrangianBezier3D", mTotalLagrangianBezier3D )
         KRATOS_REGISTER_ELEMENT( "UnsaturatedSoilsElement_2phase_SmallStrainBezier3D", mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D )
+        KRATOS_REGISTER_ELEMENT( "KinematicLinearKirchoffLoveIsogeometricShellBezier2D3", mKinematicLinearKirchoffLoveIsogeometricShellBezier2D3 )
 
         // register conditions
         KRATOS_REGISTER_CONDITION( "LineLoadNURBS3D", mLineLoadNURBS )
@@ -81,9 +83,9 @@ namespace Kratos
         KRATOS_REGISTER_CONDITION( "FaceLoadNURBS", mFaceLoadNURBS )
         KRATOS_REGISTER_CONDITION( "FaceLoadBezier", mFaceLoadBezier )
         KRATOS_REGISTER_CONDITION( "FacePressureNURBS", mFacePressureNURBS )
-        KRATOS_REGISTER_CONDITION( "FacePressureBezier", mFacePressureBezier )
-        KRATOS_REGISTER_CONDITION( "MasterContactFace3DBezier", mMasterContactFace3DBezier )
-        KRATOS_REGISTER_CONDITION( "SlaveContactFace3DBezier", mSlaveContactFace3DBezier )
+        KRATOS_REGISTER_CONDITION( "FacePressureBezier2D3", mFacePressureBezier2D3 )
+        KRATOS_REGISTER_CONDITION( "MasterContactFaceBezier2D3", mMasterContactFaceBezier2D3 )
+        KRATOS_REGISTER_CONDITION( "SlaveContactFaceBezier2D3", mSlaveContactFaceBezier2D3 )
     }
 
 } // namespace Kratos

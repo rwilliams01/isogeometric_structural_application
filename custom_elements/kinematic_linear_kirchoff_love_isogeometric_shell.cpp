@@ -85,12 +85,10 @@ Element::Pointer KinematicLinearKirchoffLoveIsogeometricShell::Create(IndexType 
 
 void KinematicLinearKirchoffLoveIsogeometricShell::Initialize()
 {
-    KRATOS_TRY		//EXCEPTION HANDLING (see corresponing KRATOS_CATCH("") )
-
+    KRATOS_TRY        //EXCEPTION HANDLING (see corresponing KRATOS_CATCH("") )
 
         if (mIsInitialized)
         {
-
             //dimension of the problem
             unsigned int dim = 3;
 
@@ -122,9 +120,11 @@ void KinematicLinearKirchoffLoveIsogeometricShell::Initialize()
 
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
+        bool manual_initilization = false;
         if( this->Has( EXTRACTION_OPERATOR ) )
         {
             ExtractionOperator = this->GetValue( EXTRACTION_OPERATOR );
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_MCSR ) )
         {
@@ -141,6 +141,8 @@ void KinematicLinearKirchoffLoveIsogeometricShell::Initialize()
                 ExtractionOperator = IsogeometricMathUtils::MCSR2CSR(Temp);
             else
                 ExtractionOperator = IsogeometricMathUtils::MCSR2MAT(Temp);
+
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_CSR_ROWPTR )
              and this->Has( EXTRACTION_OPERATOR_CSR_COLIND )
@@ -163,24 +165,27 @@ void KinematicLinearKirchoffLoveIsogeometricShell::Initialize()
 //            KRATOS_WATCH(values)
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
 //            ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(m, n, rowPtr, colInd, values);
+
+            manual_initilization = true;
         }
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "The extraction operator was not given for element", Id())
+//        else
+//            KRATOS_THROW_ERROR(std::logic_error, "The extraction operator was not given for element", Id())
 
         // initialize the geometry
-        mpIsogeometricGeometry->AssignGeometryData(
-            this->GetValue(NURBS_KNOTS_1),
-            this->GetValue(NURBS_KNOTS_2),
-            this->GetValue(NURBS_KNOTS_3),
-            this->GetValue(NURBS_WEIGHT),
-            ExtractionOperator,
-            this->GetValue(NURBS_DEGREE_1),
-            this->GetValue(NURBS_DEGREE_2),
-            this->GetValue(NURBS_DEGREE_3),
-            2 // only need to compute 2 integration rules
-        );
+        if(manual_initilization)
+            mpIsogeometricGeometry->AssignGeometryData(
+                this->GetValue(NURBS_KNOTS_1),
+                this->GetValue(NURBS_KNOTS_2),
+                this->GetValue(NURBS_KNOTS_3),
+                this->GetValue(NURBS_WEIGHT),
+                ExtractionOperator,
+                this->GetValue(NURBS_DEGREE_1),
+                this->GetValue(NURBS_DEGREE_2),
+                this->GetValue(NURBS_DEGREE_3),
+                2 // only need to compute 2 integration rules
+            );
 
-        mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
+        mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
                         
         InitializeJacobian();
         ////////////////////End Initialize geometry_data/////////////////////////////
@@ -204,7 +209,6 @@ void KinematicLinearKirchoffLoveIsogeometricShell::Initialize()
             mConstitutiveLawVector.resize(integration_points.size());
         }
 
-
         InitializeMaterial();
 
         mIsInitialized = true;
@@ -226,41 +230,23 @@ void KinematicLinearKirchoffLoveIsogeometricShell::InitializeJacobian()
     // configuration
     GeometryType::JacobiansType J0(integration_points.size());
 
-    mInvJ0.resize(integration_points.size());
-
     mTotalDomainInitialSize = 0.00;
-
-    for (unsigned int i = 0; i < integration_points.size(); ++i)
-    {
-        mInvJ0[i].resize(dim, dim, false);
-        noalias(mInvJ0[i]) = ZeroMatrix(dim, dim);
-    }
-
-    mDetJ0.resize(integration_points.size(), false);
-
-    noalias(mDetJ0) = ZeroVector(integration_points.size());
 
     //calculating the Jacobian
     J0 = mpIsogeometricGeometry->Jacobian(J0, mThisIntegrationMethod);
 
     //calculating the inverse Jacobian
+    double DetJ0;
     for (unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber)
     {
         //getting informations for integration
         double IntegrationWeight = integration_points[PointNumber].Weight();
         //calculating and storing inverse of the jacobian and the parameters needed
-        MathUtils<double>::InvertMatrix(J0[PointNumber], mInvJ0[PointNumber], mDetJ0[PointNumber]);
+        Matrix JtJ = prod(trans(J0[PointNumber]), J0[PointNumber]);
+        DetJ0 = sqrt(MathUtils<double>::Det(JtJ));
         //calculating the total area
-        #ifdef IGNORE_NEGATIVE_JACOBIAN
-        mTotalDomainInitialSize += fabs(mDetJ0[PointNumber]) * IntegrationWeight;
-        #else
-        mTotalDomainInitialSize += mDetJ0[PointNumber] * IntegrationWeight;
-        #endif
+        mTotalDomainInitialSize += DetJ0 * IntegrationWeight;
     }
-	
-
-
-
 }
 
 
@@ -285,8 +271,8 @@ void KinematicLinearKirchoffLoveIsogeometricShell::InitializeMaterial()
         for (unsigned int i = 0; i < mConstitutiveLawVector.size(); ++i)
         {
             mConstitutiveLawVector[i] = GetProperties()[CONSTITUTIVE_LAW]->Clone();
-//				mConstitutiveLawVector[i]->SetValue( PARENT_ELEMENT_ID, this->Id(), *(ProcessInfo*)0);
-//				mConstitutiveLawVector[i]->SetValue( INTEGRATION_POINT_INDEX, i, *(ProcessInfo*)0);
+//                mConstitutiveLawVector[i]->SetValue( PARENT_ELEMENT_ID, this->Id(), *(ProcessInfo*)0);
+//                mConstitutiveLawVector[i]->SetValue( INTEGRATION_POINT_INDEX, i, *(ProcessInfo*)0);
 //            std::cout << "consitutive law vector " << i << " received clone" << std::endl;
             mConstitutiveLawVector[i]->InitializeMaterial(
                 GetProperties(),
@@ -315,20 +301,17 @@ void KinematicLinearKirchoffLoveIsogeometricShell::ResetConstitutiveLaw()
     KRATOS_CATCH( "" )
 }
 
-	
+    
 void KinematicLinearKirchoffLoveIsogeometricShell::InitializeNonLinearIteration(ProcessInfo& CurrentProcessInfo)
 {
+    // reset all resistant forces at node
+    for ( unsigned int i = 0; i < mpIsogeometricGeometry->size(); ++i )
+    {
+        (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_X ) = 0.0;
+        (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_Y ) = 0.0;
+        (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_Z ) = 0.0;
 
-            // reset all resistant forces at node
-            for ( unsigned int i = 0; i < mpIsogeometricGeometry->size(); ++i )
-            {
-
-
-                (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_X ) = 0.0;
-                (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_Y ) = 0.0;
-                (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_Z ) = 0.0;
-
-            }
+    }
 }
 //************************************************************************************ 
 //************************************************************************************
@@ -337,21 +320,21 @@ void KinematicLinearKirchoffLoveIsogeometricShell::InitializeNonLinearIteration(
  */
 void KinematicLinearKirchoffLoveIsogeometricShell::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
 {
-        MatrixType temp = Matrix();
+    MatrixType temp = Matrix();
 
-        bool need_calculate_stiffness = false;
-        for ( unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node )
+    bool need_calculate_stiffness = false;
+    for ( unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node )
+    {
+        if((*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_X)
+        || (*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Y)
+        || (*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Z))
         {
-            if((*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_X)
-            || (*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Y)
-            || (*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Z))
-            {
-                need_calculate_stiffness = true;
-                break;
-            }
+            need_calculate_stiffness = true;
+            break;
         }
+    }
 
-        CalculateAll(temp, rRightHandSideVector, rCurrentProcessInfo, need_calculate_stiffness, true, false);
+    CalculateAll(temp, rRightHandSideVector, rCurrentProcessInfo, need_calculate_stiffness, true, false);
 }
 
 //************************************************************************************
@@ -402,7 +385,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
 
      if(CalculateStiffnessMatrixFlag == true)
      {
-         if(rLeftHandSideMatrix.size1() != mat_size)
+         if(rLeftHandSideMatrix.size1() != mat_size || rLeftHandSideMatrix.size2() != mat_size)
              rLeftHandSideMatrix.resize(mat_size, mat_size, false);
 
          noalias(rLeftHandSideMatrix) = ZeroMatrix(mat_size, mat_size);
@@ -416,8 +399,6 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
          noalias(rRightHandSideVector) = ZeroVector(mat_size);
      }
 
-
-
      // Current displacements
      Matrix CurrentDisp(number_of_ctrl_points, dim);
      for(unsigned int node =0; node < mpIsogeometricGeometry->size() ;++node)
@@ -426,13 +407,18 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
     // calculate the Jacobian
     GeometryType::JacobiansType J0(integration_points.size());
     J0 = mpIsogeometricGeometry->Jacobian0(J0, mThisIntegrationMethod);
+    double DetJ0;
 
     // loop over integration points
     for(unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber)
     {
+//        KRATOS_WATCH(J0[PointNumber])
+        Matrix JtJ = prod(trans(J0[PointNumber]), J0[PointNumber]);
+        DetJ0 = sqrt(MathUtils<double>::Det(JtJ));
+
         // declare variables
-        Vector MembraneStressVector ;
-        Vector BendingStressVector;
+        Vector MembraneStressVector(strain_size);
+        Vector BendingStressVector(strain_size);
 
         Matrix DN_De;
         Vector Ncontainer;
@@ -440,17 +426,14 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         // material parameters
         double E = GetProperties()[YOUNG_MODULUS];
         double NU = GetProperties()[POISSON_RATIO];
-	    double t = GetProperties()[THICKNESS];
-	    double q0 = GetProperties()[PRESSURE];
-		
+        double t = GetProperties()[THICKNESS];
+//        double q0 = GetProperties()[PRESSURE];
 
         // local gradient values at an integration point
         DN_De = mpIsogeometricGeometry->ShapeFunctionsLocalGradients( DN_De, integration_points[PointNumber]);
 
         // shape function values at an integration point
         Ncontainer = mpIsogeometricGeometry->ShapeFunctionsValues( Ncontainer , integration_points[PointNumber]);
-
-
 
         // calculate covariant base vector
         array_1d<double,3> G1; G1[2] = 0.0;
@@ -483,7 +466,6 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         Matrix D;
         CalculateHookeanMatrix(D, G1, G2);
 
-
         /////// membrane strains and curvature changes
         Vector MembraneStrainVector(strain_size);
         Vector CurvatureChangeVector(strain_size);
@@ -491,10 +473,8 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         CalculateStrain(MembraneStrainVector, Bm, CurrentDisp);
         CalculateStrain(CurvatureChangeVector, Bb, CurrentDisp);
 
-	MembraneStressVector = prod(D, t*MembraneStrainVector);
-	BendingStressVector = prod(D, (pow(t,3)/12)*CurvatureChangeVector);
-
-
+        noalias(MembraneStressVector) = t * prod(D, MembraneStrainVector);
+        noalias(BendingStressVector) = (pow(t,3)/12) * prod(D, CurvatureChangeVector);
 
         //calculating weights for integration on the reference configuration
         double Weight = integration_points[PointNumber].Weight();
@@ -504,30 +484,29 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
 
         if (CalculateStiffnessMatrixFlag == true) //compute the contribution to LHS
         {
-            noalias(rLeftHandSideMatrix) += prod(trans(Bm), (t*Weight * mDetJ0[PointNumber]) * Matrix(prod(D, Bm)));
-            noalias(rLeftHandSideMatrix) += prod(trans(Bb), (pow(t,3)/12*Weight * mDetJ0[PointNumber]) * Matrix(prod(D, Bb)));
+            noalias(rLeftHandSideMatrix) += t*Weight * DetJ0 * prod(trans(Bm), Matrix(prod(D, Bm)));
+            noalias(rLeftHandSideMatrix) += pow(t,3)/12*Weight * DetJ0 * prod(trans(Bb), Matrix(prod(D, Bb)));
         } // compute the contribution to LHS
+//KRATOS_WATCH(rLeftHandSideMatrix)
 
         // compute the contribution to RHS 
         if(CalculateResidualVectorFlag == true)
         {
             //contribution to external forces
             if(GetProperties().Has(BODY_FORCE))
-                CalculateAndAddExtForceContribution(rRightHandSideVector, Ncontainer, Weight, mDetJ0[PointNumber] );  
-
+                CalculateAndAddExtForceContribution(rRightHandSideVector, Ncontainer, Weight, DetJ0 );  
 
             if(GetProperties().Has(DENSITY) && GetProperties().Has(GRAVITY))
-                AddBodyForcesToRHS(rRightHandSideVector, Ncontainer, Weight, mDetJ0[PointNumber]);
+                AddBodyForcesToRHS(rRightHandSideVector, Ncontainer, Weight, DetJ0);
 
             // contribution of internal forces 
-            AddInternalForcesToRHS( rRightHandSideVector, Bm, MembraneStressVector, Weight, mDetJ0[PointNumber] );
-            AddInternalForcesToRHS( rRightHandSideVector, Bb, BendingStressVector, Weight, mDetJ0[PointNumber] );
-			//for ( unsigned int prim = 0; prim < GetGeometry().size(); ++prim )
-              //  rRightHandSideVector( prim*dim + 2 ) += Ncontainer(prim ) * q0 * Weight *mDetJ0[PointNumber];
+            AddInternalForcesToRHS( rRightHandSideVector, Bm, MembraneStressVector, Weight, DetJ0 );
+            AddInternalForcesToRHS( rRightHandSideVector, Bb, BendingStressVector, Weight, DetJ0 );
+//            for ( unsigned int prim = 0; prim < GetGeometry().size(); ++prim )
+//                rRightHandSideVector( prim*dim + 2 ) += Ncontainer(prim ) * q0 * Weight * DetJ0;
+//KRATOS_WATCH(rRightHandSideVector)
         } // compute the contribution to RHS
     }//loop over integration points
-
-
 
     if(CalculateResidualVectorFlag == true)
     {
@@ -561,7 +540,6 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
     //clean the internal data of the geometry
     mpIsogeometricGeometry->Clean();
     #endif
-
 
     KRATOS_CATCH("")
 }
@@ -610,27 +588,19 @@ KinematicLinearKirchoffLoveIsogeometricShell::IntegrationMethod KinematicLinearK
 void KinematicLinearKirchoffLoveIsogeometricShell::EquationIdVector( EquationIdVectorType& rResult,
                                      ProcessInfo& rCurrentProcessInfo)
 {
-    /*
-    DofsVectorType ElementalDofList;
-    GetDofList(ElementalDofList, rCurrentProcessInfo);
-    
-    if (rResult.size() != ElementalDofList.size())
-        rResult.resize(ElementalDofList.size(), false);
+    unsigned int number_of_nodes = GetGeometry().size();
+    unsigned int dim = number_of_nodes * 3;
 
-    for(unsigned int i = 0; i < ElementalDofList.size(); ++i)
-        rResult[i] = ElementalDofList[i]->EquationId();
-    */
-    if(rResult.size() != 12)
-        rResult.resize(12,false);
+    if ( rResult.size() != dim )
+        rResult.resize( dim );
 
-    for (int i=0; i<4; i++)
+    for ( unsigned int i = 0; i < number_of_nodes; i++ )
     {
-        int index = i*3;
-        rResult[index]	   = GetGeometry()[i].GetDof(DISPLACEMENT_X).EquationId();
-        rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y).EquationId();
-        rResult[index + 2] = GetGeometry()[i].GetDof(DISPLACEMENT_Z).EquationId();
+        int index = i * 3;
+        rResult[index]   = GetGeometry()[i].GetDof( DISPLACEMENT_X ).EquationId();
+        rResult[index+1] = GetGeometry()[i].GetDof( DISPLACEMENT_Y ).EquationId();
+        rResult[index+2] = GetGeometry()[i].GetDof( DISPLACEMENT_Z ).EquationId();
     }
- 
 }
 
 //************************************************************************************
@@ -656,7 +626,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::GetDofList( DofsVectorType& E
 void KinematicLinearKirchoffLoveIsogeometricShell::CalculateStrain(Vector& StrainVector, const Matrix& B, const Matrix& Displacements)
 {
      unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
-     unsigned int strain_size = dim * (dim + 1) / 2;
+     unsigned int strain_size = 3;
 
      noalias(StrainVector) = ZeroVector(strain_size);
      for(unsigned int i = 0; i < mpIsogeometricGeometry->size(); ++i)
@@ -706,7 +676,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::AddInternalForcesToRHS(
 )
 {
     unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
-    unsigned int strain_size = dim * (dim + 1) / 2;
+    unsigned int strain_size = 3;
     Vector InternalForces(dim);
 
     for(unsigned int i = 0; i < mpIsogeometricGeometry->size(); ++i)
@@ -715,7 +685,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::AddInternalForcesToRHS(
        {
               InternalForces(j) = 0.0;
               for(unsigned int k = 0; k < strain_size; ++k)
-                      InternalForces(j) += B(k, dim * i + j) * StressVector(k) * Weight * DetJ;
+                InternalForces(j) += B(k, dim * i + j) * StressVector(k) * Weight * DetJ;
 
               rRightHandSideVector(dim * i + j) -= InternalForces(j);
        }
@@ -735,7 +705,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateBendingBOperator(
     unsigned int strain_size = 3;
 
     if( Bb.size1() != strain_size || Bb.size2() != mat_size)
-        Bb.resize(strain_size, mat_size);
+        Bb.resize(strain_size, mat_size, false);
 
     noalias(Bb) = ZeroMatrix(strain_size, mat_size);
     
@@ -782,7 +752,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateBendingBOperator(
      MathUtils<double>::CrossProduct(G3xG1 ,G3 ,G1); 
 
      /////// compute Bb
-         Bb(strain_size, mat_size);
+     Bb(strain_size, mat_size);
      for(unsigned int i=0; i< number_of_ctrl_points; i++)
      {
          for(unsigned int j=0; j< dim; j++)
@@ -810,15 +780,15 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateMembraneBOperator(
 
 
     if( Bm.size1() != strain_size || Bm.size2() != mat_size)
-        Bm.resize(strain_size, mat_size);
+        Bm.resize(strain_size, mat_size, false);
 
     for(unsigned int i=0 ; i< number_of_ctrl_points; i++)
     {
         for(unsigned int j=0; j< dim; j++)
         {
-         Bm(0,i*dim + j) = DN_De(i,0)*G1(j);
-         Bm(1,i*dim + j) = DN_De(i,1)*G2(j);
-         Bm(2,i*dim + j) = DN_De(i,1)*G1(j) + DN_De(i,0)*G2(j);
+            Bm(0,i*dim + j) = DN_De(i,0)*G1(j);
+            Bm(1,i*dim + j) = DN_De(i,1)*G2(j);
+            Bm(2,i*dim + j) = DN_De(i,1)*G1(j) + DN_De(i,0)*G2(j);
         }
     }
 }
@@ -846,10 +816,9 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateHookeanMatrix(Matrix
 
     double aux = E/(1-pow(NU,2) );
 
-    if (D.size1() != 3||D.size2() != 3)
-        D.resize(3,3);
+    if (D.size1() != 3 || D.size2() != 3)
+        D.resize(3, 3, false);
 
-    
     D(0,0) = aux*pow(InvG_ab(0,0), 2);
     D(0,1) = aux*( NU*InvG_ab(0,0)*InvG_ab(1,1) + (1-NU)*pow(InvG_ab(0,1), 2) ); 
     D(0,2) = aux*InvG_ab(0,0)*InvG_ab(0,1);
@@ -1103,12 +1072,12 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateOnIntegrationPoints(
                 KRATOS_THROW_ERROR(std::logic_error, "Something wrong with the consitutive law", i)
             }
                 
-//			if( mConstitutiveLawVector[i]->IsIncremental() )
-//				KRATOS_THROW_ERROR( std::logic_error, "This element does not provide incremental strains!", "" );
-//			if( mConstitutiveLawVector[i]->GetStrainMeasure() != ConstitutiveLaw::StrainMeasure_Linear )
-//				KRATOS_THROW_ERROR( std::logic_error, "This element formulated in linear strain measure", "" );
-//			if( mConstitutiveLawVector[i]->GetStressMeasure() != ConstitutiveLaw::StressMeasure_PK1 )
-//				KRATOS_THROW_ERROR( std::logic_error, "This element is formulated in PK1 stresses", "" );
+//            if( mConstitutiveLawVector[i]->IsIncremental() )
+//                KRATOS_THROW_ERROR( std::logic_error, "This element does not provide incremental strains!", "" );
+//            if( mConstitutiveLawVector[i]->GetStrainMeasure() != ConstitutiveLaw::StrainMeasure_Linear )
+//                KRATOS_THROW_ERROR( std::logic_error, "This element formulated in linear strain measure", "" );
+//            if( mConstitutiveLawVector[i]->GetStressMeasure() != ConstitutiveLaw::StressMeasure_PK1 )
+//                KRATOS_THROW_ERROR( std::logic_error, "This element is formulated in PK1 stresses", "" );
         }
         
         //check Jacobian (just for debugging)

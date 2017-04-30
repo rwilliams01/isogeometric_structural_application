@@ -82,7 +82,7 @@ FacePressureIsogeometric::FacePressureIsogeometric( IndexType NewId, GeometryTyp
     : Condition( NewId, pGeometry )
 {
     mpIsogeometricGeometry = 
-        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
+        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
 // Constructor
@@ -91,7 +91,7 @@ FacePressureIsogeometric::FacePressureIsogeometric( IndexType NewId, GeometryTyp
     : Condition( NewId, pGeometry, pProperties )
 {
     mpIsogeometricGeometry = 
-        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
+        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
 //***********************************************************************************
@@ -101,6 +101,15 @@ Condition::Pointer FacePressureIsogeometric::Create( IndexType NewId,
                                         PropertiesType::Pointer pProperties ) const
 {
     return Condition::Pointer( new FacePressureIsogeometric( NewId, GetGeometry().Create( ThisNodes ), pProperties ) );
+}
+
+//***********************************************************************************
+//***********************************************************************************
+Condition::Pointer FacePressureIsogeometric::Create( IndexType NewId,
+                                        GeometryType::Pointer pGeom,
+                                        PropertiesType::Pointer pProperties ) const
+{
+    return Condition::Pointer( new FacePressureIsogeometric( NewId, pGeom, pProperties ) );
 }
 
 //***********************************************************************************
@@ -115,7 +124,6 @@ FacePressureIsogeometric::~FacePressureIsogeometric()
 void FacePressureIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
                                     ProcessInfo& rCurrentProcessInfo )
 {
-    KRATOS_TRY
     unsigned int number_of_nodes = GetGeometry().size();
     unsigned int dim = number_of_nodes * 3;
 
@@ -129,8 +137,6 @@ void FacePressureIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
         rResult[index+1] = GetGeometry()[i].GetDof( DISPLACEMENT_Y ).EquationId();
         rResult[index+2] = GetGeometry()[i].GetDof( DISPLACEMENT_Z ).EquationId();
     }
-
-    KRATOS_CATCH( "" )
 }
 
 //***********************************************************************************
@@ -153,17 +159,19 @@ void FacePressureIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
 void FacePressureIsogeometric::Initialize()
 {
     KRATOS_TRY
-    
+
         ////////////////////Initialize geometry_data/////////////////////////////
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
         #endif
-        
+
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
+        bool manual_initilization = false;
         if( this->Has( EXTRACTION_OPERATOR ) )
         {
             ExtractionOperator = this->GetValue( EXTRACTION_OPERATOR );
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_MCSR ) )
         {
@@ -180,6 +188,8 @@ void FacePressureIsogeometric::Initialize()
                 ExtractionOperator = IsogeometricMathUtils::MCSR2CSR(Temp);
             else
                 ExtractionOperator = IsogeometricMathUtils::MCSR2MAT(Temp);
+
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_CSR_ROWPTR )
              and this->Has( EXTRACTION_OPERATOR_CSR_COLIND )
@@ -189,23 +199,26 @@ void FacePressureIsogeometric::Initialize()
             Vector colInd = this->GetValue( EXTRACTION_OPERATOR_CSR_COLIND ); // must be 0-base
             Vector values = this->GetValue( EXTRACTION_OPERATOR_CSR_VALUES );
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
+            manual_initilization = true;
         }
-        
+//        else
+//            KRATOS_THROW_ERROR(std::logic_error, "The extraction operator was not given for element", Id())
 //        KRATOS_WATCH(ExtractionOperator)
 
         // initialize the geometry
-        mpIsogeometricGeometry->AssignGeometryData(
-            this->GetValue(NURBS_KNOTS_1),
-            this->GetValue(NURBS_KNOTS_2),
-            this->GetValue(NURBS_KNOTS_3),
-            this->GetValue(NURBS_WEIGHT),
-            ExtractionOperator,
-            this->GetValue(NURBS_DEGREE_1),
-            this->GetValue(NURBS_DEGREE_2),
-            this->GetValue(NURBS_DEGREE_3),
-            2 // only need to compute 2 integration rules
-        );
-        
+        if(manual_initilization)
+            mpIsogeometricGeometry->AssignGeometryData(
+                this->GetValue(NURBS_KNOTS_1),
+                this->GetValue(NURBS_KNOTS_2),
+                this->GetValue(NURBS_KNOTS_3),
+                this->GetValue(NURBS_WEIGHT),
+                ExtractionOperator,
+                this->GetValue(NURBS_DEGREE_1),
+                this->GetValue(NURBS_DEGREE_2),
+                this->GetValue(NURBS_DEGREE_3),
+                2 // only need to compute 2 integration rules
+            );
+
         mThisIntegrationMethod =
 //            GetGeometry().GetDefaultIntegrationMethod(); //default method
             GeometryData::GI_GAUSS_1;
@@ -242,27 +255,32 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 {
     KRATOS_TRY
 
-    const unsigned int number_of_nodes = GetGeometry().size();
+    const unsigned int number_of_nodes = mpIsogeometricGeometry->size();
     const unsigned int dim = 3;
-    unsigned int MatSize = number_of_nodes * dim;
+    unsigned int mat_size = number_of_nodes * dim;
 
     //resizing as needed the LHS
     if ( CalculateStiffnessMatrixFlag == true )
     {
-        if ( rLeftHandSideMatrix.size1() != MatSize )
-            rLeftHandSideMatrix.resize( MatSize, MatSize, false );
+        if ( rLeftHandSideMatrix.size1() != mat_size )
+            rLeftHandSideMatrix.resize( mat_size, mat_size, false );
 
-        noalias( rLeftHandSideMatrix ) = ZeroMatrix( MatSize, MatSize ); //resetting LHS
+        noalias( rLeftHandSideMatrix ) = ZeroMatrix( mat_size, mat_size ); //resetting LHS
     }
 
     //resizing as needed the RHS
     if ( CalculateResidualVectorFlag == true )
     {
-        if ( rRightHandSideVector.size() != MatSize )
-            rRightHandSideVector.resize( MatSize, false );
+        if ( rRightHandSideVector.size() != mat_size )
+            rRightHandSideVector.resize( mat_size, false );
 
-        rRightHandSideVector = ZeroVector( MatSize ); //resetting RHS
+        rRightHandSideVector = ZeroVector( mat_size ); //resetting RHS
     }
+
+    #ifdef ENABLE_BEZIER_GEOMETRY
+    //initialize the geometry
+    mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
+    #endif
 
     //reading integration points
     const GeometryType::IntegrationPointsArrayType& integration_points =
@@ -280,9 +298,9 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
     //loop over integration points
     Vector t1(3), t2(3), v3(3);
-    double P = GetValue(PRESSURE);
-    KRATOS_WATCH(P)
-    KRATOS_WATCH(Ncontainer)
+    double P = this->GetValue(PRESSURE);
+//    KRATOS_WATCH(P)
+//    KRATOS_WATCH(Ncontainer)
     for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber )
     {
         t1 = ZeroVector( 3 );//first tangential vector
@@ -312,9 +330,9 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
         double IntegrationWeight = integration_points[PointNumber].Weight();
 
-        KRATOS_WATCH(Load)
-        KRATOS_WATCH(IntegrationWeight)
-        KRATOS_WATCH(dA)
+//        KRATOS_WATCH(Load)
+//        KRATOS_WATCH(IntegrationWeight)
+//        KRATOS_WATCH(dA)
         
         // RIGHT HAND SIDE VECTOR
         if ( CalculateResidualVectorFlag == true ) //calculation of the matrix is required
@@ -327,6 +345,11 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     }
 
 //    KRATOS_WATCH(rRightHandSideVector)
+
+    #ifdef ENABLE_BEZIER_GEOMETRY
+    //initialize the geometry
+    mpIsogeometricGeometry->Clean();
+    #endif
 
     KRATOS_CATCH( "" )
 }

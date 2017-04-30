@@ -299,6 +299,7 @@ void KinematicLinearIsogeometric::InitializeJacobian()
 
     mDetJ0.resize(integration_points.size(), false);
 
+    // TODO remove the storage for Jacobian to save memory
     noalias(mDetJ0) = ZeroVector(integration_points.size());
 
     //calculating the Jacobian

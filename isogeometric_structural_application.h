@@ -29,6 +29,7 @@
 #include "custom_elements/kinematic_linear_isogeometric.h"
 #include "custom_elements/total_lagrangian_isogeometric.h"
 #include "custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.h"
+#include "custom_elements/kinematic_linear_kirchoff_love_isogeometric_shell.h"
 #include "custom_conditions/line_force_isogeometric.h"
 #include "custom_conditions/line_force_isogeometric_2d.h"
 #include "custom_conditions/face_load_isogeometric.h"
@@ -218,17 +219,17 @@ namespace Kratos
         const FaceLoadIsogeometric mFaceLoadNURBS;
         const FaceLoadIsogeometric mFaceLoadBezier;
         const FacePressureIsogeometric mFacePressureNURBS;
-        const FacePressureIsogeometric mFacePressureBezier;
+        const FacePressureIsogeometric mFacePressureBezier2D3;
 
-        const MasterContactFace3DIsogeometric mMasterContactFace3DBezier;
-        const SlaveContactFace3DIsogeometric mSlaveContactFace3DBezier;
+        const MasterContactFace3DIsogeometric mMasterContactFaceBezier2D3;
+        const SlaveContactFace3DIsogeometric mSlaveContactFaceBezier2D3;
 
         const KinematicLinear mKinematicLinearBezier2D;
         const KinematicLinear mKinematicLinearBezier3D;
         const KinematicLinear mTotalLagrangianBezier2D;
         const KinematicLinear mTotalLagrangianBezier3D;
         const UnsaturatedSoilsElement_2phase_SmallStrain mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D;
-
+        const KinematicLinearKirchoffLoveIsogeometricShell mKinematicLinearKirchoffLoveIsogeometricShellBezier2D3;
 
 
         ///@}

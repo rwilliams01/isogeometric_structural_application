@@ -156,12 +156,9 @@ private:
 
     double mTotalDomainInitialSize;
 
-    std::vector< Matrix > mInvJ0;
-    Vector mDetJ0;
     bool mIsInitialized;
 
     Matrix mInitialDisp;
-
 
     void InitializeMaterial();
 
