@@ -24,6 +24,7 @@
 namespace Kratos
 {
 
+
 /**
 Implementation of the thin shell using Kirchhoff-Love theory and isogeometric analysis
 REF: Nguyen Vinh Phu, igafem
@@ -49,9 +50,8 @@ public:
     /** 
      * Default constructor.
      */
-    KinematicLinearKirchoffLoveIsogeometricShell();
-    KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry);
-    KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+    KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry );
+    KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties );
 
     /**
      * Destructor.
@@ -62,17 +62,17 @@ public:
      * Operations.
      */
 
-    virtual Element::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,
-                            PropertiesType::Pointer pProperties) const;
+    virtual Element::Pointer Create( IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties ) const;
 
-    virtual Element::Pointer Create(IndexType NewId, GeometryType::Pointer pGeom,
-                            PropertiesType::Pointer pProperties) const;
+    virtual Element::Pointer Create( IndexType NewId, GeometryType::Pointer pGeom, PropertiesType::Pointer pProperties ) const;
 
     void Initialize();
 
     void InitializeJacobian();
 
     void ResetConstitutiveLaw();
+
+    void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
                                VectorType& rRightHandSideVector, 
@@ -125,20 +125,13 @@ public:
 
 protected:
 
-
-private:
-
-    IntegrationMethod mThisIntegrationMethod;
-
-    IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
-
-    std::vector<ConstitutiveLaw::Pointer> mConstitutiveLawVector;
-
-    std::vector< Matrix > mInvJ0;
-    Vector mDetJ0;
-    double mTotalDomainInitialSize;
-
     friend class Serializer;
+
+    // A private default constructor necessary for serialization
+    KinematicLinearKirchoffLoveIsogeometricShell()
+    {
+    }
+
 
     virtual void save ( Serializer& rSerializer ) const
     {
@@ -149,6 +142,26 @@ private:
     {
         KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Element )
     }
+
+    //virtual int Check( const ProcessInfo& rCurrentProcessInfo );
+
+
+private:
+
+    IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
+    
+    std::vector<ConstitutiveLaw::Pointer> mConstitutiveLawVector;
+
+    IntegrationMethod mThisIntegrationMethod;
+
+    double mTotalDomainInitialSize;
+
+    std::vector< Matrix > mInvJ0;
+    Vector mDetJ0;
+    bool mIsInitialized;
+
+    Matrix mInitialDisp;
+
 
     void InitializeMaterial();
 
