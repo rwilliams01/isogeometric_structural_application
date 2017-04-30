@@ -10,34 +10,47 @@
 // External includes 
 
 // Project includes 
-#include "includes/c2c_variables.h"
 #include "custom_elements/kinematic_linear_kirchoff_love_isogeometric_shell.h"
-#include "structural_application/structural_application.h"
 #include "isogeometric_structural_application/isogeometric_structural_application.h"
-
+#include "structural_application/custom_utilities/sd_math_utils.h"
+#include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
+#include "isogeometric_application/isogeometric_application.h"
+#include<iostream>
+using namespace std;
 //#define DEBUG_DKGQ
 
 namespace Kratos
 {
+//extern Variable<Vector> STRESSES;
+KRATOS_DEFINE_3D_VARIABLE_WITH_COMPONENTS(PRESCRIBED_DELTA_DISPLACEMENT)
 
 //************************************************************************************
 //***** Constructor and Destructor ***************************************************
 //************************************************************************************
-KinematicLinearKirchoffLoveIsogeometricShell::KinematicLinearKirchoffLoveIsogeometricShell()
+KinematicLinearKirchoffLoveIsogeometricShell::KinematicLinearKirchoffLoveIsogeometricShell(IndexType NewId,
+        GeometryType::Pointer pGeometry) :
+        Element(NewId, pGeometry)
 {
+    mIsInitialized = false;
+//    mpIsogeometricGeometry = 
+//        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
+    mpIsogeometricGeometry = 
+        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
+    /*
+    Important remarks:
+        + GetGeometry() and (*mpIsogeometricGeometry) refer to the same instance of IsogeometricGeometryType in the memory. However, GetGeometry() only provides access to the functions wrapped by Geometry interface, whereby (*mpIsogeometricGeometry) provides access to functions exclusive to IsogeometricGeometryType. It is ok to replace every instances of GetGeometry() by (*mpIsogeometricGeometry) but to keep the code looks compatible (especiall for comparison with old code), GetGeometry() can still be kept, but take note to the wrapped functions.
+     */
 }
 
-KinematicLinearKirchoffLoveIsogeometricShell::KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, 
-                              GeometryType::Pointer pGeometry)
-: Element( NewId, pGeometry )
+KinematicLinearKirchoffLoveIsogeometricShell::KinematicLinearKirchoffLoveIsogeometricShell(IndexType NewId,
+        GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties) :
+        Element(NewId, pGeometry, pProperties)
 {
-}
-
-KinematicLinearKirchoffLoveIsogeometricShell::KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, 
-                              GeometryType::Pointer pGeometry,
-                              PropertiesType::Pointer pProperties)
-: Element( NewId, pGeometry, pProperties )
-{
+    mIsInitialized = false;
+//    mpIsogeometricGeometry = 
+//        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
+    mpIsogeometricGeometry = 
+        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
 /**
@@ -52,92 +65,157 @@ KinematicLinearKirchoffLoveIsogeometricShell::~KinematicLinearKirchoffLoveIsogeo
 //**** Operations ****************************************
 //********************************************************
 
-Element::Pointer KinematicLinearKirchoffLoveIsogeometricShell::Create(IndexType NewId, NodesArrayType const& ThisNodes,
-                                        PropertiesType::Pointer pProperties) const
+Element::Pointer KinematicLinearKirchoffLoveIsogeometricShell::Create(IndexType NewId,
+        NodesArrayType const& ThisNodes,
+        PropertiesType::Pointer pProperties) const
 {
-    return Element::Pointer(new KinematicLinearKirchoffLoveIsogeometricShell(NewId, GetGeometry().Create(ThisNodes), pProperties));
+    return Element::Pointer(
+            new KinematicLinearKirchoffLoveIsogeometricShell(NewId,
+                    GetGeometry().Create(ThisNodes), pProperties));
 }
 
-Element::Pointer KinematicLinearKirchoffLoveIsogeometricShell::Create(IndexType NewId, GeometryType::Pointer pGeom,
-                                        PropertiesType::Pointer pProperties) const
+Element::Pointer KinematicLinearKirchoffLoveIsogeometricShell::Create(IndexType NewId,
+        GeometryType::Pointer pGeom,
+        PropertiesType::Pointer pProperties) const
 {
-    return Element::Pointer(new KinematicLinearKirchoffLoveIsogeometricShell(NewId, pGeom, pProperties));
+    return Element::Pointer(
+            new KinematicLinearKirchoffLoveIsogeometricShell(NewId,
+                    pGeom, pProperties));
 }
 
 void KinematicLinearKirchoffLoveIsogeometricShell::Initialize()
 {
-    KRATOS_TRY
+    KRATOS_TRY		//EXCEPTION HANDLING (see corresponing KRATOS_CATCH("") )
 
-    // integration rule
-    if(this->Has( INTEGRATION_ORDER ))
-    {
-        if(this->GetValue(INTEGRATION_ORDER) == 1)
+
+        if (mIsInitialized)
         {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
+
+            //dimension of the problem
+            unsigned int dim = 3;
+
+            //Set Up Initial displacement for StressFreeActivation of Elements
+            mInitialDisp.resize(mpIsogeometricGeometry->size(), dim, false);
+
+            for (unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node)
+                for (unsigned int i = 0; i < dim; ++i) // hbui edited
+                    mInitialDisp(node, i) =
+                        (*mpIsogeometricGeometry)[node].GetSolutionStepValue(
+                            DISPLACEMENT)[i];
+
+            return;
         }
-        else if(this->GetValue(INTEGRATION_ORDER) == 2)
+
+        ///////////////////////////////////////////////////////////////
+        // One time initialisation
+        ///////////////////////////////////////////////////////////////
+        
+        ////////////////////Initialize geometry_data/////////////////////////////
+//        KRATOS_WATCH(GetValue(NURBS_KNOTS_1))
+//        KRATOS_WATCH(GetValue(NURBS_KNOTS_2))
+//        KRATOS_WATCH(GetValue(NURBS_KNOTS_3))
+//        KRATOS_WATCH(GetValue(NURBS_WEIGHT))
+//        KRATOS_WATCH(GetValue(EXTRACTION_OPERATOR))
+//        KRATOS_WATCH(GetValue(NURBS_DEGREE_1))
+//        KRATOS_WATCH(GetValue(NURBS_DEGREE_2))
+//        KRATOS_WATCH(GetValue(NURBS_DEGREE_3))
+
+        // try to read the extraction operator from the elemental data
+        Matrix ExtractionOperator;
+        if( this->Has( EXTRACTION_OPERATOR ) )
         {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
+            ExtractionOperator = this->GetValue( EXTRACTION_OPERATOR );
         }
-        else if(this->GetValue(INTEGRATION_ORDER) == 3)
+        else if( this->Has( EXTRACTION_OPERATOR_MCSR ) )
         {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_3;
+            Matrix Temp = this->GetValue( EXTRACTION_OPERATOR_MCSR );
+
+            // make a simple check
+            if(Temp.size1() != 2)
+                KRATOS_THROW_ERROR(std::logic_error, "Invalid MCSR matrix for extraction operator found at element", this->Id())
+
+            // choose the best storage scheme based ratio between number of nonzeros and the full size of the matrix
+            unsigned int size_ex_n = (unsigned int)(Temp(0, 0) - 1);
+            unsigned int size_ex_nz = Temp.size2() - 1;
+            if( ( (double)(size_ex_nz) ) / (size_ex_n * size_ex_n) < 0.2 )
+                ExtractionOperator = IsogeometricMathUtils::MCSR2CSR(Temp);
+            else
+                ExtractionOperator = IsogeometricMathUtils::MCSR2MAT(Temp);
         }
-        else if(this->GetValue(INTEGRATION_ORDER) == 4)
+        else if( this->Has( EXTRACTION_OPERATOR_CSR_ROWPTR )
+             and this->Has( EXTRACTION_OPERATOR_CSR_COLIND )
+             and this->Has( EXTRACTION_OPERATOR_CSR_VALUES ) )
         {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_4;
-        }
-        else if(this->GetValue(INTEGRATION_ORDER) == 5)
-        {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
+            Vector rowPtr = this->GetValue( EXTRACTION_OPERATOR_CSR_ROWPTR ); // must be 0-base
+            Vector colInd = this->GetValue( EXTRACTION_OPERATOR_CSR_COLIND ); // must be 0-base
+            Vector values = this->GetValue( EXTRACTION_OPERATOR_CSR_VALUES );
+//            int m = mpIsogeometricGeometry->size();
+//            int n;
+//            unsigned int dim = mpIsogeometricGeometry->NURBS_WorkingSpaceDimension();
+//            if(dim == 2)
+//                n = (1 + this->GetValue(NURBS_DEGREE_1)) * (1 + this->GetValue(NURBS_DEGREE_2));
+//            else if(dim == 3)
+//                n = (1 + this->GetValue(NURBS_DEGREE_1)) * (1 + this->GetValue(NURBS_DEGREE_2)) * (1 + this->GetValue(NURBS_DEGREE_3));
+//            KRATOS_WATCH(m)
+//            KRATOS_WATCH(n)
+//            KRATOS_WATCH(rowPtr)
+//            KRATOS_WATCH(colInd)
+//            KRATOS_WATCH(values)
+            ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
+//            ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(m, n, rowPtr, colInd, values);
         }
         else
-            KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration rule", this->GetValue(INTEGRATION_ORDER))
-    }
-    else if(GetProperties().Has( INTEGRATION_ORDER ))
-    {
-        if(GetProperties()[INTEGRATION_ORDER] == 1)
-        {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
-        }
-        else if(GetProperties()[INTEGRATION_ORDER] == 2)
-        {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
-        }
-        else if(GetProperties()[INTEGRATION_ORDER] == 3)
-        {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_3;
-        }
-        else if(GetProperties()[INTEGRATION_ORDER] == 4)
-        {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_4;
-        }
-        else if(GetProperties()[INTEGRATION_ORDER] == 5)
-        {
-            mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
-        }
-        else
-            KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration points", GetProperties()[INTEGRATION_ORDER])
-    }
-    else
-        mThisIntegrationMethod = GetGeometry().GetDefaultIntegrationMethod(); // default method
+            KRATOS_THROW_ERROR(std::logic_error, "The extraction operator was not given for element", Id())
 
-    const GeometryType::IntegrationPointsArrayType& integration_points
-            = GetGeometry().IntegrationPoints( mThisIntegrationMethod );
+        // initialize the geometry
+        mpIsogeometricGeometry->AssignGeometryData(
+            this->GetValue(NURBS_KNOTS_1),
+            this->GetValue(NURBS_KNOTS_2),
+            this->GetValue(NURBS_KNOTS_3),
+            this->GetValue(NURBS_WEIGHT),
+            ExtractionOperator,
+            this->GetValue(NURBS_DEGREE_1),
+            this->GetValue(NURBS_DEGREE_2),
+            this->GetValue(NURBS_DEGREE_3),
+            2 // only need to compute 2 integration rules
+        );
 
-    if ( mConstitutiveLawVector.size() != integration_points.size() )
-    {
-        mConstitutiveLawVector.resize( integration_points.size() );
-    }
+        mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
+                        
+        InitializeJacobian();
+        ////////////////////End Initialize geometry_data/////////////////////////////
+        
+        //Set Up Initial displacement for StressFreeActivation of Elements
+        unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
+        mInitialDisp.resize(mpIsogeometricGeometry->size(), dim, false);
 
-    InitializeMaterial();
+        for (unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node)
+            for (unsigned int i = 0; i < dim; ++i)
+                mInitialDisp(node, i) =
+                    (*mpIsogeometricGeometry)[node].GetSolutionStepValue(DISPLACEMENT)[i];
 
-    KRATOS_CATCH("")
+        //Initialization of the constitutive law vector and
+        // declaration, definition and initialization of the material
+        // law was at each integration point
+        const GeometryType::IntegrationPointsArrayType& integration_points =
+                mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
+        if (mConstitutiveLawVector.size() != integration_points.size())
+        {
+            mConstitutiveLawVector.resize(integration_points.size());
+        }
+
+
+        InitializeMaterial();
+
+        mIsInitialized = true;
+
+    KRATOS_CATCH( "" )
 }
+
 
 void KinematicLinearKirchoffLoveIsogeometricShell::InitializeJacobian()
 {
-    unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
+    unsigned int dim = 3;
 
     //number of integration points used, mThisIntegrationMethod refers to the
     //integration method defined in the constructor
@@ -179,47 +257,51 @@ void KinematicLinearKirchoffLoveIsogeometricShell::InitializeJacobian()
         mTotalDomainInitialSize += mDetJ0[PointNumber] * IntegrationWeight;
         #endif
     }
+	
+
+
+
 }
 
 
+
+/**
+ * Initialization of the Material law at each integration point
+ */
 void KinematicLinearKirchoffLoveIsogeometricShell::InitializeMaterial()
 {
     KRATOS_TRY
 
-    for ( unsigned int i = 0; i < mConstitutiveLawVector.size(); ++i )
-    {
-        mConstitutiveLawVector[i] = GetProperties()[CONSTITUTIVE_LAW]->Clone();
-        mConstitutiveLawVector[i]->SetValue( PARENT_ELEMENT_ID, this->Id(), *(ProcessInfo*)0);
-        mConstitutiveLawVector[i]->SetValue( INTEGRATION_POINT_INDEX, i, *(ProcessInfo*)0);
-        mConstitutiveLawVector[i]->InitializeMaterial( GetProperties(), GetGeometry(), row( GetGeometry().ShapeFunctionsValues( mThisIntegrationMethod ), i ) );
+        //calculating shape functions values
+        GeometryType::ShapeFunctionsGradientsType DN_De;
+        Matrix Ncontainer;
+        
+        mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
+            Ncontainer,
+            DN_De,
+            mThisIntegrationMethod
+        );
 
-         //verify that the constitutive law has the correct dimension
-//                if ( dimension == 2 )
-//                {
-//                    if ( this->GetProperties().Has( THICKNESS ) == false )
-//                        KRATOS_THROW_ERROR( std::logic_error, "THICKNESS not provided for element ", this->Id() );
-
-//                    if ( this->GetProperties().GetValue( CONSTITUTIVE_LAW )->Getstrain_size() != 3 )
-//                        KRATOS_THROW_ERROR( std::logic_error, "wrong constitutive law used. This is a 2D element! expected strain size is 3 (el id = ) ", this->Id() );
-//                }
-//                else if(dimension == 3)
-//                {
-//                    if ( this->GetProperties().GetValue( CONSTITUTIVE_LAW )->Getstrain_size() != 6 )
-//                        KRATOS_THROW_ERROR( std::logic_error, "wrong constitutive law used. This is a 3D element! expected strain size is 6 (el id = ) ", this->Id() );
-//                }
-
-        //check constitutive law
-        mConstitutiveLawVector[i]->Check( GetProperties(), GetGeometry(), *(ProcessInfo*)0 );
-//                if( mConstitutiveLawVector[i]->IsIncremental() )
-//                    KRATOS_THROW_ERROR( std::logic_error, "This element does not provide incremental strains!", "" );
-//                if( mConstitutiveLawVector[i]->GetStrainMeasure() != ConstitutiveLaw::StrainMeasure_Linear )
-//                    KRATOS_THROW_ERROR( std::logic_error, "This element formulated in linear strain measure", "" );
-//                if( mConstitutiveLawVector[i]->GetStressMeasure() != ConstitutiveLaw::StressMeasure_PK1 )
-//                    KRATOS_THROW_ERROR( std::logic_error, "This element is formulated in PK1 stresses", "" );
-    }
+        for (unsigned int i = 0; i < mConstitutiveLawVector.size(); ++i)
+        {
+            mConstitutiveLawVector[i] = GetProperties()[CONSTITUTIVE_LAW]->Clone();
+//				mConstitutiveLawVector[i]->SetValue( PARENT_ELEMENT_ID, this->Id(), *(ProcessInfo*)0);
+//				mConstitutiveLawVector[i]->SetValue( INTEGRATION_POINT_INDEX, i, *(ProcessInfo*)0);
+//            std::cout << "consitutive law vector " << i << " received clone" << std::endl;
+            mConstitutiveLawVector[i]->InitializeMaterial(
+                GetProperties(),
+                (*mpIsogeometricGeometry),
+                row(Ncontainer, i)
+            );
+//            std::cout << "consitutive law vector " << i << " is initialized" << std::endl;
+        }
 
     KRATOS_CATCH( "" )
+
+
 }
+
+
 
 void KinematicLinearKirchoffLoveIsogeometricShell::ResetConstitutiveLaw()
 {
@@ -233,24 +315,43 @@ void KinematicLinearKirchoffLoveIsogeometricShell::ResetConstitutiveLaw()
     KRATOS_CATCH( "" )
 }
 
+	
+void KinematicLinearKirchoffLoveIsogeometricShell::InitializeNonLinearIteration(ProcessInfo& CurrentProcessInfo)
+{
+
+            // reset all resistant forces at node
+            for ( unsigned int i = 0; i < mpIsogeometricGeometry->size(); ++i )
+            {
+
+
+                (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_X ) = 0.0;
+                (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_Y ) = 0.0;
+                (*mpIsogeometricGeometry)[i].GetSolutionStepValue( REACTION_Z ) = 0.0;
+
+            }
+}
 //************************************************************************************ 
 //************************************************************************************
 /**
  * calculates only the RHS vector
  */
-void KinematicLinearKirchoffLoveIsogeometricShell::CalculateRightHandSide( VectorType& rRightHandSideVector, 
-        ProcessInfo& rCurrentProcessInfo)
+void KinematicLinearKirchoffLoveIsogeometricShell::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
 {
-    //calculation flags
-    bool CalculateStiffnessMatrixFlag = false;
-    bool CalculateResidualVectorFlag = true;
-    bool MaterialUpdateFlag = false;
-    MatrixType matrix = Matrix();
-    CalculateAll( matrix, rRightHandSideVector, 
-                  rCurrentProcessInfo,
-                  CalculateStiffnessMatrixFlag, 
-                  CalculateResidualVectorFlag,
-                  MaterialUpdateFlag);
+        MatrixType temp = Matrix();
+
+        bool need_calculate_stiffness = false;
+        for ( unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node )
+        {
+            if((*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_X)
+            || (*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Y)
+            || (*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Z))
+            {
+                need_calculate_stiffness = true;
+                break;
+            }
+        }
+
+        CalculateAll(temp, rRightHandSideVector, rCurrentProcessInfo, need_calculate_stiffness, true, false);
 }
 
 //************************************************************************************
@@ -285,7 +386,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
     KRATOS_TRY
 
     unsigned int number_of_ctrl_points = mpIsogeometricGeometry->size();
-    unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
+    unsigned int dim = 3;
 
     #ifdef ENABLE_BEZIER_GEOMETRY
     //initialize the geometry
@@ -296,7 +397,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
     const GeometryType::IntegrationPointsArrayType& integration_points = 
         mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
 
-     unsigned int strain_size = dim*(dim+1)/2;
+     unsigned int strain_size = 3;
      unsigned int mat_size = number_of_ctrl_points*dim;
 
      if(CalculateStiffnessMatrixFlag == true)
@@ -316,6 +417,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
      }
 
 
+
      // Current displacements
      Matrix CurrentDisp(number_of_ctrl_points, dim);
      for(unsigned int node =0; node < mpIsogeometricGeometry->size() ;++node)
@@ -329,8 +431,8 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
     for(unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber)
     {
         // declare variables
-        Vector MembraneStressVector = ZeroVector(strain_size);
-        Vector BendingStressVector = ZeroVector(strain_size);
+        Vector MembraneStressVector ;
+        Vector BendingStressVector;
 
         Matrix DN_De;
         Vector Ncontainer;
@@ -338,16 +440,16 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         // material parameters
         double E = GetProperties()[YOUNG_MODULUS];
         double NU = GetProperties()[POISSON_RATIO];
-        double lambda = E*NU /(1.0 +NU)/(1.0 - 2.0*NU);
-        double mu = 0.5*E/(1.0 + NU);
-        double kappa = GetProperties()[KAPPA];
-	double t = GetProperties()[THICKNESS];
+	    double t = GetProperties()[THICKNESS];
+	    double q0 = GetProperties()[PRESSURE];
+		
 
         // local gradient values at an integration point
         DN_De = mpIsogeometricGeometry->ShapeFunctionsLocalGradients( DN_De, integration_points[PointNumber]);
 
         // shape function values at an integration point
         Ncontainer = mpIsogeometricGeometry->ShapeFunctionsValues( Ncontainer , integration_points[PointNumber]);
+
 
 
         // calculate covariant base vector
@@ -381,6 +483,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         Matrix D;
         CalculateHookeanMatrix(D, G1, G2);
 
+
         /////// membrane strains and curvature changes
         Vector MembraneStrainVector(strain_size);
         Vector CurvatureChangeVector(strain_size);
@@ -388,8 +491,8 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         CalculateStrain(MembraneStrainVector, Bm, CurrentDisp);
         CalculateStrain(CurvatureChangeVector, Bb, CurrentDisp);
 
-	noalias(MembrainStressVector) = prod(D, t*MembraneStrainVector);
-	noalias(BendingStressVector) = prod(D, pow(t,3)/12*CurvatureChangeVector);
+	MembraneStressVector = prod(D, t*MembraneStrainVector);
+	BendingStressVector = prod(D, (pow(t,3)/12)*CurvatureChangeVector);
 
 
 
@@ -419,8 +522,12 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
             // contribution of internal forces 
             AddInternalForcesToRHS( rRightHandSideVector, Bm, MembraneStressVector, Weight, mDetJ0[PointNumber] );
             AddInternalForcesToRHS( rRightHandSideVector, Bb, BendingStressVector, Weight, mDetJ0[PointNumber] );
+			//for ( unsigned int prim = 0; prim < GetGeometry().size(); ++prim )
+              //  rRightHandSideVector( prim*dim + 2 ) += Ncontainer(prim ) * q0 * Weight *mDetJ0[PointNumber];
         } // compute the contribution to RHS
     }//loop over integration points
+
+
 
     if(CalculateResidualVectorFlag == true)
     {
@@ -441,6 +548,12 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
                 for( unsigned int i = 0; i < mat_size; ++i )
                     rRightHandSideVector[i] -= rLeftHandSideMatrix(i, node * dim + 1) * temp;
             }
+            if((*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Z))
+            {
+                double temp = (*mpIsogeometricGeometry)[node].GetSolutionStepValue(PRESCRIBED_DELTA_DISPLACEMENT_Z);
+                for( unsigned int i = 0; i < mat_size; ++i )
+                    rRightHandSideVector[i] -= rLeftHandSideMatrix(i, node * dim + 2) * temp;
+            }
         }
     }
 
@@ -448,6 +561,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
     //clean the internal data of the geometry
     mpIsogeometricGeometry->Clean();
     #endif
+
 
     KRATOS_CATCH("")
 }
@@ -496,6 +610,7 @@ KinematicLinearKirchoffLoveIsogeometricShell::IntegrationMethod KinematicLinearK
 void KinematicLinearKirchoffLoveIsogeometricShell::EquationIdVector( EquationIdVectorType& rResult,
                                      ProcessInfo& rCurrentProcessInfo)
 {
+    /*
     DofsVectorType ElementalDofList;
     GetDofList(ElementalDofList, rCurrentProcessInfo);
     
@@ -504,6 +619,18 @@ void KinematicLinearKirchoffLoveIsogeometricShell::EquationIdVector( EquationIdV
 
     for(unsigned int i = 0; i < ElementalDofList.size(); ++i)
         rResult[i] = ElementalDofList[i]->EquationId();
+    */
+    if(rResult.size() != 12)
+        rResult.resize(12,false);
+
+    for (int i=0; i<4; i++)
+    {
+        int index = i*3;
+        rResult[index]	   = GetGeometry()[i].GetDof(DISPLACEMENT_X).EquationId();
+        rResult[index + 1] = GetGeometry()[i].GetDof(DISPLACEMENT_Y).EquationId();
+        rResult[index + 2] = GetGeometry()[i].GetDof(DISPLACEMENT_Z).EquationId();
+    }
+ 
 }
 
 //************************************************************************************
@@ -681,6 +808,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateMembraneBOperator(
     unsigned int strain_size = 3;
     unsigned int mat_size = dim*number_of_ctrl_points;
 
+
     if( Bm.size1() != strain_size || Bm.size2() != mat_size)
         Bm.resize(strain_size, mat_size);
 
@@ -798,7 +926,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::GetValueOnIntegrationPoints( 
         return;
     }
 
-    if( rVariable == INTEGRATION_POINT_GLOBAL )
+    /*if( rVariable == INTEGRATION_POINT_GLOBAL )
     {
         const GeometryType::IntegrationPointsArrayType& integration_points =
                 GetGeometry().IntegrationPoints( mThisIntegrationMethod );
@@ -809,9 +937,9 @@ void KinematicLinearKirchoffLoveIsogeometricShell::GetValueOnIntegrationPoints( 
         }
 
         return;
-    }
+    }*/
 
-    if( rVariable == INTEGRATION_POINT_LOCAL )
+    /*if( rVariable == INTEGRATION_POINT_LOCAL )
     {
         const GeometryType::IntegrationPointsArrayType& integration_points =
                 GetGeometry().IntegrationPoints( mThisIntegrationMethod );
@@ -822,7 +950,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::GetValueOnIntegrationPoints( 
         }
 
         return;
-    }
+    }*/
 }
 
 //************************************************************************************
@@ -854,7 +982,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::GetValueOnIntegrationPoints( 
             rValues[i] = 0.5 * inner_prod(StrainList[i], StressList[i]);
         }
     }
-    else if( rVariable == JACOBIAN_0 )
+    /*else if( rVariable == JACOBIAN_0 )
     {
         // initializing the Jacobian in the reference configuration
         GeometryType::JacobiansType J0;
@@ -873,8 +1001,8 @@ void KinematicLinearKirchoffLoveIsogeometricShell::GetValueOnIntegrationPoints( 
             Matrix JtJ = prod(trans(J0[i]), J0[i]); // TODO check this
             rValues[i] = sqrt(MathUtils<double>::Det(JtJ));
         }
-    }
-    else if( rVariable == INTEGRATION_WEIGHT )
+    }*/
+    /*else if( rVariable == INTEGRATION_WEIGHT )
     {
         const GeometryType::IntegrationPointsArrayType& integration_points = GetGeometry().IntegrationPoints( mThisIntegrationMethod );
         for( unsigned int i = 0; i < rValues.size(); ++i )
@@ -888,7 +1016,7 @@ void KinematicLinearKirchoffLoveIsogeometricShell::GetValueOnIntegrationPoints( 
         {
             rValues[i] = this->GetValue(MATERIAL_DENSITY);
         }
-    }
+    }*/
     else
     {
         //reading integration points and local gradients
@@ -922,5 +1050,91 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateOnIntegrationPoints(
 {
     this->GetValueOnIntegrationPoints(rVariable, rValues, rCurrentProcessInfo);
 }
+
+/*int KinematicLinearKirchoffLoveIsogeometricShell::Check(const Kratos::ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_TRY
+        
+        KRATOS_WATCH("At Check")
+        
+        unsigned int dimension = this->mpIsogeometricGeometry->WorkingSpaceDimension();
+
+        //verify valid id
+        if (this->Id() < 1)
+        {
+            KRATOS_THROW_ERROR(std::logic_error, "Invalid element ->", this->Id());
+        }
+
+        //verify valid domain size
+        #ifndef IGNORE_NEGATIVE_JACOBIAN
+        if (mTotalDomainInitialSize < 0)
+        {
+            std::stringstream ss;
+            ss << "error on element -> " << this->Id() << ": ";
+            ss << "Domain size can not be less than 0. Please check Jacobian. mTotalDomainInitialSize = " << mTotalDomainInitialSize;
+            KRATOS_THROW_ERROR(std::logic_error, ss.str(), "");
+        }
+        #endif
+
+        //verify that the constitutive law exists
+        if (this->GetProperties().Has(CONSTITUTIVE_LAW) == false)
+        {
+            KRATOS_THROW_ERROR(std::logic_error,
+                    "constitutive law not provided for property ",
+                    this->GetProperties().Id());
+        }
+
+        //verify that the constitutive law has the correct dimension
+        if (dimension == 2)
+        {
+            if (this->GetProperties().Has(THICKNESS) == false)
+                KRATOS_THROW_ERROR(std::logic_error,
+                        "THICKNESS not provided for element", this->Id());
+        }
+
+        //check constitutive law
+        int ok = 0;
+        for (unsigned int i = 0; i < mConstitutiveLawVector.size(); ++i)
+        {
+            ok = mConstitutiveLawVector[i]->Check(GetProperties(),
+                    (*mpIsogeometricGeometry), rCurrentProcessInfo);
+            if (ok != 0)
+            {
+                KRATOS_THROW_ERROR(std::logic_error, "Something wrong with the consitutive law", i)
+            }
+                
+//			if( mConstitutiveLawVector[i]->IsIncremental() )
+//				KRATOS_THROW_ERROR( std::logic_error, "This element does not provide incremental strains!", "" );
+//			if( mConstitutiveLawVector[i]->GetStrainMeasure() != ConstitutiveLaw::StrainMeasure_Linear )
+//				KRATOS_THROW_ERROR( std::logic_error, "This element formulated in linear strain measure", "" );
+//			if( mConstitutiveLawVector[i]->GetStressMeasure() != ConstitutiveLaw::StressMeasure_PK1 )
+//				KRATOS_THROW_ERROR( std::logic_error, "This element is formulated in PK1 stresses", "" );
+        }
+        
+        //check Jacobian (just for debugging)
+        //check Jacobian  should be detected by Area() ot Volume()
+//        #ifdef CHECK_JACOBIAN
+//        GeometryType::CoordinatesArrayType P;
+//        
+//        P[0] = 0.0;
+//        P[1] = 0.0;
+//        P[2] = 0.0;
+//        
+//        double J0 = mpIsogeometricGeometry->DeterminantOfJacobian( P );
+//        
+//        if(J0 < 0.0)
+//        {
+//            KRATOS_THROW_ERROR(std::logic_error, "Negative Jacobian is detected", __FUNCTION__)
+//        }
+//        #endif
+
+//        KRATOS_WATCH("Check completed")
+
+        return ok;
+
+    KRATOS_CATCH( "" );
+
+}*/
+
 
 } // Namespace Kratos
