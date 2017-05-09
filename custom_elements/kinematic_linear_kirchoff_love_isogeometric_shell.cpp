@@ -712,9 +712,9 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateBendingBOperator(
      // bending Bb operator
      //////// covariant of unit normal base vector
      array_1d<double,3> G3; 
-     MathUtils<double>::CrossProduct(G3,G1,G2);
-     G3 /= norm_2(G3);
-
+     array_1d<double,3> G1xG2;
+     MathUtils<double>::CrossProduct(G1xG2,G1,G2);
+     G3 = G1xG2/norm_2(G1xG2);
      //////// compute G1,1 ; G1,2 ; G2,2
      /*array_1d<double,3> G11 ;
      array_1d<double,3> G12 ;
@@ -757,12 +757,12 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateBendingBOperator(
      {
          for(unsigned int j=0; j< dim; j++)
          {
-             Bb(0, i*dim+j) = -D2N_De2[i](0,0)*G3(j) + ( 1/norm_2(G3) )*( DN_De(i,0)*G11xG2(j) + DN_De(i,1)*G1xG11(j) ) 
-                                + inner_prod(G3, G11)/norm_2(G3)*( DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG1(j) );
-             Bb(1, i*dim+j) = -D2N_De2[i](1,1)*G3(j) + ( 1/norm_2(G3) )*( DN_De(i,0)*G22xG2(j) + DN_De(i,1)*G1xG22(j) ) 
-                                + inner_prod(G3, G22)/norm_2(G3)*( DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG1(j) );
-             Bb(2, i*dim+j) = -2*D2N_De2[i](0,1)*G3(j) + 2*( 1/norm_2(G3) )*( DN_De(i,0)*G12xG2(j) + DN_De(i,1)*G1xG12(j) ) 
-                                + 2*inner_prod(G3, G12)/norm_2(G3)*( DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG1(j) );
+             Bb(0, i*dim+j) = -D2N_De2[i](0,0)*G3(j) + ( 1/norm_2(G1xG2) )*( DN_De(i,0)*G11xG2(j) + DN_De(i,1)*G1xG11(j)  
+                                + inner_prod(G3, G11)*( DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG1(j) ) );
+             Bb(1, i*dim+j) = -D2N_De2[i](1,1)*G3(j) + ( 1/norm_2(G1xG2) )*( DN_De(i,0)*G22xG2(j) + DN_De(i,1)*G1xG22(j)  
+                                + inner_prod(G3, G22)*(  DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG1(j) ) );
+             Bb(2, i*dim+j) = -2*D2N_De2[i](0,1)*G3(j) + 2*( 1/norm_2(G1xG2) )*( DN_De(i,0)*G12xG2(j) + DN_De(i,1)*G1xG12(j)  
+                                + 2*inner_prod(G3, G12)*( DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG1(j) ) );
          }
      }
 }// Bending B operator
