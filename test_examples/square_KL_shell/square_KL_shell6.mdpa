@@ -1,0 +1,69 @@
+//KRATOS isogeometric application data file
+//(c) 2017 Hoang-Giang Bui, Ruhr-University Bochum
+//This file is created at 9/4/17 19:8:31
+
+Begin ModelPartData
+End ModelPartData
+
+Begin Properties 1
+NUM_IGA_INTEGRATION_METHOD	2
+End Properties
+
+Begin Nodes
+1 0 0 0
+2 50 0 0
+3 100 0 0
+4 0 50 0
+5 50 50 0
+6 100 50 0
+7 0 100 0
+8 50 100 0
+9 100 100 0
+End Nodes
+
+Begin BezierBlock 
+    Begin IsogeometricBezierData 
+        1 9 2 3 2 2 0
+        [9](1,1,1,1,1,1,1,1,1)
+        MCSR
+        [2,10]((10,10,10,10,10,10,10,10,10,10),(1,1,1,1,1,1,1,1,1,0))
+
+    End IsogeometricBezierData
+
+    Begin ElementsWithGeometry KinematicLinearKirchoffLoveIsogeometricShellBezier2D3
+        1 1 1 1 4 7 2 5 8 3 6 9
+    End ElementsWithGeometry
+
+End BezierBlock
+
+Begin ElementalData NUM_DIVISION_1
+1 5
+End ElementalData
+
+Begin ElementalData NUM_DIVISION_2
+1 5
+End ElementalData
+
+Begin BezierBlock 
+    Begin IsogeometricBezierData 
+        1 9 2 3 2 2 0
+        [9](1,1,1,1,1,1,1,1,1)
+        MCSR
+        [2,10]((10,10,10,10,10,10,10,10,10,10),(1,1,1,1,1,1,1,1,1,0))
+
+    End IsogeometricBezierData
+
+    Begin ConditionsWithGeometry FacePressureBezier2D3
+        1 1 1 1 4 7 2 5 8 3 6 9
+    End ConditionsWithGeometry
+
+End BezierBlock
+
+Begin ConditionalData NUM_DIVISION_1
+1 5
+End ConditionalData
+
+Begin ConditionalData NUM_DIVISION_2
+1 5
+End ConditionalData
+
