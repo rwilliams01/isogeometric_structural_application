@@ -193,31 +193,31 @@ class Model:
 #        pressure_water.write(str(time)+"/"+str(model_part.Nodes[layer_nodes_sets['side'][i]].GetZ())+"/"+str(model_part.Nodes[layer_nodes_sets['side'][i]].GetSolutionStepValue(WATER_PRESSURE))+"\n")
 #
             
-    def WriteOutput( self, time ):
-        if self.generate_post_model_part == False:
-            print ('Before GenerateModelPart')
-            self.isogeometric_post_utility.GenerateModelPart(self.model_part_post, PostElementType.Quadrilateral)
-            self.isogeometric_post_utility.GenerateModelPart2(self.model_part_post)
-            self.generate_post_model_part = True
-            print ('Generate PostModelPart completed')
-        if self.generate_post_model_part == True:
-            self.isogeometric_post_utility.TransferNodalResults(DISPLACEMENT, self.model_part_post)
-            self.isogeometric_post_utility.TransferNodalResults(REACTION, self.model_part_post)
-            self.isogeometric_post_utility.TransferIntegrationPointResults(STRESSES, self.model_part_post, self.solver_post)
-            print ('Synchronize PostModelPart completed')
-        self.gid_io.InitializeMesh( time )
-        post_mesh = self.model_part_post.GetMesh()
-        print(post_mesh)
-        self.gid_io.WriteNodeMesh( post_mesh )
-        self.gid_io.WriteMesh( post_mesh )
-        print("mesh written...")
-        self.gid_io.FinalizeMesh()
-        self.gid_io.InitializeResults( time, post_mesh )
-        print("write nodal displacements")
-        self.gid_io.WriteNodalResults(DISPLACEMENT, self.model_part_post.Nodes, time, 0)
-        self.gid_io.WriteNodalResults(REACTION, self.model_part_post.Nodes, time, 0)
-        self.gid_io.WriteNodalResults(STRESSES, self.model_part_post.Nodes, time, 0)
-        self.gid_io.FinalizeResults()
+#    def WriteOutput( self, time ):
+#        if self.generate_post_model_part == False:
+#            print ('Before GenerateModelPart')
+#            self.isogeometric_post_utility.GenerateModelPart(self.model_part_post, PostElementType.Quadrilateral)
+#            self.isogeometric_post_utility.GenerateModelPart2(self.model_part_post)
+#            self.generate_post_model_part = True
+#            print ('Generate PostModelPart completed')
+#        if self.generate_post_model_part == True:
+#            self.isogeometric_post_utility.TransferNodalResults(DISPLACEMENT, self.model_part_post)
+#            self.isogeometric_post_utility.TransferNodalResults(REACTION, self.model_part_post)
+#            self.isogeometric_post_utility.TransferIntegrationPointResults(STRESSES, self.model_part_post, self.solver_post)
+#            print ('Synchronize PostModelPart completed')
+#        self.gid_io.InitializeMesh( time )
+#        post_mesh = self.model_part_post.GetMesh()
+#        print(post_mesh)
+        #self.gid_io.WriteNodeMesh( post_mesh )
+#        self.gid_io.WriteMesh( post_mesh )
+#        print("mesh written...")
+#        self.gid_io.FinalizeMesh()
+#        self.gid_io.InitializeResults( time, post_mesh )
+#        print("write nodal displacements")
+#        self.gid_io.WriteNodalResults(DISPLACEMENT, self.model_part_post.Nodes, time, 0)
+#        self.gid_io.WriteNodalResults(REACTION, self.model_part_post.Nodes, time, 0)
+#        self.gid_io.WriteNodalResults(STRESSES, self.model_part_post.Nodes, time, 0)
+#        self.gid_io.FinalizeResults()
                 
     def InitializeModel( self ):
         ##################################################################
@@ -228,7 +228,7 @@ class Model:
         
         self.model_part.Properties[1].SetValue(CONSTITUTIVE_LAW, PlaneStress() )
         self.model_part.Properties[1].SetValue(THICKNESS, 3.0 )
-        self.model_part.Properties[1].SetValue(PRESSURE, 1.0 )
+        self.model_part.Properties[1].SetValue(PRESSURE, -1.0 )
         self.model_part.Properties[1].SetValue(YOUNG_MODULUS,3.0000e+6)
         self.model_part.Properties[1].SetValue(POISSON_RATIO,0.3 )
         self.model_part.Properties[1].SetValue(INITIAL_PENALTY,1.0e+7)
