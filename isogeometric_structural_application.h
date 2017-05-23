@@ -36,6 +36,7 @@
 #include "custom_conditions/face_pressure_isogeometric.h"
 #include "custom_conditions/slave_contact_face_3D_isogeometric.h"
 #include "custom_conditions/master_contact_face_3D_isogeometric.h"
+#include "custom_conditions/penalty_stiffness_shell.h"
 #include "isogeometric_application/custom_geometries/geo_1d_nurbs.h"
 #include "isogeometric_application/custom_geometries/geo_2d_nurbs.h"
 #include "isogeometric_application/custom_geometries/geo_3d_nurbs.h"
@@ -231,6 +232,7 @@ namespace Kratos
         const UnsaturatedSoilsElement_2phase_SmallStrain mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D;
         const KinematicLinearKirchoffLoveIsogeometricShell mKinematicLinearKirchoffLoveIsogeometricShellBezier2D3;
 
+        const PenaltyStiffnessShell mPenaltyStiffnessShell3D2N;
 
         ///@}
         ///@name Private Operators

@@ -24,6 +24,7 @@ set( KRATOS_APPNAME_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric_2d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_load_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_pressure_isogeometric.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/penalty_stiffness_shell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/master_contact_face_3D_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/slave_contact_face_3D_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/contact_link_3D_kinematic_linear_isogeometric.cpp

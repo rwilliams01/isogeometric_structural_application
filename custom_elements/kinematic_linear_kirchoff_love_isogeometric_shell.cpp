@@ -15,9 +15,7 @@
 #include "structural_application/custom_utilities/sd_math_utils.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
-#include<iostream>
-using namespace std;
-//#define DEBUG_DKGQ
+
 
 namespace Kratos
 {
@@ -457,6 +455,13 @@ void KinematicLinearKirchoffLoveIsogeometricShell::CalculateAll( MatrixType& rLe
         /* D2N_De2[i](D2N_Dxi2, D2N_Dxieta; D2N_Detaxi, D2N_Deta2]*/
         ShapeFunctionsSecondDerivativesType D2N_De2;
         D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);
+
+        //std::cout << "at point " << PointNumber << ":" << std::endl;
+        //KRATOS_WATCH(integration_points[PointNumber])
+        //KRATOS_WATCH(Ncontainer)
+        //KRATOS_WATCH(DN_De)
+        //KRATOS_WATCH(D2N_De2)
+        //std::cout << "----------------------------" << std::endl;
 
         //////// Bb
         Matrix Bb(strain_size, mat_size);

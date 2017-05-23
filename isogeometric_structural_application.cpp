@@ -16,6 +16,7 @@
 // Project includes
 #include "isogeometric_structural_application.h"
 #include "geometries/geometry.h"
+#include "geometries/line_3d_2.h"
 #include "isogeometric_application/custom_geometries/geo_1d_bezier.h"
 #include "isogeometric_application/custom_geometries/geo_2d_bezier.h"
 #include "isogeometric_application/custom_geometries/geo_2d_bezier_3.h"
@@ -50,6 +51,7 @@ namespace Kratos
     , mTotalLagrangianBezier3D( 0, Element::GeometryType::Pointer( new Geo3dBezier<Node<3> >() ) )
     , mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D( 0, Element::GeometryType::Pointer( new Geo3dBezier<Node<3> >() ) )
     , mKinematicLinearKirchoffLoveIsogeometricShellBezier2D3( 0, Element::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mPenaltyStiffnessShell3D2N( 0, Element::GeometryType::Pointer( new Line3D2<Node<3> >( Element::GeometryType::PointsArrayType( 2, Node<3>() ) ) ) )
     {}
 
     void KratosIsogeometricStructuralApplication::Register()
@@ -86,6 +88,7 @@ namespace Kratos
         KRATOS_REGISTER_CONDITION( "FacePressureBezier2D3", mFacePressureBezier2D3 )
         KRATOS_REGISTER_CONDITION( "MasterContactFaceBezier2D3", mMasterContactFaceBezier2D3 )
         KRATOS_REGISTER_CONDITION( "SlaveContactFaceBezier2D3", mSlaveContactFaceBezier2D3 )
+        KRATOS_REGISTER_CONDITION( "PenaltyStiffnessShell3D2N", mPenaltyStiffnessShell3D2N )
     }
 
 } // namespace Kratos

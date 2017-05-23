@@ -1062,7 +1062,7 @@ Begin ConditionalData NUM_DIVISION_2
 48 5
 End ConditionalData
 
-Begin Conditions PenaltyStiffnessShell
+Begin Conditions PenaltyStiffnessShell3D2N
 1 1  1 15
 2 1  2 16
 3 1  3 17
