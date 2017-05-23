@@ -255,18 +255,16 @@ void PenaltyStiffnessShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
     unsigned int mat_size = 6;
 
     //resizing as needed the LHS
+    if ( rLeftHandSideMatrix.size1() != mat_size )
+        rLeftHandSideMatrix.resize( mat_size, mat_size, false );
 
-        if ( rLeftHandSideMatrix.size1() != mat_size )
-            rLeftHandSideMatrix.resize( mat_size, mat_size, false );
-
-        noalias( rLeftHandSideMatrix ) = ZeroMatrix( mat_size, mat_size ); //resetting LHS
+    noalias( rLeftHandSideMatrix ) = ZeroMatrix( mat_size, mat_size ); //resetting LHS
 
     //resizing as needed the RHS
+    if ( rRightHandSideVector.size() != mat_size )
+        rRightHandSideVector.resize( mat_size, false );
 
-        if ( rRightHandSideVector.size() != mat_size )
-            rRightHandSideVector.resize( mat_size, false );
-
-        rRightHandSideVector = ZeroVector( mat_size ); //resetting RHS
+    rRightHandSideVector = ZeroVector( mat_size ); //resetting RHS
 
      // Current displacements
      Matrix CurrentDisp(number_of_nodes, 3);
@@ -279,31 +277,22 @@ void PenaltyStiffnessShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
         for(unsigned int j = 0; j < 3; ++j)
              DispVector(i*3+j) = CurrentDisp(i,j);
 
-
-    const double& W = pow(10,7);//GetProperties()[INITIAL_PENALTY];
-    KRATOS_WATCH(W)
-
+    const double& W = GetProperties()[INITIAL_PENALTY];
  
-    //rLeftHandSideMatrix(0,0) = W;
-    //rLeftHandSideMatrix(0,3) = -W;
-    //rLeftHandSideMatrix(1,1) = W;
-    //rLeftHandSideMatrix(1,4) = -W;
+    rLeftHandSideMatrix(0,0) = W;
+    rLeftHandSideMatrix(0,3) = -W;
+    rLeftHandSideMatrix(1,1) = W;
+    rLeftHandSideMatrix(1,4) = -W;
     rLeftHandSideMatrix(2,2) = W;
     rLeftHandSideMatrix(2,5) = -W;
-    //rLeftHandSideMatrix(3,0) = -W;
-    //rLeftHandSideMatrix(3,3) = W;
-    //rLeftHandSideMatrix(4,1) = -W;
-    //rLeftHandSideMatrix(4,4) = W;
+    rLeftHandSideMatrix(3,0) = -W;
+    rLeftHandSideMatrix(3,3) = W;
+    rLeftHandSideMatrix(4,1) = -W;
+    rLeftHandSideMatrix(4,4) = W;
     rLeftHandSideMatrix(5,2) = -W;
     rLeftHandSideMatrix(5,5) = W;
 
-
     noalias(rRightHandSideVector) = -prod(rLeftHandSideMatrix,DispVector);
-
- 
-
-    
-
 
     KRATOS_CATCH( "" )
 }

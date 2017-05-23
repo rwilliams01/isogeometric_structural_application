@@ -60,147 +60,83 @@ model.Solve(time, 0, 0, 0, 0)
 R0 = 100.0
 tol = 1.0e-5
 for node in model.model_part.Nodes:
-    if abs(node.X0- model.model_part.Nodes[1].X0) < tol and abs(node.Y0- model.model_part.Nodes[1].Y0) < tol:
+    if abs(node.X0-100) < tol and abs(node.Y0) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[2].X0) < tol and abs(node.Y0- model.model_part.Nodes[2].Y0) < tol:
+    if abs(node.X0-108.333333) < tol and abs(node.Y0) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[15].X0) < tol and abs(node.Y0- model.model_part.Nodes[15].Y0) < tol:
+    if abs(node.X0-100) < tol and abs(node.Y0-9.174737) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[16].X0) < tol and abs(node.Y0- model.model_part.Nodes[16].Y0) < tol:
+    if abs(node.X0-108.333333) < tol and abs(node.Y0-9.939298) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[29].X0) < tol and abs(node.Y0- model.model_part.Nodes[29].Y0) < tol:
+    if abs(node.X0-96.560154) < tol and abs(node.Y0-27.763231) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[30].X0) < tol and abs(node.Y0- model.model_part.Nodes[30].Y0) < tol:
+    if abs(node.X0-104.606833) < tol and abs(node.Y0-30.076834) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[43].X0) < tol and abs(node.Y0- model.model_part.Nodes[43].Y0) < tol:
+    if abs(node.X0-89.247117) < tol and abs(node.Y0-46.235586) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[44].X0) < tol and abs(node.Y0- model.model_part.Nodes[44].Y0) < tol:
+    if abs(node.X0-96.684377 ) < tol and abs(node.Y0-50.088551) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[57].X0) < tol and abs(node.Y0- model.model_part.Nodes[57].Y0) < tol:
+    if abs(node.X0-78.033009) < tol and abs(node.Y0-63.388348) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[58].X0) < tol and abs(node.Y0- model.model_part.Nodes[58].Y0) < tol:
+    if abs(node.X0-84.535759) < tol and abs(node.Y0-68.67071) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[71].X0) < tol and abs(node.Y0- model.model_part.Nodes[71].Y0) < tol:
+    if abs(node.X0-63.388348) < tol and abs(node.Y0-78.033009) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[72].X0) < tol and abs(node.Y0- model.model_part.Nodes[72].Y0) < tol:
+    if abs(node.X0-68.67071) < tol and abs(node.Y0-84.535759) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[85].X0) < tol and abs(node.Y0- model.model_part.Nodes[85].Y0) < tol:
+    if abs(node.X0-46.235586) < tol and abs(node.Y0-89.247117) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[86].X0) < tol and abs(node.Y0- model.model_part.Nodes[86].Y0) < tol:
+    if abs(node.X0-50.088551) < tol and abs(node.Y0-96.684377) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[99].X0) < tol and abs(node.Y0- model.model_part.Nodes[99].Y0) < tol:
+    if abs(node.X0-27.763231) < tol and abs(node.Y0-96.560154) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[100].X0) < tol and abs(node.Y0- model.model_part.Nodes[100].Y0) < tol:
+    if abs(node.X0-30.076834) < tol and abs(node.Y0-104.606833) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[113].X0) < tol and abs(node.Y0- model.model_part.Nodes[113].Y0) < tol:
+    if abs(node.X0-9.174737) < tol and abs(node.Y0-100) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[114].X0) < tol and abs(node.Y0- model.model_part.Nodes[114].Y0) < tol:
+    if abs(node.X0-9.939298) < tol and abs(node.Y0-108.333333) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[127].X0) < tol and abs(node.Y0- model.model_part.Nodes[127].Y0) < tol:
+    if abs(node.X0-0.0) < tol and abs(node.Y0-100) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[128].X0) < tol and abs(node.Y0- model.model_part.Nodes[128].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[141].X0) < tol and abs(node.Y0- model.model_part.Nodes[141].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[142].X0) < tol and abs(node.Y0- model.model_part.Nodes[142].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[155].X0) < tol and abs(node.Y0- model.model_part.Nodes[155].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[156].X0) < tol and abs(node.Y0- model.model_part.Nodes[156].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[169].X0) < tol and abs(node.Y0- model.model_part.Nodes[169].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[170].X0) < tol and abs(node.Y0- model.model_part.Nodes[170].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[183].X0) < tol and abs(node.Y0- model.model_part.Nodes[183].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[184].X0) < tol and abs(node.Y0- model.model_part.Nodes[184].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[197].X0) < tol and abs(node.Y0- model.model_part.Nodes[197].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[198].X0) < tol and abs(node.Y0- model.model_part.Nodes[198].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[211].X0) < tol and abs(node.Y0- model.model_part.Nodes[211].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[212].X0) < tol and abs(node.Y0- model.model_part.Nodes[212].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[225].X0) < tol and abs(node.Y0- model.model_part.Nodes[225].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[226].X0) < tol and abs(node.Y0- model.model_part.Nodes[226].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[239].X0) < tol and abs(node.Y0- model.model_part.Nodes[239].Y0) < tol:
-        node.Fix( DISPLACEMENT_X )
-        node.Fix( DISPLACEMENT_Y )
-        node.Fix( DISPLACEMENT_Z )
-    if abs(node.X0- model.model_part.Nodes[240].X0) < tol and abs(node.Y0- model.model_part.Nodes[240].Y0) < tol:
+    if abs(node.X0-0.0) < tol and abs(node.Y0-108.333333) < tol:
         node.Fix( DISPLACEMENT_X )
         node.Fix( DISPLACEMENT_Y )
         node.Fix( DISPLACEMENT_Z )
