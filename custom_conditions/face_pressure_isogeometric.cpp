@@ -62,7 +62,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
 
-#define ENABLE_PROFILING
+//#define ENABLE_PROFILING
 
 namespace Kratos
 {
@@ -301,6 +301,7 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     double P = this->GetValue(PRESSURE);
 //    KRATOS_WATCH(P)
 //    KRATOS_WATCH(Ncontainer)
+
     for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber )
     {
         t1 = ZeroVector( 3 );//first tangential vector
@@ -333,7 +334,7 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 //        KRATOS_WATCH(Load)
 //        KRATOS_WATCH(IntegrationWeight)
 //        KRATOS_WATCH(dA)
-        
+
         // RIGHT HAND SIDE VECTOR
         if ( CalculateResidualVectorFlag == true ) //calculation of the matrix is required
         {
@@ -344,7 +345,8 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
         }
     }
 
-//    KRATOS_WATCH(rRightHandSideVector)
+//    if(CalculateResidualVectorFlag)
+//        KRATOS_WATCH(rRightHandSideVector)
 
     #ifdef ENABLE_BEZIER_GEOMETRY
     //initialize the geometry
@@ -355,3 +357,6 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 }
 
 } // Namespace Kratos.
+
+#undef ENABLE_PROFILING
+

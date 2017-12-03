@@ -29,9 +29,12 @@
 #include "custom_elements/kinematic_linear_isogeometric.h"
 #include "custom_elements/total_lagrangian_isogeometric.h"
 #include "custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.h"
-#include "custom_elements/kinematic_linear_kirchoff_love_isogeometric_shell.h"
+#include "custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell.h"
+#include "custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell_rev2.h"
+#include "custom_elements/K_L_large_deformation_shell.h"
 #include "custom_conditions/line_force_isogeometric.h"
 #include "custom_conditions/line_force_isogeometric_2d.h"
+#include "custom_conditions/line_pressure_isogeometric_2d.h"
 #include "custom_conditions/face_load_isogeometric.h"
 #include "custom_conditions/face_pressure_isogeometric.h"
 #include "custom_conditions/slave_contact_face_3D_isogeometric.h"
@@ -47,6 +50,14 @@
 #include "structural_application/custom_elements/kinematic_linear.h"
 #include "structural_application/custom_elements/total_lagrangian.h"
 #include "structural_application/custom_elements/unsaturated_soils_element_2phase_small_strain.h"
+#include "structural_application/custom_conditions/elastic_constraint.h"
+#ifdef PLATE_AND_SHELL_APPLICATION_IS_ON
+#include "plate_and_shell_application/custom_elements/kirchhoff_love_linear_shell.h"
+#ifdef PLATE_AND_SHELL_APPLICATION_USE_ADOL_C
+#include "plate_and_shell_application/custom_elements/kirchhoff_love_shell_ad.h"
+#include "plate_and_shell_application/custom_elements/kirchhoff_love_shell_2_ad.h"
+#endif
+#endif
 
 namespace Kratos
 {
@@ -78,7 +89,7 @@ namespace Kratos
     public:
         ///@name Type Definitions
         ///@{
-        
+
         /// Pointer definition of KratosMultiphaseApplication
         KRATOS_CLASS_POINTER_DEFINITION(KratosIsogeometricStructuralApplication);
 
@@ -199,7 +210,7 @@ namespace Kratos
         ///@name Member Variables
         ///@{
 
-
+        // element with old interface
 //        const KinematicLinearNURBS mKinematicLinearGeo1dNURBS; //TODO: doesn't work, segmentation fault error
 //        const KinematicLinearNURBS mKinematicLinearGeo2dNURBS;
 //        const KinematicLinearNURBS mKinematicLinearGeo3dNURBS;
@@ -211,11 +222,15 @@ namespace Kratos
         const KinematicLinearIsogeometric mKinematicLinearGeo3dBezier;
         const TotalLagrangianIsogeometric mTotalLagrangianGeo3dBezier;
         const UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric mUnsaturatedSoilsElement_2phase_SmallStrain_Geo3dBezier;
+        const KinematicLinearKirchhoffLoveIsogeometricShell mKinematicLinearKirchhoffLoveIsogeometricShellBezier2D3;
+        const KinematicLinearKirchhoffLoveIsogeometricShell mKinematicLinearKirchhoffLoveIsogeometricShellRev2Bezier2D3;
 
         const LineForceIsogeometric mLineLoadNURBS;
         const LineForceIsogeometric2D mLineLoadNURBS2D;
+        const LinePressureIsogeometric2D mLinePressureNURBS2D;
         const LineForceIsogeometric mLineLoadBezier;
         const LineForceIsogeometric2D mLineLoadBezier2D;
+        const LinePressureIsogeometric2D mLinePressureBezier2D;
 
         const FaceLoadIsogeometric mFaceLoadNURBS;
         const FaceLoadIsogeometric mFaceLoadBezier;
@@ -225,12 +240,22 @@ namespace Kratos
         const MasterContactFace3DIsogeometric mMasterContactFaceBezier2D3;
         const SlaveContactFace3DIsogeometric mSlaveContactFaceBezier2D3;
 
+        // the elements below use new interface, which means it exploits the NURBS geometry in the kernel so the element is not needed to modify to work with NURBS
         const KinematicLinear mKinematicLinearBezier2D;
         const KinematicLinear mKinematicLinearBezier3D;
         const KinematicLinear mTotalLagrangianBezier2D;
         const KinematicLinear mTotalLagrangianBezier3D;
         const UnsaturatedSoilsElement_2phase_SmallStrain mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D;
-        const KinematicLinearKirchoffLoveIsogeometricShell mKinematicLinearKirchoffLoveIsogeometricShellBezier2D3;
+        #ifdef PLATE_AND_SHELL_APPLICATION_IS_ON
+        const KirchhoffLoveLinearShell mKirchhoffLoveLinearShellBezier2D3;
+        #ifdef PLATE_AND_SHELL_APPLICATION_USE_ADOL_C
+        const KirchhoffLoveShellAD mKirchhoffLoveShellADBezier2D3;
+        const KirchhoffLoveShell2AD mKirchhoffLoveShell2ADBezier2D3;
+        #endif
+        #endif
+        const KirchhoffLoveLargeDeformationShell mKirchhoffLoveLargeDeformationShellBezier2D3;
+
+        const ElasticConstraint mElasticFaceConstraintBezier2D3;
 
         const PenaltyStiffnessShell mPenaltyStiffnessShell3D2N;
 

@@ -337,3 +337,6 @@ void FaceLoadIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 }
 
 } // Namespace Kratos.
+
+#undef ENABLE_PROFILING
+

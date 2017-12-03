@@ -9,8 +9,13 @@ include_directories( ${CMAKE_SOURCE_DIR}/applications/isogeometric_application )
 include_directories( ${CMAKE_SOURCE_DIR}/applications/structural_application )
 #######################################################################
 
+if(ADOL_C_DIR AND (PLATE_AND_SHELL_APPLICATION MATCHES ON))
+    add_definitions(-DPLATE_AND_SHELL_APPLICATION_IS_ON)
+    add_definitions(-DPLATE_AND_SHELL_APPLICATION_USE_ADOL_C)
+endif()
+
 ######### add compilation units here
-set( KRATOS_APPNAME_APPLICATION_SOURCES
+set( KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_structural_application.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_structural_python_application.cpp
@@ -19,9 +24,15 @@ set( KRATOS_APPNAME_APPLICATION_SOURCES
 #    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_nurbs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/total_lagrangian_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/unsaturated_soils_element_2phase_small_strain_isogeometric.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_kirchoff_love_isogeometric_shell.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell_rev2.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/K_L_large_deformation_shell.cpp
+    )
+
+set( KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES ${KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_force_isogeometric_2d.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/line_pressure_isogeometric_2d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_load_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/face_pressure_isogeometric.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/penalty_stiffness_shell.cpp
@@ -32,9 +43,12 @@ set( KRATOS_APPNAME_APPLICATION_SOURCES
 #######################################################################
 
 ## define library Kratos which defines the basic python interface
-add_library(KratosIsogeometricStructuralApplication SHARED ${KRATOS_APPNAME_APPLICATION_SOURCES})
+add_library(KratosIsogeometricStructuralApplication SHARED ${KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES})
 target_link_libraries(KratosIsogeometricStructuralApplication KratosCore)
 target_link_libraries(KratosIsogeometricStructuralApplication KratosIsogeometricApplication)
+if(PLATE_AND_SHELL_APPLICATION MATCHES ON)
+    target_link_libraries(KratosIsogeometricStructuralApplication KratosPlateAndShellApplication)
+endif()
 target_link_libraries(KratosIsogeometricStructuralApplication KratosStructuralApplication)
 set_target_properties(KratosIsogeometricStructuralApplication PROPERTIES PREFIX "")
 install(TARGETS KratosIsogeometricStructuralApplication DESTINATION libs )

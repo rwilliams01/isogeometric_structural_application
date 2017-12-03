@@ -45,14 +45,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* *********************************************************
 *
 *   Last Modified by:    $Author: hbui $
-*   Date:                $Date: 23 Oct 2014 $
+*   Date:                $Date: 24 Oct 2014 $
 *   Revision:            $Revision: 1.1 $
 *
 * ***********************************************************/
 
 
-#if !defined(KRATOS_ISOGEOMETRIC_APP_LINE_FORCE_ISOGEOMETRIC_H_INCLUDED )
-#define  KRATOS_ISOGEOMETRIC_APP_LINE_FORCE_ISOGEOMETRIC_H_INCLUDED
+#if !defined(KRATOS_LINE_PRESSURE_ISOGEOMETRIC_2D_H_INCLUDED )
+#define  KRATOS_LINE_PRESSURE_ISOGEOMETRIC_2D_H_INCLUDED
 
 
 // System includes
@@ -66,80 +66,72 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "includes/condition.h"
 #include "includes/ublas_interface.h"
 #include "includes/variables.h"
-#include "isogeometric_application/custom_geometries/isogeometric_geometry.h"
+#include "isogeometric_application/custom_geometries/geo_1d_nurbs.h"
+#include "custom_conditions/line_force_isogeometric.h"
 
 namespace Kratos
 {
 
-extern Variable<array_1d<double, 3> > FACE_LOAD;
 
 /*
- * Implement tht force on line condition in 3D. The force at the integration point is interpolated from the FACE_LOAD value at the control points.
- * Therefore this condition works in both 2D and 3D. In 2D, the thickness is not incorporated. If thickness must be accounted, use LineForceIsogeometric2D.
+ * This condition reflects a constant pressure field along a line in 2D. Thickness is incorporated in computing the nodal load.
  */
-class LineForceIsogeometric : public Condition
+class LinePressureIsogeometric2D : public LineForceIsogeometric
 {
 public:
     
+    typedef LineForceIsogeometric BaseType;
+    
     typedef GeometryData::IntegrationMethod IntegrationMethod;
     
-    typedef IsogeometricGeometry<GeometryType::PointType> IsogeometricGeometryType;
+    typedef Geo1dNURBS<GeometryType::PointType> Geo1dNURBSType;
 
-    // Counted pointer of LineForceIsogeometric
-    KRATOS_CLASS_POINTER_DEFINITION( LineForceIsogeometric );
+    // Counted pointer of LinePressureIsogeometric2D
+    KRATOS_CLASS_POINTER_DEFINITION( LinePressureIsogeometric2D );
 
     // Constructor void
-    LineForceIsogeometric();
+    LinePressureIsogeometric2D();
 
     // Constructor using an array of nodes
-    LineForceIsogeometric( IndexType NewId, GeometryType::Pointer pGeometry );
+    LinePressureIsogeometric2D( IndexType NewId, GeometryType::Pointer pGeometry );
 
     // Constructor using an array of nodes with properties
-    LineForceIsogeometric( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties );
+    LinePressureIsogeometric2D( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties );
 
     // Destructor
-    virtual ~LineForceIsogeometric();
+    virtual ~LinePressureIsogeometric2D();
 
     // Name Operations
+
+    virtual Condition::Pointer Create(
+        IndexType NewId,
+        NodesArrayType const& ThisNodes,
+        PropertiesType::Pointer pProperties ) const;
 
     virtual Condition::Pointer Create(
         IndexType NewId,
         GeometryType::Pointer pGeom,
         PropertiesType::Pointer pProperties ) const;
 
-    virtual void Initialize();
-    
-    virtual void EquationIdVector(
-        EquationIdVectorType& rResult,
-        ProcessInfo& rCurrentProcessInfo );
-
     virtual void GetDofList(
         DofsVectorType& ElementalDofList,
         ProcessInfo& rCurrentProcessInfo );
-
-    virtual void CalculateLocalSystem(
-        MatrixType& rLeftHandSideMatrix,
-        VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo );
-
+    
+    //inherited from LineForceIsogeometric
+//    virtual void Initialize();
+    
 protected:
 
-    IntegrationMethod mThisIntegrationMethod;
-    
-    IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
-
-    virtual void CalculateAll( MatrixType& rLeftHandSideMatrix,
-                   VectorType& rRightHandSideVector,
-                   const ProcessInfo& rCurrentProcessInfo,
-                   bool CalculateStiffnessMatrixFlag,
-                   bool CalculateResidualVectorFlag );
-
+    //overridden from LineLoad
+    virtual void CalculateAll(
+        MatrixType& rLeftHandSideMatrix,
+        VectorType& rRightHandSideVector,
+        const ProcessInfo& rCurrentProcessInfo,
+        bool CalculateStiffnessMatrixFlag,
+        bool CalculateResidualVectorFlag );
+        
 private:
     ///@name Static Member Variables
-
-    /// privat variables
-    
-    // privat name Operations
 
 
     ///@}
@@ -160,8 +152,8 @@ private:
         KRATOS_SERIALIZE_LOAD_BASE_CLASS( rSerializer, Condition );
     }
 
-}; // class LineForceIsogeometric.
+}; // class LinePressureIsogeometric2D.
 
 } // namespace Kratos.
 
-#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined 
+#endif // KRATOS_LINE_PRESSURE_ISOGEOMETRIC_2D_H_INCLUDED  defined 

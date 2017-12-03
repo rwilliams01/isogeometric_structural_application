@@ -74,7 +74,7 @@ namespace Kratos
 
 
 /*
- * A customization of LineForceIsogeometric for 2D
+ * This condition is similar to LineForceIsogeometric but the thickness (for 2D simulation) is incorporated.
  */
 class LineForceIsogeometric2D : public LineForceIsogeometric
 {
@@ -108,6 +108,11 @@ public:
         NodesArrayType const& ThisNodes,
         PropertiesType::Pointer pProperties ) const;
 
+    virtual Condition::Pointer Create(
+        IndexType NewId,
+        GeometryType::Pointer pGeom,
+        PropertiesType::Pointer pProperties ) const;
+
     virtual void GetDofList(
         DofsVectorType& ElementalDofList,
         ProcessInfo& rCurrentProcessInfo );
@@ -117,7 +122,7 @@ public:
     
 protected:
 
-    //overrided from LineLoad
+    //overridden from LineLoad
     virtual void CalculateAll(
         MatrixType& rLeftHandSideMatrix,
         VectorType& rRightHandSideVector,

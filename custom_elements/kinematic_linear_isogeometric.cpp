@@ -88,9 +88,9 @@ KinematicLinearIsogeometric::KinematicLinearIsogeometric(IndexType NewId,
         Element(NewId, pGeometry)
 {
     mIsInitialized = false;
-//    mpIsogeometricGeometry = 
+//    mpIsogeometricGeometry =
 //        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
     /*
     Important remarks:
@@ -110,9 +110,9 @@ KinematicLinearIsogeometric::KinematicLinearIsogeometric(IndexType NewId,
         Element(NewId, pGeometry, pProperties)
 {
     mIsInitialized = false;
-//    mpIsogeometricGeometry = 
+//    mpIsogeometricGeometry =
 //        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
@@ -165,9 +165,9 @@ void KinematicLinearIsogeometric::Initialize()
         }
 
         ///////////////////////////////////////////////////////////////
-        // One time initialisation
+        // One time initialization
         ///////////////////////////////////////////////////////////////
-        
+
         ////////////////////Initialize geometry_data/////////////////////////////
 //        KRATOS_WATCH(GetValue(NURBS_KNOTS_1))
 //        KRATOS_WATCH(GetValue(NURBS_KNOTS_2))
@@ -239,10 +239,10 @@ void KinematicLinearIsogeometric::Initialize()
         );
 
         mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
-                        
+
         InitializeJacobian();
         ////////////////////End Initialize geometry_data/////////////////////////////
-        
+
         //Set Up Initial displacement for StressFreeActivation of Elements
         unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
         mInitialDisp.resize(mpIsogeometricGeometry->size(), dim, false);
@@ -436,7 +436,7 @@ void KinematicLinearIsogeometric::CalculateOnIntegrationPoints(
             else if (rVariable == INSITU_STRESS)
             {
                 Vector dummy = row(Output[PointNumber], 0);
-                row(Output[PointNumber], 0) = 
+                row(Output[PointNumber], 0) =
                     mConstitutiveLawVector[PointNumber]->GetValue(
                         INSITU_STRESS, dummy
                     );
@@ -456,7 +456,7 @@ void KinematicLinearIsogeometric::InitializeMaterial()
         //calculating shape functions values
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
@@ -487,13 +487,13 @@ void KinematicLinearIsogeometric::ResetConstitutiveLaw()
         //calculating shape functions values
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
             mThisIntegrationMethod
         );
-        
+
         for (unsigned int i = 0; i < mConstitutiveLawVector.size(); ++i)
         {
             mConstitutiveLawVector[i]->ResetMaterial(
@@ -563,17 +563,17 @@ void KinematicLinearIsogeometric::CalculateAll(MatrixType& rLeftHandSideMatrix,
 
         const GeometryType::IntegrationPointsArrayType& integration_points =
                 mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
-        
+
         //calculating shape function values and local gradients
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
             mThisIntegrationMethod
         );
-        
+
         //Current displacements
         for (unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node)
             noalias(row(CurrentDisp, node)) =
@@ -581,7 +581,7 @@ void KinematicLinearIsogeometric::CalculateAll(MatrixType& rLeftHandSideMatrix,
 
         //auxiliary terms
         Vector BodyForce;
-        
+
         #ifdef DEBUG_LEVEL1
         KRATOS_WATCH(integration_points.size())
         KRATOS_WATCH(mpIsogeometricGeometry->size())
@@ -604,7 +604,7 @@ void KinematicLinearIsogeometric::CalculateAll(MatrixType& rLeftHandSideMatrix,
             noalias(DN_DX) = prod(DN_De[PointNumber], mInvJ0[PointNumber]);
             //Initializing B_Operator at the current integration point
             CalculateBoperator(B, DN_DX);
-            
+
             #ifdef DEBUG_LEVEL1
             KRATOS_WATCH(B)
             #endif
@@ -627,7 +627,7 @@ void KinematicLinearIsogeometric::CalculateAll(MatrixType& rLeftHandSideMatrix,
                 row(Ncontainer, PointNumber), true,
                 (int) CalculateStiffnessMatrixFlag, true
             );
-            
+
             #ifdef DEBUG_LEVEL1
             KRATOS_WATCH(TanC)
             #endif
@@ -650,7 +650,7 @@ void KinematicLinearIsogeometric::CalculateAll(MatrixType& rLeftHandSideMatrix,
                 noalias(rLeftHandSideMatrix) += prod(trans(B), (IntToReferenceWeight * mDetJ0[PointNumber]) * Matrix(prod(TanC, B)));
                 #endif
                 //CalculateStiffnesMatrix(rLeftHandSideMatrix, TanC, msB, Weight, mDetJ0[PointNumber]);
-                
+
                 #ifdef DEBUG_LEVEL1
                 KRATOS_WATCH(integration_points[PointNumber].Weight())
                 KRATOS_WATCH(GetProperties()[THICKNESS])
@@ -723,7 +723,7 @@ void KinematicLinearIsogeometric::CalculateAll(MatrixType& rLeftHandSideMatrix,
                 #endif
             }
         } //loop over integration points
-        
+
         // modify the right hand side to account for prescribed displacement
 //        if(CalculateStiffnessMatrixFlag && CalculateResidualVectorFlag)
 //        {
@@ -749,7 +749,7 @@ void KinematicLinearIsogeometric::CalculateAll(MatrixType& rLeftHandSideMatrix,
 //                }
 //            }
 //        }
-        
+
         #ifdef DEBUG_LEVEL2
         KRATOS_WATCH(rLeftHandSideMatrix)
         #endif
@@ -786,13 +786,13 @@ void KinematicLinearIsogeometric::InitializeSolutionStep(
     //calculating shape functions values
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-    
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
         mThisIntegrationMethod
     );
-    
+
     unsigned int NumberOfIntegrationPoints =
         mpIsogeometricGeometry->IntegrationPointsNumber(mThisIntegrationMethod);
 
@@ -817,17 +817,17 @@ void KinematicLinearIsogeometric::InitializeNonLinearIteration(
         (*mpIsogeometricGeometry)[i].GetSolutionStepValue(REACTION_Y) = 0.0;
         (*mpIsogeometricGeometry)[i].GetSolutionStepValue(REACTION_Z) = 0.0;
     }
-    
+
     //calculating shape functions values
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-    
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
         mThisIntegrationMethod
     );
-    
+
     unsigned int NumberOfIntegrationPoints =
         mpIsogeometricGeometry->IntegrationPointsNumber(mThisIntegrationMethod);
 
@@ -867,13 +867,13 @@ void KinematicLinearIsogeometric::FinalizeNonLinearIteration(
     //calculating shape functions values
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-    
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
         mThisIntegrationMethod
     );
-    
+
     unsigned int NumberOfIntegrationPoints =
         mpIsogeometricGeometry->IntegrationPointsNumber(mThisIntegrationMethod);
 
@@ -885,12 +885,12 @@ void KinematicLinearIsogeometric::FinalizeNonLinearIteration(
     Matrix CurrentDisp(number_of_ctrl_points, dim);
     Vector StrainVector(strain_size);
     Matrix DN_DX(number_of_ctrl_points, dim);
-        
+
     //Current displacements
     for (unsigned int node = 0; node < number_of_ctrl_points; ++node)
         noalias(row(CurrentDisp, node)) =
             (*mpIsogeometricGeometry)[node].GetSolutionStepValue(DISPLACEMENT);
-                
+
     for (unsigned int Point = 0; Point < NumberOfIntegrationPoints; ++Point)
     {
         if(mConstitutiveLawVector[Point]->Has(POST_STRAIN_VECTOR))
@@ -898,14 +898,14 @@ void KinematicLinearIsogeometric::FinalizeNonLinearIteration(
             //Initializing B_Operator at the current integration point
             noalias( DN_DX ) = prod( DN_De[Point], mInvJ0[Point] );
             CalculateBoperator( B, DN_DX );
-                
+
             //calculate strain
             CalculateStrain( B, CurrentDisp, StrainVector );
-                
+
             //set the strain vector to the constitutive law
             mConstitutiveLawVector[Point]->SetValue(POST_STRAIN_VECTOR, StrainVector, CurrentProcessInfo);
         }
-            
+
         mConstitutiveLawVector[Point]->FinalizeNonLinearIteration(
             GetProperties(),
             (*mpIsogeometricGeometry),
@@ -1002,16 +1002,16 @@ void KinematicLinearIsogeometric::MassMatrix(MatrixType& rMassMatrix,
 
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-    
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
         mThisIntegrationMethod
     );
-    
+
     const GeometryType::IntegrationPointsArrayType& integration_points =
         mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
-    
+
     for(unsigned int Point = 0; Point < integration_points.size(); ++Point)
     {
         double IntToReferenceWeight = integration_points[Point].Weight();
@@ -1032,7 +1032,7 @@ void KinematicLinearIsogeometric::DampMatrix(MatrixType& rDampMatrix,
         ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-    
+
         unsigned int number_of_ctrl_points = mpIsogeometricGeometry->size();
         unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
 
@@ -1166,7 +1166,7 @@ void KinematicLinearIsogeometric::EquationIdVector(
 {
     DofsVectorType ElementalDofList;
     GetDofList(ElementalDofList, rCurrentProcessInfo);
-    
+
     if (rResult.size() != ElementalDofList.size())
         rResult.resize(ElementalDofList.size(), false);
 
@@ -1251,7 +1251,7 @@ inline void KinematicLinearIsogeometric::CalculateAndAdd_ExtForceContribution(
 )
 {
     KRATOS_TRY
-    
+
         unsigned int number_of_ctrl_points = mpIsogeometricGeometry->size();
         unsigned int dimension = mpIsogeometricGeometry->WorkingSpaceDimension();
 
@@ -1573,13 +1573,13 @@ void KinematicLinearIsogeometric::GetValueOnIntegrationPoints(
 
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
             mThisIntegrationMethod
         );
-        
+
         // extract current displacements
         for (unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node)
             noalias(row(CurrentDisp, node)) =
@@ -1593,7 +1593,7 @@ void KinematicLinearIsogeometric::GetValueOnIntegrationPoints(
             // compute B_Operator at the current integration point
             noalias(DN_DX) = prod(DN_De[i], mInvJ0[i]);
             CalculateBoperator(B, DN_DX);
-            
+
             // compute the strain at integration point
             CalculateStrain(B, CurrentDisp, StrainVector);
             if(dim == 2)
@@ -1691,13 +1691,13 @@ void KinematicLinearIsogeometric::SetValueOnIntegrationPoints(
         //calculating shape functions values
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
             mThisIntegrationMethod
         );
-    
+
         for (unsigned int i = 0; i < rValues.size(); ++i)
         {
             mConstitutiveLawVector[i] = rValues[i];
@@ -1713,9 +1713,9 @@ void KinematicLinearIsogeometric::SetValueOnIntegrationPoints(
 int KinematicLinearIsogeometric::Check(const Kratos::ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-        
+
         KRATOS_WATCH("At Check")
-        
+
         unsigned int dimension = this->mpIsogeometricGeometry->WorkingSpaceDimension();
 
         //verify valid id
@@ -1761,7 +1761,7 @@ int KinematicLinearIsogeometric::Check(const Kratos::ProcessInfo& rCurrentProces
             {
                 KRATOS_THROW_ERROR(std::logic_error, "Something wrong with the consitutive law", i)
             }
-                
+
 //			if( mConstitutiveLawVector[i]->IsIncremental() )
 //				KRATOS_THROW_ERROR( std::logic_error, "This element does not provide incremental strains!", "" );
 //			if( mConstitutiveLawVector[i]->GetStrainMeasure() != ConstitutiveLaw::StrainMeasure_Linear )
@@ -1769,18 +1769,18 @@ int KinematicLinearIsogeometric::Check(const Kratos::ProcessInfo& rCurrentProces
 //			if( mConstitutiveLawVector[i]->GetStressMeasure() != ConstitutiveLaw::StressMeasure_PK1 )
 //				KRATOS_THROW_ERROR( std::logic_error, "This element is formulated in PK1 stresses", "" );
         }
-        
+
         //check Jacobian (just for debugging)
         //check Jacobian  should be detected by Area() ot Volume()
 //        #ifdef CHECK_JACOBIAN
 //        GeometryType::CoordinatesArrayType P;
-//        
+//
 //        P[0] = 0.0;
 //        P[1] = 0.0;
 //        P[2] = 0.0;
-//        
+//
 //        double J0 = mpIsogeometricGeometry->DeterminantOfJacobian( P );
-//        
+//
 //        if(J0 < 0.0)
 //        {
 //            KRATOS_THROW_ERROR(std::logic_error, "Negative Jacobian is detected", __FUNCTION__)

@@ -65,26 +65,13 @@
 #include "includes/variables.h"
 #include "includes/constitutive_law.h"
 #include "isogeometric_application/custom_geometries/isogeometric_geometry.h"
+#include "structural_application/structural_application.h"
 
 namespace Kratos
 {
 
 ///@name Kratos Globals
 ///@{
-
-extern Variable<Vector> PRESTRESS;
-extern Variable<Vector> PLASTIC_STRAIN_VECTOR;
-extern Variable<Vector> STRESSES;
-extern Variable<Vector> STRAIN;
-extern Variable<double> PRESTRESS_FACTOR;
-extern Variable<double> OVERCONSOLIDATION_RATIO;
-extern Variable<int> PARENT_ELEMENT_ID;
-extern Variable<int> INTEGRATION_POINT_INDEX;
-extern Variable<int> NEIGHBOUR_EXPANSION_LEVEL;
-extern Variable<Vector> RECOVERY_STRESSES;
-extern Variable<int> STRESS_RECOVERY_TYPE;
-extern Variable<Vector> PRE_STRAIN_VECTOR;
-extern Variable<Vector> POST_STRAIN_VECTOR;
 
 ///@}
 ///@name Type Definitions
@@ -122,7 +109,7 @@ public:
     typedef ConstitutiveLawType::Pointer ConstitutiveLawPointerType;
 
     typedef IsogeometricGeometry<GeometryType::PointType> IsogeometricGeometryType;
-    
+
     KRATOS_CLASS_POINTER_DEFINITION( KinematicLinearIsogeometric );
 
     ///@}
@@ -172,7 +159,7 @@ public:
     void InitializeSolutionStep( ProcessInfo& CurrentProcessInfo );
 
     void InitializeNonLinearIteration(ProcessInfo& CurrentProcessInfo);
-    
+
     void FinalizeNonLinearIteration(ProcessInfo& CurrentProcessInfo);
 
     void FinalizeSolutionStep( ProcessInfo& CurrentProcessInfo );
@@ -306,9 +293,9 @@ private:
     ///@}
     ///@name Member Variables
     ///@{
-        
+
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
-    
+
     std::vector<ConstitutiveLaw::Pointer> mConstitutiveLawVector;
 
     IntegrationMethod mThisIntegrationMethod;
@@ -323,7 +310,7 @@ private:
     bool mIsInitialized;
 
     Matrix mInitialDisp;
-    
+
     ///@}
     ///@name Private Operators
     ///@{
@@ -426,5 +413,5 @@ private:
 }
   // namespace Kratos.
 
-#endif // KRATOS_KINEMATIC_LINEAR2_INCLUDED defined 
+#endif // KRATOS_KINEMATIC_LINEAR2_INCLUDED defined
 

@@ -5,8 +5,8 @@
 //   Revision:            $Revision: 1.0 $
 //
 //
-#if !defined(KRATOS_KINEMATIC_LINEAR_KIRCHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED )
-#define  KRATOS_KINEMATIC_LINEAR_KIRCHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED
+#if !defined(KRATOS_KINEMATIC_LINEAR_KIRCHHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED )
+#define  KRATOS_KINEMATIC_LINEAR_KIRCHHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED
 
 
 // External includes 
@@ -29,7 +29,7 @@ namespace Kratos
 Implementation of the thin shell using Kirchhoff-Love theory and isogeometric analysis
 REF: Nguyen Vinh Phu, igafem
  */
-class KinematicLinearKirchoffLoveIsogeometricShell : public Element
+class KinematicLinearKirchhoffLoveIsogeometricShell : public Element
 {
 public:
     typedef GeometryData::IntegrationMethod IntegrationMethod;
@@ -44,19 +44,19 @@ public:
 
     typedef GeometryType::ShapeFunctionsSecondDerivativesType ShapeFunctionsSecondDerivativesType;
 
-    // Counted pointer of KinematicLinearKirchoffLoveIsogeometricShell
-    KRATOS_CLASS_POINTER_DEFINITION(KinematicLinearKirchoffLoveIsogeometricShell);
+    // Counted pointer of KinematicLinearKirchhoffLoveIsogeometricShell
+    KRATOS_CLASS_POINTER_DEFINITION(KinematicLinearKirchhoffLoveIsogeometricShell);
 
     /** 
      * Default constructor.
      */
-    KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry );
-    KinematicLinearKirchoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties );
+    KinematicLinearKirchhoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry );
+    KinematicLinearKirchhoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties );
 
     /**
      * Destructor.
      */
-    virtual ~KinematicLinearKirchoffLoveIsogeometricShell();
+    virtual ~KinematicLinearKirchhoffLoveIsogeometricShell();
 
     /**
      * Operations.
@@ -128,7 +128,7 @@ protected:
     friend class Serializer;
 
     // A private default constructor necessary for serialization
-    KinematicLinearKirchoffLoveIsogeometricShell()
+    KinematicLinearKirchhoffLoveIsogeometricShell()
     {
     }
 
@@ -187,11 +187,11 @@ private:
     void CalculateBendingBOperator (Matrix& Bb, const array_1d<double,3>& G1, const array_1d<double,3>& G2, const Matrix& DN_De, 
 														 const ShapeFunctionsSecondDerivativesType& D2N_De2 ) ;
 
-    void CalculateHookeanMatrix(Matrix& D, const Vector& G1, const Vector& G2);
+    void CalculateHookeanMatrix(Matrix& D, const Vector& G1, const Vector& G2, const double& E, const double& NU);
 
-}; // Class KinematicLinearKirchoffLoveIsogeometricShell 
+}; // Class KinematicLinearKirchhoffLoveIsogeometricShell 
 
 }  // namespace Kratos.
   
 
-#endif // KRATOS_KINEMATIC_LINEAR_KIRCHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined 
+#endif // KRATOS_KINEMATIC_LINEAR_Kirchhoff_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined 

@@ -59,10 +59,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "utilities/math_utils.h"
 #include "utilities/openmp_utils.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
+#include "structural_application/structural_application.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
 
+#define ENABLE_BEZIER_GEOMETRY
 #define ENABLE_PROFILING
+
+#include "iostream"
+using namespace std;
 
 namespace Kratos
 {
@@ -83,6 +88,7 @@ LineForceIsogeometric::LineForceIsogeometric( IndexType NewId, GeometryType::Poi
 {
     mpIsogeometricGeometry = 
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
+
 }
 
 // Constructor
@@ -97,11 +103,12 @@ LineForceIsogeometric::LineForceIsogeometric( IndexType NewId, GeometryType::Poi
 //***********************************************************************************
 //***********************************************************************************
 Condition::Pointer LineForceIsogeometric::Create( IndexType NewId,
-                                        NodesArrayType const& ThisNodes,
-                                        PropertiesType::Pointer pProperties ) const
+    GeometryType::Pointer pGeom,
+    PropertiesType::Pointer pProperties ) const
 {
-    return Condition::Pointer( new LineForceIsogeometric( NewId, GetGeometry().Create( ThisNodes ), pProperties ) );
+return Condition::Pointer( new LineForceIsogeometric( NewId, pGeom, pProperties ) );
 }
+
 
 //***********************************************************************************
 //***********************************************************************************
@@ -112,10 +119,50 @@ LineForceIsogeometric::~LineForceIsogeometric()
 
 //***********************************************************************************
 //***********************************************************************************
+void LineForceIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
+    ProcessInfo& rCurrentProcessInfo )
+{
+    KRATOS_TRY
+
+    DofsVectorType ConditionalDofList;
+    GetDofList(ConditionalDofList, rCurrentProcessInfo);
+
+    if (rResult.size() != ConditionalDofList.size())
+    rResult.resize(ConditionalDofList.size(), false);
+
+    for(unsigned int i = 0; i < ConditionalDofList.size(); ++i)
+    {
+        rResult[i] = ConditionalDofList[i]->EquationId();
+    }
+
+
+
+    KRATOS_CATCH( "" )
+}
+
+//***********************************************************************************
+//***********************************************************************************
+void LineForceIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
+ProcessInfo& rCurrentProcessInfo )
+{
+    const unsigned int dim = 3;
+
+    ElementalDofList.resize( 0 );
+
+    for ( unsigned int i = 0; i < GetGeometry().size(); ++i )
+    {
+        ElementalDofList.push_back( GetGeometry()[i].pGetDof( DISPLACEMENT_X ) );
+        ElementalDofList.push_back( GetGeometry()[i].pGetDof( DISPLACEMENT_Y ) );
+        ElementalDofList.push_back( GetGeometry()[i].pGetDof( DISPLACEMENT_Z ) );
+    }
+}
+
+//***********************************************************************************
+//***********************************************************************************
 void LineForceIsogeometric::Initialize()
 {
     KRATOS_TRY
-    
+
         ////////////////////Initialize geometry_data/////////////////////////////
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
@@ -123,9 +170,11 @@ void LineForceIsogeometric::Initialize()
         
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
+        bool manual_initilization = false;
         if( this->Has( EXTRACTION_OPERATOR ) )
         {
             ExtractionOperator = this->GetValue( EXTRACTION_OPERATOR );
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_MCSR ) )
         {
@@ -142,6 +191,7 @@ void LineForceIsogeometric::Initialize()
                 ExtractionOperator = IsogeometricMathUtils::MCSR2CSR(Temp);
             else
                 ExtractionOperator = IsogeometricMathUtils::MCSR2MAT(Temp);
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_CSR_ROWPTR )
              and this->Has( EXTRACTION_OPERATOR_CSR_COLIND )
@@ -151,69 +201,85 @@ void LineForceIsogeometric::Initialize()
             Vector colInd = this->GetValue( EXTRACTION_OPERATOR_CSR_COLIND ); // must be 0-base
             Vector values = this->GetValue( EXTRACTION_OPERATOR_CSR_VALUES );
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
+            manual_initilization = true;
         }
         
-        KRATOS_WATCH(ExtractionOperator)
+//        KRATOS_WATCH(ExtractionOperator)
 
         // initialize the geometry
-        mpIsogeometricGeometry->AssignGeometryData(
-            this->GetValue(NURBS_KNOTS_1),
-            this->GetValue(NURBS_KNOTS_2),
-            this->GetValue(NURBS_KNOTS_3),
-            this->GetValue(NURBS_WEIGHT),
-            ExtractionOperator,
-            this->GetValue(NURBS_DEGREE_1),
-            this->GetValue(NURBS_DEGREE_2),
-            this->GetValue(NURBS_DEGREE_3),
-            2 // only need to compute 2 integration rules
-        );
+        if(manual_initilization)
+            mpIsogeometricGeometry->AssignGeometryData(
+                this->GetValue(NURBS_KNOTS_1),
+                this->GetValue(NURBS_KNOTS_2),
+                this->GetValue(NURBS_KNOTS_3),
+                this->GetValue(NURBS_WEIGHT),
+                ExtractionOperator,
+                this->GetValue(NURBS_DEGREE_1),
+                this->GetValue(NURBS_DEGREE_2),
+                this->GetValue(NURBS_DEGREE_3),
+                2 // only need to compute 2 integration rules
+            );
         
-        mThisIntegrationMethod =
-//            GetGeometry().GetDefaultIntegrationMethod(); //default method
-            GeometryData::GI_GAUSS_1;
-        
+        // integration rule
+        if(this->Has( INTEGRATION_ORDER ))
+        {
+            if(this->GetValue(INTEGRATION_ORDER) == 1)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
+            }
+            else if(this->GetValue(INTEGRATION_ORDER) == 2)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
+            }
+            else if(this->GetValue(INTEGRATION_ORDER) == 3)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_3;
+            }
+            else if(this->GetValue(INTEGRATION_ORDER) == 4)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_4;
+            }
+            else if(this->GetValue(INTEGRATION_ORDER) == 5)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
+            }
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration rule", this->GetValue(INTEGRATION_ORDER))
+        }
+        else if(GetProperties().Has( INTEGRATION_ORDER ))
+        {
+            if(GetProperties()[INTEGRATION_ORDER] == 1)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
+            }
+            else if(GetProperties()[INTEGRATION_ORDER] == 2)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
+            }
+            else if(GetProperties()[INTEGRATION_ORDER] == 3)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_3;
+            }
+            else if(GetProperties()[INTEGRATION_ORDER] == 4)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_4;
+            }
+            else if(GetProperties()[INTEGRATION_ORDER] == 5)
+            {
+                mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
+            }
+            else
+                KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration points", GetProperties()[INTEGRATION_ORDER])
+        }
+        else
+            mThisIntegrationMethod = GeometryData::GI_GAUSS_1; // default method
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
         #endif
-        
+
     KRATOS_CATCH("")
-}
-
-//***********************************************************************************
-//***********************************************************************************
-void LineForceIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
-                                            ProcessInfo& rCurrentProcessInfo )
-{
-    KRATOS_TRY
-    
-    DofsVectorType ConditionalDofList;
-    GetDofList(ConditionalDofList, rCurrentProcessInfo);
-    
-    if (rResult.size() != ConditionalDofList.size())
-        rResult.resize(ConditionalDofList.size(), false);
-
-    for(unsigned int i = 0; i < ConditionalDofList.size(); ++i)
-    {
-        rResult[i] = ConditionalDofList[i]->EquationId();
-    }
-
-    KRATOS_CATCH( "" )
-}
-
-//***********************************************************************************
-//***********************************************************************************
-void LineForceIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
-                                        ProcessInfo& rCurrentProcessInfo )
-{
-    ElementalDofList.resize( 0 );
-
-    for ( unsigned int i = 0; i < GetGeometry().size(); ++i )
-    {
-        ElementalDofList.push_back( GetGeometry()[i].pGetDof( DISPLACEMENT_X ) );
-        ElementalDofList.push_back( GetGeometry()[i].pGetDof( DISPLACEMENT_Y ) );
-        ElementalDofList.push_back( GetGeometry()[i].pGetDof( DISPLACEMENT_Z ) );
-    }
 }
 
 //***********************************************************************************
@@ -233,19 +299,19 @@ void LineForceIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatri
 //***********************************************************************************
 //***********************************************************************************
 void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
-                                        VectorType& rRightHandSideVector,
-                                        const ProcessInfo& rCurrentProcessInfo,
-                                        bool CalculateStiffnessMatrixFlag,
-                                        bool CalculateResidualVectorFlag )
+                                VectorType& rRightHandSideVector,
+                                const ProcessInfo& rCurrentProcessInfo,
+                                bool CalculateStiffnessMatrixFlag,
+                                bool CalculateResidualVectorFlag )
 {
     KRATOS_TRY
 
     const unsigned int number_of_nodes = GetGeometry().size();
     const unsigned int dim = 3;
     unsigned int MatSize = number_of_nodes * dim;
-    //resizing as needed the LHS
 
-    if ( CalculateStiffnessMatrixFlag == true ) //calculation of the matrix is required
+    //resizing as needed the LHS
+    if ( CalculateStiffnessMatrixFlag == true )
     {
         if ( rLeftHandSideMatrix.size1() != MatSize )
             rLeftHandSideMatrix.resize( MatSize, MatSize, false );
@@ -254,13 +320,21 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     }
 
     //resizing as needed the RHS
-    if ( CalculateResidualVectorFlag == true ) //calculation of the matrix is required
+    if ( CalculateResidualVectorFlag == true )
     {
         if ( rRightHandSideVector.size() != MatSize )
             rRightHandSideVector.resize( MatSize, false );
 
-        rRightHandSideVector = ZeroVector( MatSize ); //resetting RHS
+        noalias(rRightHandSideVector) = ZeroVector( MatSize ); //resetting RHS
     }
+
+    //KRATOS_WATCH(typeid(*mpIsogeometricGeometry).name())
+
+
+    #ifdef ENABLE_BEZIER_GEOMETRY
+    //initialize the geometry
+    mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
+    #endif
 
     //reading integration points
     const GeometryType::IntegrationPointsArrayType& integration_points =
@@ -269,11 +343,11 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     //calculating shape function values and local gradients
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-
+        
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
-        integration_points
+        mThisIntegrationMethod
     );
 
     //loop over integration points
@@ -285,7 +359,8 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
         noalias( Load ) = ZeroVector( dim );
         for ( unsigned int n = 0; n < GetGeometry().size(); ++n )
         {
-            noalias( temp ) = ( GetGeometry()[n] ).GetSolutionStepValue( FACE_LOAD );
+            noalias( temp ) = ( GetGeometry()[n] ).GetSolutionStepValue(FACE_LOAD);
+//            KRATOS_WATCH(temp)
 
             for ( unsigned int i = 0; i < dim; ++i )
             {
@@ -305,9 +380,15 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
             t[2] += GetGeometry().GetPoint( n ).Z0() * DN_De[PointNumber]( n, 0 );
         }
 
+//        KRATOS_WATCH(t)
         //calculating length
         double dL = sqrt( t[0] * t[0] + t[1] * t[1] + t[2] * t[2] );
-        
+
+//        KRATOS_WATCH(Ncontainer)
+//        KRATOS_WATCH(Load)
+//        KRATOS_WATCH(IntegrationWeight)
+//        KRATOS_WATCH(dL)
+
         // contribute to RHS vector
         if ( CalculateResidualVectorFlag == true )
         {
@@ -317,6 +398,7 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
                         Ncontainer( PointNumber, prim ) * Load( i ) * IntegrationWeight * dL;
         }
     }
+//    KRATOS_WATCH(rRightHandSideVector)
 
     KRATOS_CATCH( "" )
 }

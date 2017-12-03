@@ -55,7 +55,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <boost/timer.hpp>
 // Project includes
 #include "includes/define.h"
-#include "line_force_isogeometric_2d.h"
+#include "line_pressure_isogeometric_2d.h"
 #include "utilities/math_utils.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
@@ -73,18 +73,18 @@ namespace Kratos
 // -------- //
 
 // Constructor
-LineForceIsogeometric2D::LineForceIsogeometric2D()
+LinePressureIsogeometric2D::LinePressureIsogeometric2D()
 {
 }
 
 // Constructor
-LineForceIsogeometric2D::LineForceIsogeometric2D( IndexType NewId, GeometryType::Pointer pGeometry )
+LinePressureIsogeometric2D::LinePressureIsogeometric2D( IndexType NewId, GeometryType::Pointer pGeometry )
     : LineForceIsogeometric( NewId, pGeometry )
 {
 }
 
 // Constructor
-LineForceIsogeometric2D::LineForceIsogeometric2D( IndexType NewId, GeometryType::Pointer pGeometry,
+LinePressureIsogeometric2D::LinePressureIsogeometric2D( IndexType NewId, GeometryType::Pointer pGeometry,
                           PropertiesType::Pointer pProperties )
     : LineForceIsogeometric( NewId, pGeometry, pProperties )
 {
@@ -92,32 +92,32 @@ LineForceIsogeometric2D::LineForceIsogeometric2D( IndexType NewId, GeometryType:
 
 //***********************************************************************************
 //***********************************************************************************
-Condition::Pointer LineForceIsogeometric2D::Create( IndexType NewId,
+Condition::Pointer LinePressureIsogeometric2D::Create( IndexType NewId,
                                         NodesArrayType const& ThisNodes,
                                         PropertiesType::Pointer pProperties ) const
 {
-    return Condition::Pointer( new LineForceIsogeometric2D( NewId, GetGeometry().Create( ThisNodes ), pProperties ) );
+    return Condition::Pointer( new LinePressureIsogeometric2D( NewId, GetGeometry().Create( ThisNodes ), pProperties ) );
 }
 
 //***********************************************************************************
 //***********************************************************************************
-Condition::Pointer LineForceIsogeometric2D::Create( IndexType NewId,
+Condition::Pointer LinePressureIsogeometric2D::Create( IndexType NewId,
                                         GeometryType::Pointer pGeom,
                                         PropertiesType::Pointer pProperties ) const
 {
-    return Condition::Pointer( new LineForceIsogeometric2D( NewId, pGeom, pProperties ) );
+    return Condition::Pointer( new LinePressureIsogeometric2D( NewId, pGeom, pProperties ) );
 }
 
 //***********************************************************************************
 //***********************************************************************************
 // Destructor
-LineForceIsogeometric2D::~LineForceIsogeometric2D()
+LinePressureIsogeometric2D::~LinePressureIsogeometric2D()
 {
 }
 
 //***********************************************************************************
 //***********************************************************************************
-void LineForceIsogeometric2D::GetDofList( DofsVectorType& ConditionalDofList,
+void LinePressureIsogeometric2D::GetDofList( DofsVectorType& ConditionalDofList,
                               ProcessInfo& rCurrentProcessInfo )
 {
     ConditionalDofList.resize( 0 );
@@ -133,14 +133,14 @@ void LineForceIsogeometric2D::GetDofList( DofsVectorType& ConditionalDofList,
 //***********************************************************************************
 //***********************************************************************************
 //***********************************************************************************
-void LineForceIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
+void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                 VectorType& rRightHandSideVector,
                                 const ProcessInfo& rCurrentProcessInfo,
                                 bool CalculateStiffnessMatrixFlag,
                                 bool CalculateResidualVectorFlag )
 {
     KRATOS_TRY
-KRATOS_WATCH(__LINE__)
+
     const unsigned int number_of_nodes = GetGeometry().size();
     const unsigned int dim = 2;
     unsigned int MatSize = number_of_nodes * dim;
@@ -179,30 +179,16 @@ KRATOS_WATCH(__LINE__)
     
     #ifdef DEBUG_LEVEL1
     KRATOS_WATCH(integration_points.size())
+    KRATOS_WATCH(Ncontainer)
     #endif
-        
+
+    double P = this->GetValue(PRESSURE);
+//    KRATOS_WATCH(P)
+
     // loop over integration points
     Vector Load( dim );
-    Vector temp( dim );
     for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber )
     {
-        // interpolate the load by using geometry shape functions
-        noalias( Load ) = ZeroVector( dim );
-
-        for ( unsigned int n = 0; n < GetGeometry().size(); ++n )
-        {
-            noalias( temp ) = ( GetGeometry()[n] ).GetSolutionStepValue( FACE_LOAD );
-
-            for ( unsigned int i = 0; i < dim; ++i )
-            {
-                Load( i ) += temp( i ) * Ncontainer( PointNumber, n );
-            }
-        }
-        
-        #ifdef DEBUG_LEVEL1
-        KRATOS_WATCH(Load)
-        #endif
-        
         // compute integration weight
         double IntegrationWeight = integration_points[PointNumber].Weight();
         
@@ -220,10 +206,11 @@ KRATOS_WATCH(__LINE__)
             t[1] += GetGeometry().GetPoint( n ).Y0() * DN_De[PointNumber]( n, 0 );
         }
         double dL = norm_2(t);
-        KRATOS_WATCH(dL)
-        KRATOS_WATCH(IntegrationWeight)
-        KRATOS_WATCH(Load)
-        
+
+        //calculating load 
+        Load[0] = -P*t[1]/dL;
+        Load[1] = P*t[0]/dL;
+
         // contribute to RIGHT HAND SIDE VECTOR
         if ( CalculateResidualVectorFlag == true ) //calculation of the matrix is required
         {
@@ -232,9 +219,8 @@ KRATOS_WATCH(__LINE__)
                     rRightHandSideVector( prim * dim + i ) +=
                         Ncontainer( PointNumber, prim ) * Load( i ) * IntegrationWeight * dL;
         }
-        
     }
-    
+
     #ifdef DEBUG_LEVEL1
     KRATOS_WATCH(rRightHandSideVector)
     #endif
