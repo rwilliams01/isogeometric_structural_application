@@ -112,6 +112,10 @@ public:
                                NodesArrayType const& ThisNodes,
                                PropertiesType::Pointer pProperties ) const;
 
+    Condition::Pointer Create( IndexType NewId,
+                               GeometryType::Pointer pGeometry,
+                               PropertiesType::Pointer pProperties ) const;
+
     virtual void Initialize();
     
     /**
@@ -185,6 +189,8 @@ public:
 protected:
 
 private:
+
+    IntegrationMethod mThisIntegrationMethod;
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
     void CalculateAll( MatrixType& rLeftHandSideMatrix,

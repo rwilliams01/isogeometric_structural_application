@@ -178,6 +178,7 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
     );
     
     #ifdef DEBUG_LEVEL1
+    KRATOS_WATCH(mThisIntegrationMethod)
     KRATOS_WATCH(integration_points.size())
     KRATOS_WATCH(Ncontainer)
     #endif
@@ -192,10 +193,6 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
         // compute integration weight
         double IntegrationWeight = integration_points[PointNumber].Weight();
         
-        #ifdef DEBUG_LEVEL1
-        KRATOS_WATCH(integration_points[PointNumber])
-        #endif
-
         IntegrationWeight *= GetProperties()[THICKNESS];
 
         // compute length

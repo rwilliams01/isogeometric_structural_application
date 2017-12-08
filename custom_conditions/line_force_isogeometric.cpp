@@ -244,7 +244,7 @@ void LineForceIsogeometric::Initialize()
                 mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
             }
             else
-                KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration rule", this->GetValue(INTEGRATION_ORDER))
+                KRATOS_THROW_ERROR(std::logic_error, "LineForceIsogeometric element does not support for integration rule", this->GetValue(INTEGRATION_ORDER))
         }
         else if(GetProperties().Has( INTEGRATION_ORDER ))
         {
@@ -269,7 +269,7 @@ void LineForceIsogeometric::Initialize()
                 mThisIntegrationMethod = GeometryData::GI_GAUSS_5;
             }
             else
-                KRATOS_THROW_ERROR(std::logic_error, "KinematicLinear element does not support for integration points", GetProperties()[INTEGRATION_ORDER])
+                KRATOS_THROW_ERROR(std::logic_error, "LineForceIsogeometric element does not support for integration points", GetProperties()[INTEGRATION_ORDER])
         }
         else
             mThisIntegrationMethod = GeometryData::GI_GAUSS_1; // default method

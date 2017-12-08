@@ -87,16 +87,21 @@ SlaveContactFace3DIsogeometric::SlaveContactFace3DIsogeometric( IndexType NewId,
                                                                 PropertiesType::Pointer pProperties )
 : Condition( NewId, pGeometry, pProperties )
 {
-    mpIsogeometricGeometry = 
-        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
+    mpIsogeometricGeometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
 Condition::Pointer SlaveContactFace3DIsogeometric::Create( IndexType NewId,
                                                            NodesArrayType const& ThisNodes,
                                                            PropertiesType::Pointer pProperties ) const
 {
-    return Condition::Pointer( new SlaveContactFace3DIsogeometric( NewId, (*mpIsogeometricGeometry).Create( ThisNodes ),
-                                                                   pProperties ) );
+    return Condition::Pointer( new SlaveContactFace3DIsogeometric( NewId, (*mpIsogeometricGeometry).Create( ThisNodes ), pProperties ) );
+}
+
+Condition::Pointer SlaveContactFace3DIsogeometric::Create( IndexType NewId,
+                           GeometryType::Pointer pGeometry,
+                           PropertiesType::Pointer pProperties) const
+{
+    return Condition::Pointer( new SlaveContactFace3DIsogeometric( NewId, pGeometry, pProperties ) );
 }
 
 //***********************************************************************************
@@ -109,12 +114,14 @@ void SlaveContactFace3DIsogeometric::Initialize()
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
         #endif
-        
+
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
+        bool manual_initilization = false;
         if( this->Has( EXTRACTION_OPERATOR ) )
         {
             ExtractionOperator = this->GetValue( EXTRACTION_OPERATOR );
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_MCSR ) )
         {
@@ -131,6 +138,8 @@ void SlaveContactFace3DIsogeometric::Initialize()
                 ExtractionOperator = IsogeometricMathUtils::MCSR2CSR(Temp);
             else
                 ExtractionOperator = IsogeometricMathUtils::MCSR2MAT(Temp);
+
+            manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_CSR_ROWPTR )
              and this->Has( EXTRACTION_OPERATOR_CSR_COLIND )
@@ -140,25 +149,35 @@ void SlaveContactFace3DIsogeometric::Initialize()
             Vector colInd = this->GetValue( EXTRACTION_OPERATOR_CSR_COLIND ); // must be 0-base
             Vector values = this->GetValue( EXTRACTION_OPERATOR_CSR_VALUES );
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
+            manual_initilization = true;
         }
-        
+//        else
+//            KRATOS_THROW_ERROR(std::logic_error, "The extraction operator was not given for element", Id())
 //        KRATOS_WATCH(ExtractionOperator)
 
         // initialize the geometry
-        mpIsogeometricGeometry->AssignGeometryData(
-            this->GetValue(NURBS_KNOTS_1),
-            this->GetValue(NURBS_KNOTS_2),
-            this->GetValue(NURBS_KNOTS_3),
-            this->GetValue(NURBS_WEIGHT),
-            ExtractionOperator,
-            this->GetValue(NURBS_DEGREE_1),
-            this->GetValue(NURBS_DEGREE_2),
-            this->GetValue(NURBS_DEGREE_3),
-            2 // only need to compute 2 integration rules
-        );
+        if(manual_initilization)
+            mpIsogeometricGeometry->AssignGeometryData(
+                this->GetValue(NURBS_KNOTS_1),
+                this->GetValue(NURBS_KNOTS_2),
+                this->GetValue(NURBS_KNOTS_3),
+                this->GetValue(NURBS_WEIGHT),
+                ExtractionOperator,
+                this->GetValue(NURBS_DEGREE_1),
+                this->GetValue(NURBS_DEGREE_2),
+                this->GetValue(NURBS_DEGREE_3),
+                2 // only need to compute 2 integration rules
+            );
+
+        mThisIntegrationMethod =
+//            GetGeometry().GetDefaultIntegrationMethod(); //default method
+            GeometryData::GI_GAUSS_1;
         
-//        KRATOS_WATCH((*mpIsogeometricGeometry).IntegrationPoints().size())
-        
+        #ifdef ENABLE_PROFILING
+        double end_compute = OpenMPUtils::GetCurrentTime();
+        std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
+        #endif
+
         mpMasterElements = ContactMasterContainerType::Pointer( new ContactMasterContainerType() );
         GetValue( LAMBDAS ).resize( (*mpIsogeometricGeometry).IntegrationPoints().size(), false );
         noalias( GetValue( LAMBDAS ) ) = ZeroVector( (*mpIsogeometricGeometry).IntegrationPoints().size() );

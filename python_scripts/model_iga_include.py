@@ -12,6 +12,7 @@
 ##################################################################
 import sys
 import os
+import math
 #kratos_root_path=os.environ['KRATOS_ROOT_PATH']
 ##################################################################
 ##################################################################
@@ -25,6 +26,7 @@ from KratosMultiphysics.MKLSolversApplication import *
 kernel = Kernel()   #defining kernel
 
 ##################################################################
+### Give the basic parameters for static analysis. This is used for initialization of Model
 def StaticParameters():
     analysis_parameters = {}
     # content of analysis_parameters:
@@ -81,6 +83,7 @@ def StaticParameters():
     return analysis_parameters
 
 ##################################################################
+### Interface class with KRATOS to perform analysis
 class Model:
     def __init__( self, problem_name, path, model_part, analysis_parameters ):
         #setting the domain size for the problem to be solved
@@ -106,7 +109,6 @@ class Model:
         ## generating solver
         import structural_solver_advanced
         self.solver = structural_solver_advanced.SolverAdvanced( self.model_part, self.domain_size, number_of_time_steps, self.analysis_parameters, abs_tol, rel_tol )
-        self.solver.CalculateReactionFlag = False
         ##################################################################
         ## POST_PROCESSING DEFINITIONS ###################################
         ##################################################################
@@ -134,12 +136,14 @@ class Model:
         self.solver.Initialize()
         (self.solver.solver).SetEchoLevel(self.analysis_parameters['echo_level'])
         (self.solver.solver).max_iter = self.analysis_parameters['max_iter'] #control the maximum iterations of Newton Raphson loop
+        (self.solver.solver).CalculateReactionsFlag = False
+        (self.solver.solver).MoveMeshFlag = False
 
         ##################################################################
         ## INITIALISE RESTART UTILITY ####################################
         ##################################################################
         #restart_utility= RestartUtility( self.problem_name )
-        
+
     def WriteOutput( self, time ):
         if self.generate_post_model_part == False:
             print ('Before GenerateModelPart')
@@ -165,15 +169,15 @@ class Model:
         self.gid_io.WriteNodalResults(REACTION, self.model_part_post.Nodes, time, 0)
 #        self.gid_io.WriteNodalResults(STRESSES, self.model_part_post.Nodes, time, 0)
         self.gid_io.FinalizeResults()
-                
+
     def InitializeModel( self ):
         ##################################################################
         ## STORE LAYER SETS ##############################################
         ##################################################################
         ## ELEMENTS on layers ############################################
-        
+
         ## NODES on layers ###############################################
-        
+
         ## CONTACT MASTER NODES ##########################################
 
         ## CONTACT SLAVE NODES ###########################################
@@ -185,22 +189,81 @@ class Model:
         ##################################################################
         ## ACTIVATION ####################################################
         ##################################################################
-        
+
         self.deac = DeactivationUtility()
         self.deac.Initialize( self.model_part )
         self.model_part.Check(self.model_part.ProcessInfo)
         print ("activation utility initialized")
+        ##################################################################
         print ("model successfully initialized")
-    
+
     def FinalizeModel( self ):
         self.gid_io.CloseResultFile()
-        if( mpi.rank == 0 ):
-            self.mergefile.close()
 
     def Solve( self, time, from_deac, to_deac, from_reac, to_reac ):
-        #self.deac.Reactivate( self.model_part, from_reac, to_reac )
-        #self.deac.Deactivate( self.model_part, from_deac, to_deac )
+        self.deac.Reactivate( self.model_part, from_reac, to_reac )
+        self.deac.Deactivate( self.model_part, from_deac, to_deac )
         self.model_part.CloneTimeStep(time)
         self.solver.Solve()
-        
+
+##################################################################
+### Post-process a multipatch
+def PostMultiPatch(mpatch, dim, time, params):
+    #################DEFAULT SETTINGS#################################
+    if 'name' not in params:
+        params['name'] = "iga model"
+    if 'base element name' not in params:
+        params['base element name'] = "KinematicLinear"
+    if 'last node id' not in params:
+        params['last node id'] = 1
+    if 'last element id' not in params:
+        params['last element id'] = 1
+    if 'last condition id' not in params:
+        params['last condition id'] = 1
+    if 'division mode' not in params:
+        params['division mode'] = "uniform"
+    if 'uniform division number' not in params:
+        params['uniform division number'] = 10
+    # default variables list
+    if 'variables list' not in params:
+        params['variables list'] = []
+        params['variables list'].append(DISPLACEMENT)
+
+    #################POST PROCESSING##################################
+    if dim == 2:
+        fem_mesh = NonConformingMultipatchLagrangeMesh2D(mpatch)
+    elif dim == 3:
+        fem_mesh = NonConformingMultipatchLagrangeMesh3D(mpatch)
+    fem_mesh.SetBaseElementName(params['base element name'])
+    fem_mesh.SetLastNodeId(params['last node id'])
+    fem_mesh.SetLastElemId(params['last element id'])
+    fem_mesh.SetLastPropId(params['last condition id'])
+    if params['division mode'] == "uniform":
+        fem_mesh.SetUniformDivision(params['uniform division number'])
+
+    post_model_part = ModelPart("iga-fem mesh " + params['name'])
+    for var in params['variables list']:
+        post_model_part.AddNodalSolutionStepVariable(var)
+    fem_mesh.WriteModelPart(post_model_part)
+
+    print(post_model_part)
+
+    #######WRITE TO GID
+    write_deformed_flag = WriteDeformedMeshFlag.WriteUndeformed
+    write_elements = WriteConditionsFlag.WriteConditions
+    #write_elements = WriteConditionsFlag.WriteElementsOnly
+    post_mode = GiDPostMode.GiD_PostBinary
+    multi_file_flag = MultiFileFlag.MultipleFiles
+    gid_io = StructuralGidIO(params['name'], post_mode, multi_file_flag, write_deformed_flag, write_elements)
+    gid_io.InitializeMesh( time )
+    post_mesh = post_model_part.GetMesh()
+    gid_io.WriteMesh( post_mesh )
+    print("mesh written...")
+    gid_io.FinalizeMesh()
+    gid_io.InitializeResults( time, post_mesh )
+    print("write nodal results")
+    for var in params['variables list']:
+        gid_io.WriteNodalResults(var, post_model_part.Nodes, time, 0)
+    gid_io.FinalizeResults()
+
 ##################################################################

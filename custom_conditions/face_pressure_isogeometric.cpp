@@ -207,6 +207,10 @@ void FacePressureIsogeometric::Initialize()
 
         // initialize the geometry
         if(manual_initilization)
+        {
+            int num_integration_method = 2; // by default compute two integration rules
+            if( GetProperties().Has(NUM_IGA_INTEGRATION_METHOD) )
+                num_integration_method = GetProperties()[NUM_IGA_INTEGRATION_METHOD];
             mpIsogeometricGeometry->AssignGeometryData(
                 this->GetValue(NURBS_KNOTS_1),
                 this->GetValue(NURBS_KNOTS_2),
@@ -216,8 +220,9 @@ void FacePressureIsogeometric::Initialize()
                 this->GetValue(NURBS_DEGREE_1),
                 this->GetValue(NURBS_DEGREE_2),
                 this->GetValue(NURBS_DEGREE_3),
-                2 // only need to compute 2 integration rules
+                num_integration_method
             );
+        }
 
         mThisIntegrationMethod =
 //            GetGeometry().GetDefaultIntegrationMethod(); //default method
@@ -298,7 +303,7 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
     //loop over integration points
     Vector t1(3), t2(3), v3(3);
-    double P = this->GetValue(PRESSURE);
+    const double& P = this->GetValue(PRESSURE);
 //    KRATOS_WATCH(P)
 //    KRATOS_WATCH(Ncontainer)
 
@@ -349,7 +354,7 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 //        KRATOS_WATCH(rRightHandSideVector)
 
     #ifdef ENABLE_BEZIER_GEOMETRY
-    //initialize the geometry
+    //clean the geometry
     mpIsogeometricGeometry->Clean();
     #endif
 

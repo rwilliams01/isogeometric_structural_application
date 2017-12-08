@@ -125,7 +125,7 @@ public:
 protected:
 
     IntegrationMethod mThisIntegrationMethod;
-    
+
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
     virtual void CalculateAll( MatrixType& rLeftHandSideMatrix,
