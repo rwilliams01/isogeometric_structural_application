@@ -282,11 +282,6 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
         rRightHandSideVector = ZeroVector( mat_size ); //resetting RHS
     }
 
-    #ifdef ENABLE_BEZIER_GEOMETRY
-    //initialize the geometry
-    mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
-    #endif
-
     //reading integration points
     const GeometryType::IntegrationPointsArrayType& integration_points =
                 mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
@@ -352,11 +347,6 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
 //    if(CalculateResidualVectorFlag)
 //        KRATOS_WATCH(rRightHandSideVector)
-
-    #ifdef ENABLE_BEZIER_GEOMETRY
-    //clean the geometry
-    mpIsogeometricGeometry->Clean();
-    #endif
 
     KRATOS_CATCH( "" )
 }

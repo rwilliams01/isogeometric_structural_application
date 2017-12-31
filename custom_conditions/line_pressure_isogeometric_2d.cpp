@@ -183,26 +183,29 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
     KRATOS_WATCH(Ncontainer)
     #endif
 
-    double P = this->GetValue(PRESSURE);
+    const double& P = this->GetValue(PRESSURE);
 //    KRATOS_WATCH(P)
 
     // loop over integration points
     Vector Load( dim );
+    Vector t( dim );
+    double dL;
     for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber )
     {
         // compute integration weight
         double IntegrationWeight = integration_points[PointNumber].Weight();
-        
+
         IntegrationWeight *= GetProperties()[THICKNESS];
 
         // compute length
-        Vector t = ZeroVector( dim );//tangential vector
+        noalias( t ) = ZeroVector( dim );//tangential vector
         for ( unsigned int n = 0; n < GetGeometry().size(); ++n )
         {
             t[0] += GetGeometry().GetPoint( n ).X0() * DN_De[PointNumber]( n, 0 );
             t[1] += GetGeometry().GetPoint( n ).Y0() * DN_De[PointNumber]( n, 0 );
         }
-        double dL = norm_2(t);
+        dL = norm_2(t);
+//        KRATOS_WATCH(t)
 
         //calculating load 
         Load[0] = -P*t[1]/dL;

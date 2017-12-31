@@ -53,6 +53,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // System includes
 // External includes
 #include <boost/timer.hpp>
+
 // Project includes
 #include "includes/define.h"
 #include "line_force_isogeometric_2d.h"
@@ -140,7 +141,7 @@ void LineForceIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                 bool CalculateResidualVectorFlag )
 {
     KRATOS_TRY
-KRATOS_WATCH(__LINE__)
+
     const unsigned int number_of_nodes = GetGeometry().size();
     const unsigned int dim = 2;
     unsigned int MatSize = number_of_nodes * dim;
@@ -220,10 +221,10 @@ KRATOS_WATCH(__LINE__)
             t[1] += GetGeometry().GetPoint( n ).Y0() * DN_De[PointNumber]( n, 0 );
         }
         double dL = norm_2(t);
-        KRATOS_WATCH(dL)
-        KRATOS_WATCH(IntegrationWeight)
-        KRATOS_WATCH(Load)
-        
+//        KRATOS_WATCH(dL)
+//        KRATOS_WATCH(IntegrationWeight)
+//        KRATOS_WATCH(Load)
+
         // contribute to RIGHT HAND SIDE VECTOR
         if ( CalculateResidualVectorFlag == true ) //calculation of the matrix is required
         {

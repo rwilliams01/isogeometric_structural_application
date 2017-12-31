@@ -82,6 +82,13 @@ def StaticParameters():
     analysis_parameters['max_iter'] = 10
     return analysis_parameters
 
+### Give the basic parameters for static analysis. This is used for initialization of Model
+def QuasiStaticParameters():
+    analysis_parameters = StaticParameters()
+    analysis_parameters['analysis_type'] = 1
+    analysis_parameters['dissipation_radius'] = 0.1
+    return analysis_parameters
+
 ##################################################################
 ### Interface class with KRATOS to perform analysis
 class Model:
@@ -238,8 +245,15 @@ def PostMultiPatch(mpatch, dim, time, params):
     fem_mesh.SetLastNodeId(params['last node id'])
     fem_mesh.SetLastElemId(params['last element id'])
     fem_mesh.SetLastPropId(params['last condition id'])
+    print(241)
     if params['division mode'] == "uniform":
         fem_mesh.SetUniformDivision(params['uniform division number'])
+    elif params['division mode'] == "non-uniform":
+        for patch_ptr in mpatch.Patches():
+            patch = patch_ptr.GetReference()
+            fem_mesh.SetDivision(patch.Id, 0, params['division number u'])
+            fem_mesh.SetDivision(patch.Id, 1, params['division number v'])
+            fem_mesh.SetDivision(patch.Id, 2, params['division number w'])
 
     post_model_part = ModelPart("iga-fem mesh " + params['name'])
     for var in params['variables list']:
@@ -267,3 +281,75 @@ def PostMultiPatch(mpatch, dim, time, params):
     gid_io.FinalizeResults()
 
 ##################################################################
+### Compute the strain energy of the model_part
+def ComputeStrainEnergy(model_part):
+    senergy = 0.0
+    for element in model_part.Elements:
+        if element.GetValue(IS_INACTIVE) == False:
+            J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, model_part.ProcessInfo)
+            W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, model_part.ProcessInfo)
+            SE = element.GetValuesOnIntegrationPoints(STRAIN_ENERGY, model_part.ProcessInfo)
+            for i in range(0, len(W)):
+                senergy = senergy + SE[i][0] * W[i][0] * J0[i][0]
+    return senergy
+
+### Compute the relative L2-error
+def ComputeL2error(model_part, analytical_solution):
+    nom = 0.0
+    denom = 0.0
+    for element in model_part.Elements:
+        if element.GetValue(IS_INACTIVE) == False:
+            u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, model_part.ProcessInfo)
+            J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, model_part.ProcessInfo)
+            Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
+            W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, model_part.ProcessInfo)
+            for i in range(0, len(u)):
+                ana_u = analytical_solution.get_displacement(Q[i][0], Q[i][1], Q[i][2])
+                nom = nom + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
+                denom = denom + (pow(ana_u[0], 2) + pow(ana_u[1], 2)) * W[i][0] * J0[i][0]
+    error = math.sqrt(nom / denom)
+    print("Global displacement (L2) error:", error)
+    return error
+
+### Compute the relative H1-error
+def ComputeH1error(model_part, analytical_solution):
+    nom = 0.0
+    denom = 0.0
+    for element in model_part.Elements:
+        if element.GetValue(IS_INACTIVE) == False:
+            o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, model_part.ProcessInfo)
+            J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, model_part.ProcessInfo)
+            Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
+            W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, model_part.ProcessInfo)
+            for i in range(0, len(o)):
+                ana_o = analytical_solution.get_stress_3d(Q[i][0], Q[i][1], Q[i][2])
+                nom = nom + (pow(o[i][0] - ana_o[0], 2) + pow(o[i][1] - ana_o[1], 2) + pow(o[i][2] - ana_o[2], 2) + 2.0*(pow(o[i][3] - ana_o[3], 2) + pow(o[i][4] - ana_o[4], 2) + pow(o[i][5] - ana_o[5], 2))) * W[i][0] * J0[i][0]
+                denom = denom + (pow(ana_o[0], 2) + pow(ana_o[1], 2) + pow(ana_o[2], 2) + 2.0*(pow(ana_o[3], 2) + pow(ana_o[4], 2) + pow(ana_o[5], 2))) * W[i][0] * J0[i][0]
+    error = math.sqrt(nom / denom)
+    print("Global stress (H1) error:", math.sqrt(nom / denom))
+    return error
+
+### Compute energy norm error
+### REF: https://www.sharcnet.ca/Software/Ansys/17.0/en-us/help/ans_vm/Hlp_V_CH2_5.html
+def ComputeEnergyError(model_part, analytical_solution):
+    senergy = 0.0
+    ana_senergy = 0.0
+    error = 0.0
+    for element in model_part.Elements:
+        if element.GetValue(IS_INACTIVE) == False:
+            o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, model_part.ProcessInfo)
+            e = element.GetValuesOnIntegrationPoints(THREED_STRAIN, model_part.ProcessInfo)
+            J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, model_part.ProcessInfo)
+            Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
+            W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, model_part.ProcessInfo)
+            for i in range(0, len(o)):
+                senergy = senergy + 0.5 * (e[i][0]*o[i][0] + e[i][1]*o[i][1] + e[i][2]*o[i][2] + e[i][3]*o[i][3] + e[i][4]*o[i][4] + e[i][5]*o[i][5]) * W[i][0] * J0[i][0]
+                ana_o = analytical_solution.get_stress_3d(Q[i][0], Q[i][1], Q[i][2])
+                ana_e = analytical_solution.get_strain_3d(Q[i][0], Q[i][1], Q[i][2])
+                ana_senergy = ana_senergy + 0.5 * (ana_e[0]*ana_o[0] + ana_e[1]*ana_o[1] + ana_e[2]*ana_o[2] + ana_e[3]*ana_o[3] + ana_e[4]*ana_o[4] + ana_e[5]*ana_o[5]) * W[i][0] * J0[i][0]
+                error = error + 0.5 * ((e[i][0] - ana_e[0])*(o[i][0] - ana_o[0]) + (e[i][1] - ana_e[1])*(o[i][1] - ana_o[1]) + (e[i][2] - ana_e[2])*(o[i][2] - ana_o[2]) + (e[i][3] - ana_e[3])*(o[i][3] - ana_o[3]) + (e[i][4] - ana_e[4])*(o[i][4] - ana_o[4]) + (e[i][5] - ana_e[5])*(o[i][5] - ana_o[5])) * W[i][0] * J0[i][0]
+    error = math.sqrt(error/ana_senergy)
+    print("Global energy norm error:", error)
+    return [error, senergy]
+
+

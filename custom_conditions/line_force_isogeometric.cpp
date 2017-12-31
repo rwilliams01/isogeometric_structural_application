@@ -53,6 +53,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // System includes
 // External includes
 #include <boost/timer.hpp>
+
 // Project includes
 #include "includes/define.h"
 #include "custom_conditions/line_force_isogeometric.h"
@@ -63,11 +64,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
 
-#define ENABLE_BEZIER_GEOMETRY
-#define ENABLE_PROFILING
-
-#include "iostream"
-using namespace std;
+//#define ENABLE_PROFILING
 
 namespace Kratos
 {
@@ -329,12 +326,6 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     }
 
     //KRATOS_WATCH(typeid(*mpIsogeometricGeometry).name())
-
-
-    #ifdef ENABLE_BEZIER_GEOMETRY
-    //initialize the geometry
-    mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
-    #endif
 
     //reading integration points
     const GeometryType::IntegrationPointsArrayType& integration_points =
