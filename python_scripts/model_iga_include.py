@@ -16,6 +16,7 @@ import math
 #kratos_root_path=os.environ['KRATOS_ROOT_PATH']
 ##################################################################
 ##################################################################
+
 #importing Kratos modules
 from KratosMultiphysics import *
 from KratosMultiphysics.StructuralApplication import *
@@ -23,6 +24,8 @@ from KratosMultiphysics.IsogeometricApplication import *
 from KratosMultiphysics.IsogeometricStructuralApplication import *
 from KratosMultiphysics.ExternalSolversApplication import *
 from KratosMultiphysics.MKLSolversApplication import *
+from KratosMultiphysics.MortarApplication import *
+from KratosMultiphysics.IsogeometricMortarApplication import *
 kernel = Kernel()   #defining kernel
 
 ##################################################################
@@ -214,8 +217,8 @@ class Model:
         self.solver.Solve()
 
 ##################################################################
-### Post-process a multipatch
-def PostMultiPatch(mpatch, dim, time, params):
+### Create FEM mesh for post
+def CreatePostMesh(mpatch, dim, params):
     #################DEFAULT SETTINGS#################################
     if 'name' not in params:
         params['name'] = "iga model"
@@ -245,7 +248,6 @@ def PostMultiPatch(mpatch, dim, time, params):
     fem_mesh.SetLastNodeId(params['last node id'])
     fem_mesh.SetLastElemId(params['last element id'])
     fem_mesh.SetLastPropId(params['last condition id'])
-    print(241)
     if params['division mode'] == "uniform":
         fem_mesh.SetUniformDivision(params['uniform division number'])
     elif params['division mode'] == "non-uniform":
@@ -255,13 +257,10 @@ def PostMultiPatch(mpatch, dim, time, params):
             fem_mesh.SetDivision(patch.Id, 1, params['division number v'])
             fem_mesh.SetDivision(patch.Id, 2, params['division number w'])
 
-    post_model_part = ModelPart("iga-fem mesh " + params['name'])
-    for var in params['variables list']:
-        post_model_part.AddNodalSolutionStepVariable(var)
-    fem_mesh.WriteModelPart(post_model_part)
+    return fem_mesh
 
-    print(post_model_part)
-
+### Write a post mesh to GiD
+def WriteGiD(post_model_part, time, params):
     #######WRITE TO GID
     write_deformed_flag = WriteDeformedMeshFlag.WriteUndeformed
     write_elements = WriteConditionsFlag.WriteConditions
@@ -279,6 +278,18 @@ def PostMultiPatch(mpatch, dim, time, params):
     for var in params['variables list']:
         gid_io.WriteNodalResults(var, post_model_part.Nodes, time, 0)
     gid_io.FinalizeResults()
+
+### Post-process a multipatch
+def PostMultiPatch(mpatch, dim, time, params):
+    fem_mesh = CreatePostMesh(mpatch, dim, params)
+
+    post_model_part = ModelPart("iga-fem mesh " + params['name'])
+    for var in params['variables list']:
+        post_model_part.AddNodalSolutionStepVariable(var)
+    fem_mesh.WriteModelPart(post_model_part)
+    print(post_model_part)
+
+    WriteGiD(post_model_part, time, params)
 
 ##################################################################
 ### Compute the strain energy of the model_part
@@ -351,5 +362,8 @@ def ComputeEnergyError(model_part, analytical_solution):
     error = math.sqrt(error/ana_senergy)
     print("Global energy norm error:", error)
     return [error, senergy]
+
+
+#############################################################
 
 
