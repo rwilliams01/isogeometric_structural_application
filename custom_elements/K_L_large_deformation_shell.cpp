@@ -1,29 +1,47 @@
-//
-//   Project Name:        Kratos
+//   
+//   Project Name:        Kratos       
 //   Last Modified by:    $Author: DongGiang $
 //   Date:                $Date: 25 August 2017$
 //   Revision:            $Revision: 1.0 $
 //
 //
-// System includes
+// System includes 
 
 
-// External includes
+// External includes 
 
-// Project includes
+// Project includes 
 #include "custom_elements/K_L_large_deformation_shell.h"
 #include "isogeometric_structural_application/isogeometric_structural_application.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
 #include "utilities/math_utils.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
-#include "structural_application/structural_application.h"
+#include "phase_field_application/phase_field_application.h"
+#include "phase_field_application/custom_utilities/eig/eig3.h"
+#include <cmath>
+#include <iostream>
+using namespace std;
+
+
 
 #define ENABLE_BEZIER_GEOMETRY
-// #define DEBUG_SHELL
+
+//#define DEBUG_LEVEL1
+//#define DEBUG_LEVEL2
+//#define DEBUG_LEVEL3
+//#define DEBUG_LEVEL4
+//#define DEBUG_LEVEL5
+//#define DEBUG_LEVEL6
+
+
+
+//#define DEBUG_DKGQ
 
 namespace Kratos
 {
+    //extern Variable<Vector> STRESSES;
+    extern Variable<array_1d<double, 3> > PRESCRIBED_DELTA_DISPLACEMENT;
     //************************************************************************************
     //***** Constructor and Destructor ***************************************************
     //************************************************************************************
@@ -31,9 +49,9 @@ namespace Kratos
             (IndexType NewId, GeometryType::Pointer pGeometry) : Element(NewId, pGeometry)
     {
         mIsInitialized = false;
-        //    mpIsogeometricGeometry =
+        //    mpIsogeometricGeometry = 
         //        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
-        mpIsogeometricGeometry =
+        mpIsogeometricGeometry = 
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
         /*
         Important remarks:
@@ -47,7 +65,7 @@ namespace Kratos
                                                     Element(NewId, pGeometry, pProperties)
     {
         mIsInitialized = false;
-        //    mpIsogeometricGeometry =
+        //    mpIsogeometricGeometry = 
         //        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
         mpIsogeometricGeometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
     }
@@ -119,7 +137,7 @@ namespace Kratos
         }
     }
 
-
+    
 
 
     void KirchhoffLoveLargeDeformationShell::Initialize()
@@ -193,6 +211,13 @@ namespace Kratos
         mNumberOfDof = mNumberOfNodes*mDim;
         mThickness = GetProperties()[THICKNESS];
 
+        // material parameters
+        mE = GetProperties()[YOUNG_MODULUS];
+        mNU = GetProperties()[POISSON_RATIO];
+        mLambda = mE*mNU /(1.0 +mNU)/(1.0 - 2.0*mNU);
+        mMu = 0.5*mE/(1.0 + mNU);
+        mKappa = GetProperties()[KAPPA];
+                                
         ////////////////////////////////////////////////////////////////
         // get nodal coordinates vector R in undeformed configuration //
         if(mNodalCoordinates.size() != mNumberOfNodes)
@@ -205,9 +230,9 @@ namespace Kratos
         {
             mNodalCoordinates[I](0) = (*mpIsogeometricGeometry)[I].X0();
             mNodalCoordinates[I](1) = (*mpIsogeometricGeometry)[I].Y0();
-            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0();
-        }
-
+            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0(); 
+        }      
+        
         #ifdef ENABLE_BEZIER_GEOMETRY
         //initialize the geometry
         mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
@@ -223,11 +248,10 @@ namespace Kratos
 
         //////////////////////////////////////////////////////////////
         ///// compute  Jacobian ,Inverse Jacobian, Det Jacobian /////
-        mInvJ0.resize(integration_points.size());
+        mInvJ0.resize(integration_points.size());   
         mN.resize(integration_points.size());
         mDN_De.resize(integration_points.size());
-        mDN_DX.resize(integration_points.size());
-
+                 
         for (unsigned int i = 0; i < integration_points.size(); ++i)
         {
             mInvJ0[i].resize(mDim, mDim, false);
@@ -239,12 +263,10 @@ namespace Kratos
             mDN_De[i].resize(mNumberOfNodes, mDim);
             noalias(mDN_De[i]) = ZeroMatrix(mNumberOfNodes, mDim);
 
-            mDN_DX[i].resize(mNumberOfNodes, mDim);
-            noalias(mDN_DX[i]) = ZeroMatrix(mNumberOfNodes, mDim);
         }
+        
 
-
-        mDetJ0.resize(integration_points.size(), false);
+        mDetJ0.resize(integration_points.size(), false);        
         // TODO remove the storage for Jacobian to save memory
         noalias(mDetJ0) = ZeroVector(integration_points.size());
 
@@ -254,25 +276,41 @@ namespace Kratos
         // calculate the Jacobian
         mJ0.resize(integration_points.size());
         mJ0 = mpIsogeometricGeometry->Jacobian0(mJ0, mThisIntegrationMethod);
-
-
+        double DetJ_temp;
+     
         for(unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++ PointNumber)
-        {
+        {       
             mN[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsValues( mN[PointNumber] , integration_points[PointNumber]);
             mDN_De[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsLocalGradients( mDN_De[PointNumber], integration_points[PointNumber]);
 
-            MathUtils<double>::InvertMatrix(mJ0[PointNumber], mInvJ0[PointNumber], mDetJ0[PointNumber]);
+            MathUtils<double>::InvertMatrix(mJ0[PointNumber], mInvJ0[PointNumber],  DetJ_temp);
 
-            // compute the gradient w.r.t global coordinates
-            noalias(mDN_DX[PointNumber]) = prod(mDN_De[PointNumber], mInvJ0[PointNumber]);
+            Matrix JtJ = prod(trans(mJ0[PointNumber]), mJ0[PointNumber]);
+            mDetJ0[PointNumber] = sqrt(MathUtils<double>::Det(JtJ));
 
             //getting informations for integration
             mIntegrationWeight[PointNumber] = integration_points[PointNumber].Weight();
         }
 
+        // integration points and weights used for thickness calculation
+        mIntegrationPoint1D.resize(4);
+        mIntegrationPoint1D(0) = -0.861136311594053 ;
+        mIntegrationPoint1D(1) = -0.339981043584856;
+        mIntegrationPoint1D(2) = 0.339981043584856;
+        mIntegrationPoint1D(3) = 0.861136311594053;
+               
+        mWeight1D.resize(4);
+        mWeight1D(0) = mWeight1D(3) = 0.347854845137454; 
+        mWeight1D(1) = mWeight1D(2) = 0.652145154862546; 
+        mDetJ1D = 0.5*mThickness;
+   
 
 
         mIsInitialized = true;
+
+        mIsIsotropicMaterial = true;
+   
+
 
         #ifdef ENABLE_BEZIER_GEOMETRY
         // clean the geometry internal data
@@ -296,7 +334,7 @@ namespace Kratos
 
 
 
-    //************************************************************************************
+    //************************************************************************************ 
     //************************************************************************************
     /**
     * calculates only the RHS vector
@@ -325,7 +363,7 @@ namespace Kratos
     /**
     * calculates this contact element's local contributions
     */
-    void KirchhoffLoveLargeDeformationShell::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+    void KirchhoffLoveLargeDeformationShell::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
                                         VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
     {
         //calculation flags
@@ -334,14 +372,15 @@ namespace Kratos
         bool MaterialUpdateFlag = false;
         CalculateAll( rLeftHandSideMatrix, rRightHandSideVector, rCurrentProcessInfo,
                   CalculateStiffnessMatrixFlag, CalculateResidualVectorFlag, MaterialUpdateFlag);
+
     }
 
 
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////// private subroutines /////////////////////////////////
 
-    void KirchhoffLoveLargeDeformationShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
-        VectorType& rRightHandSideVector,
+    void KirchhoffLoveLargeDeformationShell::CalculateAll( MatrixType& rLeftHandSideMatrix, 
+        VectorType& rRightHandSideVector, 
         ProcessInfo& rCurrentProcessInfo,
         bool CalculateStiffnessMatrixFlag,
         bool CalculateResidualVectorFlag,
@@ -363,6 +402,8 @@ namespace Kratos
             noalias(rRightHandSideVector) = ZeroVector(mNumberOfDof);
         }
 
+        Vector RightHandSideVector_trial = ZeroVector(mNumberOfDof);
+
         ////////////////////////////////////////////////////////////////////////////////
         ////// compute residual vector and stiffness matrix over integration points/////
 
@@ -370,9 +411,9 @@ namespace Kratos
         //initialize the geometry
         mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
         #endif
-
+    
         // get integration points
-        const GeometryType::IntegrationPointsArrayType& integration_points =
+        const GeometryType::IntegrationPointsArrayType& integration_points = 
             mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
 
         // Current displacements
@@ -380,177 +421,127 @@ namespace Kratos
         for(unsigned int node =0; node < mpIsogeometricGeometry->size() ;++node)
             noalias(row(CurrentDisplacement, node)) = (*mpIsogeometricGeometry)[node].GetSolutionStepValue(DISPLACEMENT);
 
-        ///////////////////////////////////////////////////////////////////////////////////////
-        //////////////////////////////////////// loop over integration points
-        for(unsigned int PointNumber=0; PointNumber < integration_points.size(); ++PointNumber)
+        if(mIsIsotropicMaterial == true)
         {
-            //////////// get shape function values and their derivatives
-            ShapeFunctionsSecondDerivativesType D2N_De2;
-            D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);
-
-
-            //////////////////////////////////////////////////////////////
-            //1. compute normal forces
-            Vector nVector;  // normal forces
-            ///// 1.1 membrane strain
-            Vector eVector;
-            //Vector eVector1;
-            /////// i. covariant base vectors
-            std::vector<Vector> a;
-            std::vector<Vector> A;  // covarianti base vector of undeformed configuration
-            CovariantBaseVector( A, mDN_De[PointNumber], mNodalCoordinates);
-            CovariantBaseVector(a,mDN_De[PointNumber], mNodalCoordinates, CurrentDisplacement);
-            #ifdef DEBUG_SHELL
-            std::cout << "Covariant base vector (a) at " << PointNumber << ":" << std::endl;
-            for (unsigned int i = 0; i < a.size(); ++i)
-                std::cout << "  " << i << ": " << a[i] << std::endl;
-            std::cout << "Covariant base vector (A) at " << PointNumber << ":" << std::endl;
-            for (unsigned int i = 0; i < A.size(); ++i)
-                std::cout << "  " << i << ": " << A[i] << std::endl;
-            #endif
-
-            /////// ii. membrane strain
-            //computeMembraneStrain( eVector, a, A);
-            ///// 1.2 Tangantial material stiffness
-            Matrix TanC;
-            computeTangentMaterialStiffness(TanC, A);
-            ///// 1.3 normal forces
-            //computeNormalForces(nVector, TanC,  eVector);
-
-            #ifdef DEBUG_SHELL
-            std::cout << "material tangent at point " << PointNumber << ": " << TanC << std::endl;
-
-            #endif
-
-            //2. compute membrane B operator
-            //CovariantBaseVector(a, DN_De, mNodalCoordinates, CurrentDisplacement);
-            Matrix Bm;
-            computeMembraneBMatrix(Bm, mDN_De[PointNumber], a);
-
-            computeStrain(eVector,  Bm,  CurrentDisplacement);
-            #ifdef DEBUG_SHELL
-            std::cout << "epsilon at " << PointNumber << ": " << eVector << std::endl;
-            #endif
-            #ifdef DEBUG_SHELL
-            std::cout << "epsilon by covariant metrics:";
-            std::cout << "  " << 0.5*(inner_prod(a[0], a[0]) - inner_prod(A[0], A[0]));
-            std::cout << "  " << 0.5*(inner_prod(a[1], a[1]) - inner_prod(A[1], A[1]));
-            std::cout << "  " << (inner_prod(a[0], a[1]) - inner_prod(A[0], A[1]));
-            std::cout << std::endl;
-            #endif
-            computeNormalForces(nVector, TanC,  eVector);
-            #ifdef DEBUG_SHELL
-            std::cout << "nVector at " << PointNumber << ": " << nVector << std::endl;
-            #endif
-
-            //3. compute bending moment
-            Vector moVector; //  bending moment
-            ///3.1 compute curvature changes
-            Vector kVector;
-            //Vector kVector1;
-            ////i. normal vector
-            Vector a3Vector, A3Vector, aa3Vector, AA3Vector; double a3, A3;
-            ReferencedNormalDirector( A3Vector,  AA3Vector, A3, A);
-            DeformedNormalDirector(a3Vector, aa3Vector, a3, a);
-            // #ifdef DEBUG_SHELL
-            // std::cout << "a3 at " << PointNumber << ": " << a3Vector << std::endl;
-            // std::cout << "A3 at " << PointNumber << ": " << A3Vector << std::endl;
-            // #endif
-            ////ii. derivative of covariant base vectors
-            boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > A_ab;
-            boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > a_ab;
-            DerivativeCovariantBaseVector( A_ab, D2N_De2, mNodalCoordinates);
-            DerivativeCovariantBaseVector( a_ab, D2N_De2, mNodalCoordinates, CurrentDisplacement);
-
-            //4. compute bending B operator
-            Matrix Bb;
-            computeBendingBMatrix(Bb, a, a3Vector, aa3Vector, a3, a_ab, mDN_De[PointNumber], D2N_De2);
-
-            ////iii. curvature changes
-            computeCurvatureChange(kVector,A_ab,a_ab,a3Vector,A3Vector );
-
-            //computeStrain(kVector,  Bb,  CurrentDisplacement);
-
-            computeBendingMoments(moVector, TanC, kVector);
-            #ifdef DEBUG_SHELL
-            std::cout << "kVector at " << PointNumber << ": " << kVector << std::endl;
-            std::cout << "moVector at " << PointNumber << ": " << moVector << std::endl;
-            #endif
-
-            //////////////////////////////////////////////////////////
-            ///////// this section for nonlinear computation /////////
-            // compute e_rs
-            boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>> eVector_rs;
-            SecondDerivativeMembraneStrain_rs( eVector_rs, mDN_De[PointNumber]);
-
-            // compute k_rs
-            std::vector<Vector> e; //basis vector
-            UnitBaseVectors(e);
-            #ifdef DEBUG_SHELL
-            std::cout << "unit base vector at " << PointNumber << ":" << std::endl;
-            for (unsigned int i = 0; i < e.size(); ++i)
-                std::cout << "  " << i << ": " << e[i] << std::endl;
-            #endif
-
-            boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>> a_abr; // a_{alpha beta,r}
-            SecondDerivativeCovariantBaseVector_ur( a_abr, D2N_De2, e);
-
-            boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>> kVector_rs;
-            SecondDerivativeCurvatureChange_rs( kVector_rs, mDN_De[PointNumber], D2N_De2, a_ab, a, a3Vector, aa3Vector, a3, e);
-            /////////////////////////////////////////////////////////
-
-            ////////////////////////// compute LHS
-            if(CalculateStiffnessMatrixFlag==true)
+            ///////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////////// loop over integration points
+            for(unsigned int PointNumber=0; PointNumber < integration_points.size(); ++PointNumber)
             {
-                AddLinearMembraneStiffness(rLeftHandSideMatrix, TanC, Bm, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
-                AddLinearBendingStiffness(rLeftHandSideMatrix, TanC, Bb, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
+                //////////// get shape function values and their derivatives
+                ShapeFunctionsSecondDerivativesType D2N_De2;
+                D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);    
 
-                AddNonlinearMembraneStiffness(rLeftHandSideMatrix, nVector, eVector_rs,  mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
-                AddNonlinearBendingStiffness(rLeftHandSideMatrix, moVector, kVector_rs,  mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
-            }
+                /////// i. covariant base vectors
+                std::vector<Vector> a;
+                std::vector<Vector> A;  // covarianti base vector of undeformed configuration
+                CovariantBaseVector( A, mDN_De[PointNumber], mNodalCoordinates);
+                CovariantBaseVector(a,mDN_De[PointNumber], mNodalCoordinates, CurrentDisplacement);
 
-            ////////////////////////// compute RHS
-            if(CalculateResidualVectorFlag==true)
-            {
-                /////////// compute f_ext
-                AddExternalForces(rRightHandSideVector, mN[PointNumber], mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
-                /////////////////////////
 
-                // add f_int
-                AddMembraneInternalForces(rRightHandSideVector, nVector, Bm, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
-                AddBendingInternalForces(rRightHandSideVector, moVector, Bb, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
+                // normal directors
+                Vector a3Vector, A3Vector, aa3Vector, AA3Vector; double a3, A3;
+                ReferencedNormalDirector( A3Vector,  AA3Vector, A3, A);
+                DeformedNormalDirector(a3Vector, aa3Vector, a3, a);
 
-            }
-            #ifdef DEBUG_SHELL
-            std::cout << "-----------end Point " << PointNumber << std::endl;
-            #endif
-        }
-        // KRATOS_WATCH(rRightHandSideVector)
-        ///////////////////////////////////////////////////end loop over integration points
+                ////ii. derivative of covariant base vectors
+                boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > A_ab;
+                boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > a_ab;
+                DerivativeCovariantBaseVector( A_ab, D2N_De2, mNodalCoordinates);
+                DerivativeCovariantBaseVector( a_ab, D2N_De2, mNodalCoordinates, CurrentDisplacement);     
 
-        if(CalculateResidualVectorFlag == true)
-        {
-            for ( unsigned int node = 0; node < mpIsogeometricGeometry->size(); ++node )
-            {
-                if((*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_X))
+        
+                // metric coefficents
+                Matrix Aab(2,2);
+                CovariantMetricCoefficient( Aab, A);
+        
+                // contravariant base vectors
+                std::vector<Vector> AA;
+                ContravariantBaseVector( AA, A, Aab);
+
+                // local Cartesian basis
+                std::vector<Vector> EE;
+                LocalCartesianBasisVector(EE,  A);
+
+                // local membrane strain
+                Matrix eeTensor;
+                computeMembraneStrain(eeTensor, a, A,  EE, AA);
+
+                Vector eeVector(3);
+                IsotropicTensorUtility<2>::StressTensorToVector(eeTensor, eeVector);
+            
+                // local curvature changes
+                Matrix kkTensor;
+                computeCurvatureChange(kkTensor,  A_ab, a_ab,a3Vector,A3Vector,  EE, AA );
+
+                Vector kkVector(3);
+                IsotropicTensorUtility<2>::StressTensorToVector(kkTensor, kkVector);
+
+
+                // first derivative of membrane strains w.r.t displacement
+                boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > eLocalVector_r;
+                FirstDerivativeLocalMembraneStrain_r( eLocalVector_r, mDN_De[PointNumber],  a, EE,  AA);
+
+                // membrane B matrix
+                Matrix BBm(mStrainSize, mNumberOfDof);
+                CreatingBmatrix( BBm, eLocalVector_r);
+    
+                // first derivative of bending strains w.r.t displacement
+                boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > kLocalVector_r;
+                FirstDerivativeLocalCurvatureChange_r(kLocalVector_r, a, a3Vector, aa3Vector,  a3 , a_ab, mDN_De[PointNumber],  D2N_De2,  EE,  AA);
+
+                // bending bending B matrix
+                Matrix BBb(mStrainSize, mNumberOfDof);
+                CreatingBmatrix( BBb, kLocalVector_r);
+
+                // material matrix
+                Matrix TanC(3,3);
+                CalculateElasticMatrix(TanC, mE,  mNU);
+
+                // stress resultant
+                Vector nVector(mStrainSize);
+                computeNormalForces(nVector, TanC,  eeVector);
+                    
+                Vector moVector(mStrainSize);
+                computeBendingMoments(moVector, TanC,  kkVector); 
+
+
+                boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>> eLocalVector_rs;
+                SecondDerivativeLocalMembraneStrain_rs(eLocalVector_rs, mDN_De[PointNumber], EE, AA);
+
+                boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>> kLocalVector_rs;
+                SecondDerivativeLocalCurvatureChange_rs(kLocalVector_rs, mDN_De[PointNumber], D2N_De2, a_ab, a, a3Vector, aa3Vector,  a3, EE,  AA);
+
+                //KRATOS_WATCH(eLocalVector_rs)
+                //KRATOS_WATCH(kLocalVector_rs)
+
+
+                if(CalculateStiffnessMatrixFlag == true)
                 {
-                    double temp = (*mpIsogeometricGeometry)[node].GetSolutionStepValue(PRESCRIBED_DELTA_DISPLACEMENT_X);
-                    for( unsigned int i = 0; i < mNumberOfDof; ++i )
-                        rRightHandSideVector[i] -= rLeftHandSideMatrix(i, node * mDim) * temp;
+                    AddLinearMembraneStiffness(rLeftHandSideMatrix, TanC,  BBm, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
+                    AddLinearBendingStiffness(rLeftHandSideMatrix, TanC, BBb, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
+
+                    AddNonlinearMembraneStiffness(rLeftHandSideMatrix, nVector, eLocalVector_rs,  mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
+                    AddNonlinearBendingStiffness(rLeftHandSideMatrix, moVector, kLocalVector_rs,  mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
                 }
-                if((*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Y))
+
+                if(CalculateResidualVectorFlag == true)
                 {
-                    double temp = (*mpIsogeometricGeometry)[node].GetSolutionStepValue(PRESCRIBED_DELTA_DISPLACEMENT_Y);
-                    for( unsigned int i = 0; i < mNumberOfDof; ++i )
-                        rRightHandSideVector[i] -= rLeftHandSideMatrix(i, node * mDim + 1) * temp;
+                
+                    AddInternalForces(rRightHandSideVector , nVector,eLocalVector_r, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
+                    AddInternalForces(rRightHandSideVector , moVector,kLocalVector_r, mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
+
+                    ////////// add external forces to RHS
+                    AddExternalForces(rRightHandSideVector, mN[PointNumber], mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
                 }
-                if((*mpIsogeometricGeometry)[node].IsFixed(DISPLACEMENT_Z))
-                {
-                    double temp = (*mpIsogeometricGeometry)[node].GetSolutionStepValue(PRESCRIBED_DELTA_DISPLACEMENT_Z);
-                    for( unsigned int i = 0; i < mNumberOfDof; ++i )
-                        rRightHandSideVector[i] -= rLeftHandSideMatrix(i, node * mDim + 2) * temp;
-                }
-            }
+
+                      
+
+            }// loop over integration points
+
+            //KRATOS_WATCH(rRightHandSideVector)
+
+            //KRATOS_WATCH(rLeftHandSideMatrix)
+
         }
 
         KRATOS_CATCH("")
@@ -558,6 +549,24 @@ namespace Kratos
 
     ///////////////////////////////////////// all components of residual vectors and stiffness matrices ///////////
     ///////////////////// add left hand side contribution
+
+    void KirchhoffLoveLargeDeformationShell::AddInternalForces(VectorType& RightHandSideVector, const Vector& StressResultants,
+         boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& StrainVector_r, const double& DetJ, const double& Weight)
+    {
+        noalias(RightHandSideVector) -= StressResultants(0)*StrainVector_r[0][0]*DetJ*Weight;
+        noalias(RightHandSideVector) -= StressResultants(1)*StrainVector_r[1][1]*DetJ*Weight;
+        noalias(RightHandSideVector) -= StressResultants(2)*StrainVector_r[0][1]*DetJ*Weight;
+    }
+
+    void KirchhoffLoveLargeDeformationShell::AddExternalForces(VectorType& RightHandSideVector, const Vector& N
+        , const double& DetJ, const double& Weight )
+    {
+        const Vector BodyForce = GetProperties()[BODY_FORCE];
+
+        for(unsigned int I=0; I < mNumberOfNodes; ++I)
+            for(unsigned int i=0; i<mDim; ++i)
+                RightHandSideVector(I*mDim + i) += N(I)*BodyForce(i)*DetJ*Weight;
+    }
 
     void KirchhoffLoveLargeDeformationShell::AddLinearMembraneStiffness(MatrixType& LeftHandSideMatrix, const Matrix& TanC
                                                 , const Matrix& Bm, const double& DetJ, const double& Weight)
@@ -588,71 +597,9 @@ namespace Kratos
         noalias(LeftHandSideMatrix) += moVector(2)*kVector_rs[0][1]*DetJ*Weight;
     }
 
-    ///////////////////// add right hand side contribution
-    void KirchhoffLoveLargeDeformationShell::AddExternalForces(VectorType& RightHandSideVector, const Vector& N,
-            double DetJ, double Weight)
-    {
-        const Vector BodyForce = GetProperties()[BODY_FORCE];
-        for(unsigned int I=0; I < mNumberOfNodes; ++I)
-            for(unsigned int i=0; i<mDim; ++i)
-                RightHandSideVector(I*mDim + i) += N(I)*BodyForce(i)*DetJ*Weight;
-    }
 
-    void KirchhoffLoveLargeDeformationShell::AddMembraneInternalForces(VectorType& RightHandSideVector
-                                , const Vector& nVector, const Matrix& Bm, double DetJ, double Weight)
-    {
-        noalias(RightHandSideVector) -= prod(trans(Bm), nVector)*DetJ*Weight;
-    }
-
-    void KirchhoffLoveLargeDeformationShell::AddBendingInternalForces(VectorType& RightHandSideVector
-                                , const Vector& moVector, const Matrix& Bb, double DetJ, double Weight)
-    {
-        noalias(RightHandSideVector) -= prod(trans(Bb), moVector)*DetJ*Weight;
-    }
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////// end
-
-
-    ///////////////////// tangent stiffness
-    void KirchhoffLoveLargeDeformationShell::computeTangentMaterialStiffness(Matrix& TanC, std::vector<Vector>& A)
-    {
-        TanC = ZeroMatrix(mStrainSize, mStrainSize);
-
-        Matrix Aab(2,2);
-        Aab(0, 0) = inner_prod(A[0], A[0]);
-        Aab(0, 1) = inner_prod(A[0], A[1]);
-        Aab(1, 0) = inner_prod(A[1], A[0]);
-        Aab(1, 1) = inner_prod(A[1], A[1]);
-
-        // for testing: no transformation is applied on TanC
-        // Aab(0, 0) = Aab(1, 1) = 1.0;
-        // Aab(1, 0) = Aab(0, 1) = 0.0;
-
-        double temp_ab;
-        Matrix InvAab(2,2);
-        MathUtils<double>::InvertMatrix(Aab, InvAab, temp_ab); // why inverse Aab here
-
-        // material parameters
-        double E = GetProperties()[YOUNG_MODULUS];
-        double NU = GetProperties()[POISSON_RATIO];
-
-        double aux = E/(1-pow(NU,2) );
-
-        if (TanC.size1() != 3 || TanC.size2() != 3)
-            TanC.resize(3, 3, false);
-
-            TanC(0,0) = aux*pow(InvAab(0,0), 2);
-            TanC(0,1) = aux*( NU*InvAab(0,0)*InvAab(1,1) + (1-NU)*pow(InvAab(0,1), 2) );
-            TanC(0,2) = aux*InvAab(0,0)*InvAab(0,1);
-            TanC(1,0) = TanC(0,1);
-            TanC(1,1) = aux*pow(InvAab(1,1), 2);
-            TanC(1,2) = aux*InvAab(1,1)*InvAab(0,1);
-            TanC(2,0) = TanC(0,2);
-            TanC(2,1) = TanC(1,2);
-            TanC(2,2) = aux*0.5*( (1-NU)*InvAab(0,0)*InvAab(1,1) + (1+NU)*pow(InvAab(0,1), 2) ) ; // maybe wrong here, see eq.(24) paper Nhon
-    }
-
+    ////////////////////////////////////////////////////////////////////////////////////////// end 
+    
 
     ///////////////////// normal forces
     void KirchhoffLoveLargeDeformationShell::computeNormalForces(Vector& nVector, const Matrix& C, const Vector& eVector)
@@ -665,258 +612,172 @@ namespace Kratos
     {
         moVector = ZeroVector(mStrainSize);
         noalias(moVector) = prod(C, pow(mThickness,3)/12*kVector);
-    }
+    } 
+
 
     ///////////////////// strain vectors
-
-    void KirchhoffLoveLargeDeformationShell::computeMembraneStrain(Vector& eVector,  std::vector<Vector>& a,  std::vector<Vector>& A)
+    
+    void KirchhoffLoveLargeDeformationShell::computeMembraneStrain(Matrix& eTensor,  std::vector<Vector>& a,  std::vector<Vector>& A, std::vector<Vector>& EE, std::vector<Vector>& AA )
     {
-        eVector.resize(mDim);
-        eVector(0) = 0.5*( MathUtils<double>::Dot3(a[0],a[0]) - MathUtils<double>::Dot3(A[0], A[0]) );
-        eVector(1) = 0.5*( MathUtils<double>::Dot3(a[1],a[1]) - MathUtils<double>::Dot3(A[1], A[1]) );
-        eVector(2) = ( MathUtils<double>::Dot3(a[0],a[1]) - MathUtils<double>::Dot3(A[0], A[1]) );
-    }
+        eTensor.resize(2,2);
+        eTensor = ZeroMatrix(2,2);
 
-    void KirchhoffLoveLargeDeformationShell::computeStrain(Vector& StrainVector,  const Matrix& B,  const Matrix& Displacements)
-    {
-        unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
-        unsigned int strain_size = 3;
-
-        StrainVector = ZeroVector(strain_size);
-
-        for(unsigned int i = 0; i < mpIsogeometricGeometry->size(); ++i)
-            for(unsigned int j = 0; j < strain_size; ++j)
-                for(unsigned int k = 0; k < dim; ++k)
-                    StrainVector[j] += B(j, i*dim + k) * Displacements(i, k);
-    }
-
-
-
-
-    void KirchhoffLoveLargeDeformationShell::computeCurvatureChange(Vector& kVector,  boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab
-        ,  boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& a_ab,  Vector a3Vector,  Vector A3Vector )
-    {
-        kVector.resize(mDim);
-        kVector(0) = MathUtils<double>::Dot3(A_ab[0][0], A3Vector) - MathUtils<double>::Dot3(a_ab[0][0], a3Vector) ;
-        kVector(1) = MathUtils<double>::Dot3(A_ab[1][1], A3Vector) - MathUtils<double>::Dot3(a_ab[1][1], a3Vector) ;
-        kVector(2) = 2*( MathUtils<double>::Dot3(A_ab[0][1], A3Vector) - MathUtils<double>::Dot3(a_ab[0][1], a3Vector) ) ;
-    }
-    ///////////////////// this section contains all B matrix
-    void KirchhoffLoveLargeDeformationShell::computeMembraneBMatrix(Matrix& Bm, const Matrix& DN_De, const std::vector<Vector>& a)
-    {
-        if(Bm.size1() != mStrainSize)
-            Bm.resize(mStrainSize,mNumberOfDof);
-        noalias(Bm) = ZeroMatrix(mStrainSize, mNumberOfDof);
-
-        for(unsigned int I=0; I< mNumberOfNodes; ++I)
+        for(unsigned int gamma=0; gamma<2;++gamma)
         {
-            for(unsigned int i=0; i< mDim; ++i)
+            for(unsigned int delta=0; delta<2; ++delta)
             {
-                Bm(0, I*mDim + i) = DN_De(I, 0)*a[0](i);
-                Bm(1, I*mDim + i) = DN_De(I, 1)*a[1](i);
-                Bm(2, I*mDim + i) =  DN_De(I,0)*a[1](i) + DN_De(I,1)*a[0](i);
-            }
-        }
-    }
-
-    void KirchhoffLoveLargeDeformationShell::computeBendingBMatrix(Matrix& Bb,  std::vector<Vector>& a
-        , Vector& a3Vector, Vector& aa3Vector, double a3 ,boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab
-                 ,const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2)
-    {
-        if(Bb.size1() != mStrainSize)
-            Bb.resize(mStrainSize, mNumberOfDof);
-        noalias(Bb) = ZeroMatrix(mStrainSize, mNumberOfDof);
-
-        std::vector<Vector> ei;
-        this->UnitBaseVectors(ei);
-
-        std::vector<Vector> eixa2(3);
-        eixa2[0] = MathUtils<double>::CrossProduct(ei[0],a[1]);
-        eixa2[1] = MathUtils<double>::CrossProduct(ei[1],a[1]);
-        eixa2[2] = MathUtils<double>::CrossProduct(ei[2],a[1]);
-
-        std::vector<Vector> a1xei(3);
-        a1xei[0] = MathUtils<double>::CrossProduct(a[0],ei[0]);
-        a1xei[1] = MathUtils<double>::CrossProduct(a[0],ei[1]);
-        a1xei[2] = MathUtils<double>::CrossProduct(a[0],ei[2]);
-
-        for(unsigned int i=0; i< mNumberOfNodes; ++i)
-        {
-            for(unsigned int j=0; j< mDim; ++j)
-            {
-
-
-                Vector a3_rVector(mDim), aa3_rVector(mDim) ; // need to declare the size of vector
-                double a3_r;
-
-                noalias(aa3_rVector) = ( DN_De(i,0)*eixa2[j] + DN_De(i,1)*a1xei[j] );
-                a3_r = MathUtils<double>::Dot3(aa3_rVector, a3Vector);   // not use noalias here
-                a3_rVector  = (aa3_rVector*a3 - aa3Vector*a3_r)*pow(a3,-2);
-
-
-
-                Bb(0, i*mDim + j) = - D2N_De2[i](0,0)*a3Vector(j) - MathUtils<double>::Dot3(a_ab[0][0], a3_rVector);
-                Bb(1, i*mDim + j) = - D2N_De2[i](1,1)*a3Vector(j) - MathUtils<double>::Dot3(a_ab[1][1], a3_rVector);
-                Bb(2, i*mDim + j) = 2*(- D2N_De2[i](0,1)*a3Vector(j) - MathUtils<double>::Dot3(a_ab[0][1], a3_rVector) );
-
-
-            }
-        }
-    }
-    //////////////////// second derivatives of membrane strains and curvature changes
-    void KirchhoffLoveLargeDeformationShell::SecondDerivativeMembraneStrain_rs(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& eVector_rs,
-        const Matrix& DN_De)
-    {
-        if (eVector_rs.size() != 2)
-            eVector_rs.resize(2);
-
-        for(unsigned int i=0; i< 2; ++i)
-        {
-            if(eVector_rs[i].size() !=2)
-                eVector_rs[i].resize(2);
-
-            for(unsigned int j=0; j<2; ++j)
-            {
-                if (eVector_rs[i][j].size1() != mNumberOfDof)
+                double temp=0;
+                for(int alpha =0 ; alpha<2; alpha++)
                 {
-                    eVector_rs[i][j].resize(mNumberOfDof, mNumberOfDof);
-                    eVector_rs[i][j] = ZeroMatrix(mNumberOfDof, mNumberOfDof);
-                }
-            }
-        }
-
-        for(unsigned int a=0; a< 2; ++a)
-        {
-            for(unsigned int b=0; b<2; ++b)
-            {
-                for(unsigned int I=0; I<mNumberOfNodes; ++I)
-                {
-                    for(unsigned int J=0; J<mNumberOfNodes; ++J)
+                    for(int beta=0; beta<2; beta++)
                     {
-                        for(unsigned int i=0;i<mDim; ++i)
-                        {
-                            for(unsigned int j=0; j<mDim; ++j)
-                            {
-                                eVector_rs[a][b](I*mDim+i, J*mDim+j)= 0.5*( DN_De(I,a)*DN_De(J,b) + DN_De(I,b)*DN_De(J,a) )*this->KroneckerDelta(i,j);
-                            }
-                        }
+                        temp += ( 0.5*( MathUtils<double>::Dot3(a[alpha],a[beta]) - MathUtils<double>::Dot3(A[alpha], A[beta]) ) )
+                                *MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]);
                     }
                 }
+
+                eTensor(gamma,delta) = temp;
             }
         }
 
-        eVector_rs[0][1] *= 2;
-        eVector_rs[1][0] *= 2;
+        eTensor(0,1) *=2;
+        eTensor(1,0) *=2;
+
     }
 
-    void KirchhoffLoveLargeDeformationShell::SecondDerivativeCurvatureChange_rs(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& kVector_rs
-        ,const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2
-        ,boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > a_ab
-        ,std::vector<Vector>& a,Vector& a3Vector, Vector& aa3Vector, const double a3,  std::vector<Vector>& e)
+
+    void KirchhoffLoveLargeDeformationShell::computeCurvatureChange(Matrix& kTensor,  boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab
+        ,  boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& a_ab,  Vector& a3Vector,  Vector& A3Vector, std::vector<Vector>& EE, std::vector<Vector>& AA)
     {
-        if (kVector_rs.size() != 2)
-            kVector_rs.resize(2);
+        kTensor.resize(2,2);
+        kTensor = ZeroMatrix(2,2);
 
-        for(unsigned int i=0; i< 2; ++i)
+        for(unsigned int gamma=0; gamma<2;++gamma)
         {
-            if(kVector_rs[i].size() !=2)
-                kVector_rs[i].resize(2);
-
-            for(unsigned int j=0; j<2; ++j)
+            for(unsigned int delta=0; delta<2; ++delta)
             {
-                if (kVector_rs[i][j].size1() != mNumberOfDof)
+                double temp=0;
+                for(int alpha =0 ; alpha<2; alpha++)
                 {
-                    kVector_rs[i][j].resize(mNumberOfDof, mNumberOfDof);
-                    kVector_rs[i][j] = ZeroMatrix(mNumberOfDof, mNumberOfDof);
+                    for(int beta=0; beta<2; beta++)
+                    {
+                        temp += ( MathUtils<double>::Dot3(A_ab[alpha][beta], A3Vector) - MathUtils<double>::Dot3(a_ab[alpha][beta], a3Vector) ) 
+                                *MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]);
+                    }
                 }
+
+                kTensor(gamma,delta) = temp;
             }
         }
 
+        kTensor(0,1) *=2;
+        kTensor(1,0) *=2;
+
+    }
 
 
-        for(unsigned int alpha=0; alpha< 2; ++alpha)
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    double KirchhoffLoveLargeDeformationShell::KroneckerDelta(int i, int j)
+    {
+        return (i=j) ? 1.0 : 0.0 ;
+    }
+
+    void KirchhoffLoveLargeDeformationShell::UnitBaseVectors(std::vector<Vector>& e)
+    {
+        if (e.size() != 3)
+            e.resize(3);
+
+        e[0]=e[1]=e[2]=ZeroVector(mDim);
+        e[0](0)=e[1](1)=e[2](2)= 1.0;
+    }
+
+
+    void KirchhoffLoveLargeDeformationShell::CalculateElasticMatrix(Matrix& C, const double& E, const double& NU)
+    {
+        unsigned int strain_size = 3;
+        if(C.size1() != strain_size || C.size2() != strain_size)
+            C.resize(strain_size, strain_size);
+
+            double c1 = E * ( 1.00 - pow(NU,2) );
+            double c2 = E * ( 1.00 - pow(NU,2) )*NU;
+            double c3 = 0.5 * E / ( 1 + NU );
+
+            C( 0, 0 ) = c1;
+            C( 0, 1 ) = c2;
+            C( 0, 2 ) = 0.0;
+            C( 1, 0 ) = c2;
+            C( 1, 1 ) = c1;
+            C( 1, 2 ) = 0.0;
+            C( 2, 0 ) = 0.0;
+            C( 2, 1 ) = 0.0;
+            C( 2, 2 ) = c3;
+     
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    void KirchhoffLoveLargeDeformationShell::LocalCartesianBasisVector(std::vector<Vector>& EE, std::vector<Vector>& A)
+    {
+        EE.resize(3);
+        for(unsigned int i=0; i<3; ++i)
+        {
+            EE[i].resize(3);
+        }
+
+        EE[0] = A[0]/MathUtils<double>::Norm3(A[0]);
+
+        Vector EE2_temp = ZeroVector(3);
+        noalias(EE2_temp) +=  A[1];
+        noalias(EE2_temp) -=  MathUtils<double>::Dot3(A[1], EE[0])*EE[0];
+        noalias(EE[1]) = ( EE2_temp )/MathUtils<double>::Norm3(EE2_temp);
+
+        EE[2] = MathUtils<double>::CrossProduct(EE[0], EE[1]); 
+    }
+
+
+    void KirchhoffLoveLargeDeformationShell::CovariantMetricCoefficient(Matrix& Aab, std::vector<Vector>& A)
+    {
+        if(Aab.size1()!=2)
+            Aab.resize(2,2);
+
+        for(unsigned int alpha=0; alpha<2; ++alpha)
         {
             for(unsigned int beta=0; beta<2; ++beta)
             {
-                for(unsigned int I=0; I<mNumberOfNodes; ++I)
-                {
-                    for(unsigned int J=0; J<mNumberOfNodes; ++J)
-                    {
-                        for(unsigned int i=0;i<mDim; ++i)
-                        {
-                            for(unsigned int j=0; j<mDim; ++j)
-                            {
-                                /////////////////////// a_abrVector dot a3_sVector
-                                //////////// a_abrVector
-                                Vector a_abrVector= ZeroVector(mDim);
-                                a_abrVector = D2N_De2[I](alpha,beta)*e[i];
-
-                                //////////// a3_sVector
-                                Vector a3_sVector =ZeroVector(mDim);
-
-                                // aa3_sVector
-                                Vector aa3_sVector;
-                                aa3_sVector = DN_De(J,0)*MathUtils<double>::CrossProduct(e[j],a[1]) + MathUtils<double>::CrossProduct(a[0],e[j])*DN_De(J,1);
-
-                                // a3_s
-                                double a3_s = MathUtils<double>::Dot3(aa3_sVector, a3Vector);
-
-                                // a3_sVector
-                                noalias(a3_sVector) = pow(a3,-2)*(aa3_sVector*a3 - aa3Vector*a3_s);
-
-                                /////////////////////// a_absVector dot a3_rVector
-                                ////////// a_absVector
-                                Vector a_absVector= ZeroVector(mDim);
-                                a_absVector = D2N_De2[J](alpha,beta)*e[j];
-
-                                //////////// a3_rVector
-                                Vector a3_rVector =ZeroVector(mDim);
-
-                                // aa3_rVector
-                                Vector aa3_rVector = ZeroVector(mDim);
-                                noalias(aa3_rVector) = DN_De(I,0)*MathUtils<double>::CrossProduct(e[i],a[1]) + MathUtils<double>::CrossProduct(a[0],e[i])*DN_De(I,1);
-
-                                // a3_r
-                                double a3_r = MathUtils<double>::Dot3(aa3_rVector, a3Vector);
-
-                                // a3_rVector
-                                noalias(a3_rVector) = pow(a3,-2)*(aa3_rVector*a3 - aa3Vector*a3_r);
-
-                                /////////////////////////  a_abVector dot a3_rsVector
-                                ///////// a3_rsVector
-                                // aa3_rsVector
-                                Vector aa3_rsVector = ZeroVector(mDim);
-                                noalias(aa3_rsVector) = DN_De(I,0)*MathUtils<double>::CrossProduct(e[i],e[j])*DN_De(J,1) +
-                                                             DN_De(J,0)*MathUtils<double>::CrossProduct(e[j],e[i])*DN_De(I,1);
-                                // a3_rs
-                                double a3_rs = pow(a3,-1)*( MathUtils<double>::Dot3(aa3_rsVector,aa3Vector) + MathUtils<double>::Dot3(aa3_rVector, aa3_sVector)
-                                                        - MathUtils<double>::Dot3(aa3_rVector,a3Vector)*MathUtils<double>::Dot3(aa3_sVector,a3Vector) );
-
-                                // a3_rsVector
-                                Vector a3_rsVector = ZeroVector(mDim);
-                                noalias(a3_rsVector) = pow(a3,-1)*( aa3_rsVector-a3_rs*a3Vector ) + pow(a3,-2)*( 2*a3Vector*a3_r*a3_s -
-                                                            a3_s*aa3_rVector - a3_r*aa3_sVector );
-
-                                ///////////////////////////////////////////////////////////////////////////////////
-                                /////////////// second derivative of curvature changes ///////////////////////////
-                                kVector_rs[alpha][beta](I*mDim+i, J*mDim+j)= -( MathUtils<double>::Dot3(a_abrVector,a3_sVector)
-                                                                         +MathUtils<double>::Dot3(a_absVector,a3_rVector)
-                                                                         +MathUtils<double>::Dot3(a_ab[alpha][beta],a3_rsVector) ) ;
-                            }
-                        }
-                    }
-                }
+                Aab(alpha,beta)= MathUtils<double>::Dot3(A[alpha], A[beta]);
             }
         }
-
-        kVector_rs[0][1] *= 2;
-        kVector_rs[1][0] *= 2;
     }
 
+    void KirchhoffLoveLargeDeformationShell::ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab)
+    {
+        AA.resize(2);
+        for(unsigned i=0; i<2;++i)
+        {
+            AA[i].resize(3);
+            AA[i] = ZeroVector(3);
+        }
 
-    ///////////////////// covariant base vectors
+
+        double temp_ab;
+        Matrix AAab(2,2);
+        MathUtils<double>::InvertMatrix(Aab, AAab, temp_ab);
+
+        noalias(AA[0]) += AAab(0,0)*A[0] ;
+        noalias(AA[0]) += AAab(0,1)*A[1] ;
+
+        noalias(AA[1]) += AAab(1,0)*A[0] ;
+        noalias(AA[1]) += AAab(1,1)*A[1] ;
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    //////////////////////////// membrane part /////////////////////////
+
+    //////////////// first derivatives
+    // covariant base vectors
     void KirchhoffLoveLargeDeformationShell::CovariantBaseVector(std::vector<Vector>& a, const Matrix& DN_De
-                    , const std::vector<Vector> X, const Matrix& u )
+                    , const std::vector<Vector>& X, const Matrix& u )
     {
         if (a.size() != 2)
             a.resize(2);
@@ -942,7 +803,7 @@ namespace Kratos
             }
         }
     }
-
+    
 
     void KirchhoffLoveLargeDeformationShell::CovariantBaseVector(std::vector<Vector>& A, const Matrix& DN_De
                                                                             , const std::vector<Vector>& X)
@@ -972,28 +833,63 @@ namespace Kratos
                 }
             }
         }
-
-
-
     }
 
-    void KirchhoffLoveLargeDeformationShell::DeformedNormalDirector(Vector& a3Vector, Vector& aa3Vector, double& a3,  std::vector<Vector>& a)
+
+
+    void KirchhoffLoveLargeDeformationShell::FirstDerivativeLocalMembraneStrain_r(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& eLocalVector_r
+        , const Matrix& DN_De,  std::vector<Vector>& a, std::vector<Vector>& EE, std::vector<Vector>& AA)
     {
-        aa3Vector = MathUtils<double>::CrossProduct(a[0], a[1]);
-        a3 = MathUtils<double>::Norm3(aa3Vector);
-        a3Vector = aa3Vector/a3;
-    }
+        if (eLocalVector_r.size() != 2)
+            eLocalVector_r.resize(2);
 
-    void KirchhoffLoveLargeDeformationShell::ReferencedNormalDirector(Vector& A3Vector, Vector& AA3Vector, double& A3,  std::vector<Vector>& A)
-    {
-        AA3Vector = MathUtils<double>::CrossProduct(A[0], A[1]);
-        A3 = MathUtils<double>::Norm3(AA3Vector);
-        A3Vector = AA3Vector/A3;
-    }
-    //////////////////////////////////////////////////////////////////////// end
+        for(unsigned int i=0; i< 2; ++i)
+        {
+            if(eLocalVector_r[i].size() !=2)
+                eLocalVector_r[i].resize(2);
 
-    ///////////////////// derivative of covariant base vectors w.r.t curvilinear coordinates
-    void KirchhoffLoveLargeDeformationShell::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab,
+            for(unsigned int j=0; j<2; ++j)
+            {
+                if (eLocalVector_r[i][j].size() != mNumberOfDof)
+                {
+                    eLocalVector_r[i][j].resize(mNumberOfDof);
+                    eLocalVector_r[i][j] = ZeroVector(mNumberOfDof);
+                }
+            }
+        }
+
+        for(unsigned int gamma=0; gamma<2;++gamma)
+        {
+            for(unsigned int delta=0; delta<2; ++delta)
+            {
+                Vector temp = ZeroVector(mNumberOfDof);
+
+                for(unsigned int alpha=0; alpha<2;++alpha)
+                {
+                    for(unsigned int beta=0; beta<2; ++beta)
+                    {
+                        for(unsigned int I=0; I< mNumberOfNodes; ++I)
+                        {
+                            for(unsigned int i=0; i< mDim; ++i)
+                            {
+                                // compute a_11
+                                temp(I*mDim + i) += 0.5*( DN_De(I,alpha)*a[beta](i) + DN_De(I,beta)*a[alpha](i) )*
+                                                MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]);
+                            }
+                        }
+                    }
+                }
+
+                noalias(eLocalVector_r[gamma][delta])= temp;
+            }
+        }
+
+        eLocalVector_r[0][1] *= 2;
+        eLocalVector_r[1][0] *= 2;
+    }
+        
+    ////////////////// second derivatives
+    void KirchhoffLoveLargeDeformationShell::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab, 
                                                  const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X, const Matrix& u)
     {
         if (a_ab.size() != 2)
@@ -1031,7 +927,7 @@ namespace Kratos
 
     }
 
-    void KirchhoffLoveLargeDeformationShell::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& A_ab,
+    void KirchhoffLoveLargeDeformationShell::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& A_ab, 
         const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X)
     {
         if (A_ab.size() != 2)
@@ -1068,146 +964,282 @@ namespace Kratos
         }
 
     }
-    ////////////////////////////////////////////////////////////// end
 
-    ///////////////////// derivative of covariant base vectors w.r.t nodal displacements
-    void KirchhoffLoveLargeDeformationShell::DerivativeCovariantBaseVector_u(std::vector<Matrix>& a_ar, const Matrix& DN_De,std::vector<Vector>& e)
+    void KirchhoffLoveLargeDeformationShell::SecondDerivativeLocalMembraneStrain_rs(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& eLocalVector_rs,
+        const Matrix& DN_De, std::vector<Vector>& EE, std::vector<Vector>& AA)
     {
-        if (a_ar.size() != 2)
-            a_ar.resize(2);
-
-        for(unsigned int alpha=0; alpha< 2; ++alpha)
-        {
-            if (a_ar[alpha].size1() != mDim)
-                a_ar[alpha].resize(mDim, mNumberOfDof);
-            a_ar[alpha] = ZeroMatrix(mDim, mNumberOfDof);
-        }
-
-        // note that a_ar means the derivative of covariant base vectors a_alpha w.r.t nodal displacement u_r
-        for(unsigned int alpha = 0; alpha < 2; ++alpha )
-        {
-            for(unsigned int a=0; a < mNumberOfNodes; ++a)
-            {
-                for(unsigned int i=0; i < mDim; ++i)
-                {
-                    // a_ar : a_alpha,r
-                    a_ar[alpha](0, a*mDim +i) = DN_De(a,alpha)*e[i](0);
-                    a_ar[alpha](1, a*mDim +i) = DN_De(a,alpha)*e[i](1);
-                    a_ar[alpha](2, a*mDim +i) = DN_De(a,alpha)*e[i](2);
-                }
-            }
-        }
-    }
-
-    void KirchhoffLoveLargeDeformationShell::DerivativeNumeratorNomalDirector(Matrix& aa3_r,  std::vector<Vector>& a,
-                                                                            std::vector<Vector>& e, const Matrix DN_De)
-    {
-        if(aa3_r.size1() != mStrainSize)
-            aa3_r.resize(mStrainSize, mNumberOfDof);
-
-        std::vector<Vector> eixa2 , eixa1;
-        eixa1.resize(3);
-        eixa2.resize(3);
-
-        for(unsigned int i=0; i<3; i++)
-        {
-            eixa1[i].resize(mDim);
-            eixa2[i].resize(mDim);
-        }
-
-
-        for(unsigned int i=0; i<3; i++)
-        {
-            eixa1[i] = MathUtils<double>::CrossProduct(e[i], a[0]);
-            eixa2[i] = MathUtils<double>::CrossProduct(e[i], a[1]);
-        }
-
-
-        for(unsigned int j=0; j< mStrainSize; j++)
-        {
-            for(unsigned int I=0; I< mNumberOfNodes; I++)
-            {
-                for(unsigned int i=0; i< mDim; i++)
-                {
-                    aa3_r(j, I*mDim + i) = DN_De(I,0)*eixa2[i](j) + DN_De(I,1)*eixa1[i](j);
-                }
-            }
-        }
-
-    }
-
-    void KirchhoffLoveLargeDeformationShell::DerivativeDenominatorNormalDirector(Matrix& a3_r,  Matrix& aa3_r,  Vector& a3Vector )
-    {
-        a3_r = ZeroMatrix(1, mNumberOfDof);
-
-        for(unsigned int I=0; I < mNumberOfNodes; I++)
-        {
-            for(unsigned int i=0; i< mDim; i++)
-            {
-                a3_r(0, I*mDim + i) = aa3_r(0, I*mDim +i)*a3Vector(0) + aa3_r(1, I*mDim +i)*a3Vector(1) + aa3_r(2, I*mDim +i)*a3Vector(2);
-            }
-        }
-    }
-
-
-
-    void KirchhoffLoveLargeDeformationShell::SecondDerivativeCovariantBaseVector_ur(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix> >& a_abr
-        , const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector> e)
-    {
-        if (a_abr.size() != 2)
-            a_abr.resize(2);
+        if (eLocalVector_rs.size() != 2)
+            eLocalVector_rs.resize(2);
 
         for(unsigned int i=0; i< 2; ++i)
         {
-            if(a_abr[i].size() !=2)
-                a_abr[i].resize(2);
+            if(eLocalVector_rs[i].size() !=2)
+                eLocalVector_rs[i].resize(2);
 
             for(unsigned int j=0; j<2; ++j)
             {
-                if (a_abr[i][j].size1() != mStrainSize)
+                if (eLocalVector_rs[i][j].size1() != mNumberOfDof)
                 {
-                    a_abr[i][j].resize(mStrainSize, mNumberOfDof);
-                    a_abr[i][j] = ZeroMatrix(mStrainSize, mNumberOfDof);
+                    eLocalVector_rs[i][j].resize(mNumberOfDof, mNumberOfDof);
+                    eLocalVector_rs[i][j] = ZeroMatrix(mNumberOfDof, mNumberOfDof);
                 }
             }
         }
 
-        for(unsigned int alpha=0; alpha<2; ++alpha)
+        std::vector<Vector> e;
+        this->UnitBaseVectors(e);
+
+        for(unsigned int gamma=0; gamma<2;++gamma)
         {
-            for(unsigned int beta=0; beta<2; ++beta)
+            for(unsigned int delta=0; delta<2; ++delta)
             {
-                for(unsigned int I=0; I< mNumberOfNodes; ++I)
+                Matrix temp = ZeroMatrix(mNumberOfDof, mNumberOfDof);
+
+                for(unsigned int alpha=0; alpha<2;++alpha)
                 {
-                    for(unsigned int i=0; i< mDim; ++i)
+                    for(unsigned int beta=0; beta<2; ++beta)
                     {
-                        a_abr[alpha][beta](0, I*mDim + i) += D2N_De2[I](alpha,beta)*e[i](0);
-                        a_abr[alpha][beta](1, I*mDim + i) += D2N_De2[I](alpha,beta)*e[i](1);
-                        a_abr[alpha][beta](2, I*mDim + i) += D2N_De2[I](alpha,beta)*e[i](2);
+                        for(unsigned int I=0; I< mNumberOfNodes; ++I)
+                        {
+                            for(unsigned int J=0; J < mNumberOfNodes; ++J)
+                            {
+                                for(unsigned int i=0; i< mDim; ++i)
+                                {
+                                    for(unsigned int j=0; j< mDim; ++j)
+                                    {
+                                        // compute a_11
+                                        temp(I*mDim+i, J*mDim+j) +=  ( 0.5*( DN_De(I,alpha)*DN_De(J,beta)
+                                                                    + DN_De(I,beta)*DN_De(J,alpha)  ) *this->KroneckerDelta(i,j) )
+                                                            *MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+
+                noalias(eLocalVector_rs[gamma][delta])= temp;
             }
         }
+
+        eLocalVector_rs[0][1] *= 2;
+        eLocalVector_rs[1][0] *= 2;
     }
 
-
-
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    double KirchhoffLoveLargeDeformationShell::KroneckerDelta(int i, int j)
+    ////////////////////////////////////////////////////////////////////
+    //////////////////////////// bending part /////////////////////////
+    void KirchhoffLoveLargeDeformationShell::DeformedNormalDirector(Vector& a3Vector, Vector& aa3Vector, double& a3,  std::vector<Vector>& a)
     {
-        return (i=j) ? 1.0 : 0.0 ;
+        aa3Vector = MathUtils<double>::CrossProduct(a[0], a[1]);
+        a3 = MathUtils<double>::Norm3(aa3Vector);
+        a3Vector = aa3Vector/a3;
     }
 
-    void KirchhoffLoveLargeDeformationShell::UnitBaseVectors(std::vector<Vector>& e)
+    void KirchhoffLoveLargeDeformationShell::ReferencedNormalDirector(Vector& A3Vector, Vector& AA3Vector, double& A3,  std::vector<Vector>& A)
     {
-        if (e.size() != 3)
-            e.resize(3);
-
-        e[0]=e[1]=e[2]=ZeroVector(mDim);
-        e[0](0)=e[1](1)=e[2](2)= 1.0;
+        AA3Vector = MathUtils<double>::CrossProduct(A[0], A[1]);
+        A3 = MathUtils<double>::Norm3(AA3Vector);
+        A3Vector = AA3Vector/A3;
     }
+
+    void KirchhoffLoveLargeDeformationShell::FirstDerivativeLocalCurvatureChange_r(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& kLocalVector_r
+        , std::vector<Vector>& a
+        , Vector& a3Vector, Vector& aa3Vector, double& a3 ,boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab
+        , const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2, std::vector<Vector>& EE, std::vector<Vector>& AA)
+    {
+        if (kLocalVector_r.size() != 2)
+            kLocalVector_r.resize(2);
+
+        for(unsigned int i=0; i< 2; ++i)
+        {
+            if(kLocalVector_r[i].size() !=2)
+                kLocalVector_r[i].resize(2);
+
+            for(unsigned int j=0; j<2; ++j)
+            {
+                if (kLocalVector_r[i][j].size() != mNumberOfDof)
+                {
+                    kLocalVector_r[i][j].resize(mNumberOfDof);
+                    kLocalVector_r[i][j] = ZeroVector(mNumberOfDof);
+                }
+            }
+        }
+
+        std::vector<Vector> e;
+        this->UnitBaseVectors(e);
+
+        for(unsigned int gamma=0; gamma<2;++gamma)
+        {
+            for(unsigned int delta=0; delta<2; ++delta)
+            {
+                Vector temp = ZeroVector(mNumberOfDof);
+
+                for(unsigned int alpha=0; alpha<2;++alpha)
+                {
+                    for(unsigned int beta=0; beta<2; ++beta)
+                    {
+                        for(unsigned int I=0; I< mNumberOfNodes; ++I)
+                        {
+                            for(unsigned int i=0; i< mDim; ++i)
+                            {
+                                Vector a3_rVector(mDim), aa3_rVector(mDim) ; // need to declare the size of vector
+                                double a3_r;
+                
+                                noalias(aa3_rVector) =  DN_De(I,0)*MathUtils<double>::CrossProduct(e[i],a[1]) + DN_De(I,1)*MathUtils<double>::CrossProduct(a[0],e[i]);
+                                a3_r = MathUtils<double>::Dot3(aa3_rVector, a3Vector);   // not use noalias here
+                                a3_rVector  = (aa3_rVector*a3 - aa3Vector*a3_r)*pow(a3,-2);
+           
+                                temp(I*mDim + i) += (- D2N_De2[I](alpha,beta)*a3Vector(i) - MathUtils<double>::Dot3(a_ab[alpha][beta], a3_rVector) )*
+                                                            MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]) ;
+
+                            }
+                        }
+                    }
+                }
+
+                noalias(kLocalVector_r[gamma][delta])= temp;
+            }
+        }
+
+        kLocalVector_r[0][1] *= 2;
+        kLocalVector_r[1][0] *= 2;
+    }
+
+    void KirchhoffLoveLargeDeformationShell::SecondDerivativeLocalCurvatureChange_rs(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& kLocalVector_rs
+        ,const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2
+        ,boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab
+        ,std::vector<Vector>& a,Vector& a3Vector, Vector& aa3Vector, const double& a3
+        , std::vector<Vector>& EE, std::vector<Vector>& AA)
+    {
+        if (kLocalVector_rs.size() != 2)
+            kLocalVector_rs.resize(2);
+
+        for(unsigned int i=0; i< 2; ++i)
+        {
+            if(kLocalVector_rs[i].size() !=2)
+                kLocalVector_rs[i].resize(2);
+
+            for(unsigned int j=0; j<2; ++j)
+            {
+                if (kLocalVector_rs[i][j].size1() != mNumberOfDof)
+                {
+                    kLocalVector_rs[i][j].resize(mNumberOfDof, mNumberOfDof);
+                    kLocalVector_rs[i][j] = ZeroMatrix(mNumberOfDof, mNumberOfDof);
+                }
+            }
+        }
+
+        std::vector<Vector> e;
+        this->UnitBaseVectors(e);
+
+        for(unsigned int gamma=0; gamma<2;++gamma)
+        {
+            for(unsigned int delta=0; delta<2; ++delta)
+            {
+                Matrix temp = ZeroMatrix(mNumberOfDof, mNumberOfDof);
+
+                for(unsigned int alpha=0; alpha<2;++alpha)
+                {
+                    for(unsigned int beta=0; beta<2; ++beta)
+                    {
+                        for(unsigned int I=0; I< mNumberOfNodes; ++I)
+                        {
+                            for(unsigned int J=0; J < mNumberOfNodes; ++J)
+                            {
+                                for(unsigned int i=0; i< mDim; ++i)
+                                {
+                                    for(unsigned int j=0; j< mDim; ++j)
+                                    {
+                                        /////////////////////// a_abrVector dot a3_sVector
+                                        //////////// a_abrVector
+                                        Vector a_abrVector= ZeroVector(mDim);
+                                        a_abrVector = D2N_De2[I](alpha,beta)*e[i];
+
+                                        //////////// a3_sVector
+                                        Vector a3_sVector =ZeroVector(mDim);
+
+                                        // aa3_sVector
+                                        Vector aa3_sVector;
+                                        aa3_sVector = DN_De(J,0)*MathUtils<double>::CrossProduct(e[j],a[1]) + MathUtils<double>::CrossProduct(a[0],e[j])*DN_De(J,1);
+
+                                        // a3_s
+                                        double a3_s = MathUtils<double>::Dot3(aa3_sVector, a3Vector);
+
+                                        // a3_sVector
+                                        noalias(a3_sVector) = pow(a3,-2)*(aa3_sVector*a3 - aa3Vector*a3_s);
+
+
+                                        /////////////////////// a_absVector dot a3_rVector
+                                        ////////// a_absVector
+                                        Vector a_absVector= ZeroVector(mDim);
+                                        a_absVector = D2N_De2[J](alpha,beta)*e[j];
+
+                                        //////////// a3_rVector
+                                        Vector a3_rVector =ZeroVector(mDim);
+
+                                        // aa3_rVector
+                                        Vector aa3_rVector = ZeroVector(mDim);
+                                        noalias(aa3_rVector) = DN_De(I,0)*MathUtils<double>::CrossProduct(e[i],a[1]) + MathUtils<double>::CrossProduct(a[0],e[i])*DN_De(I,1);
+
+                                        // a3_r
+                                        double a3_r = MathUtils<double>::Dot3(aa3_rVector, a3Vector);
+
+                                        // a3_rVector
+                                        noalias(a3_rVector) = pow(a3,-2)*(aa3_rVector*a3 - aa3Vector*a3_r);
+
+                                        /////////////////////////  a_abVector dot a3_rsVector
+                                        ///////// a3_rsVector
+                                        // aa3_rsVector
+                                        Vector aa3_rsVector = ZeroVector(mDim);
+                                        noalias(aa3_rsVector) = DN_De(I,0)*MathUtils<double>::CrossProduct(e[i],e[j])*DN_De(J,1) + 
+                                                             DN_De(J,0)*MathUtils<double>::CrossProduct(e[j],e[i])*DN_De(I,1);
+                                        // a3_rs
+                                        double a3_rs = pow(a3,-1)*( MathUtils<double>::Dot3(aa3_rsVector,aa3Vector) + MathUtils<double>::Dot3(aa3_rVector, aa3_sVector)
+                                                        - MathUtils<double>::Dot3(aa3_rVector,a3Vector)*MathUtils<double>::Dot3(aa3_sVector,a3Vector) );
+
+                                        // a3_rsVector
+                                        Vector a3_rsVector = ZeroVector(mDim);
+                                        noalias(a3_rsVector) = pow(a3,-1)*( aa3_rsVector-a3_rs*a3Vector ) + pow(a3,-2)*( 2*a3Vector*a3_r*a3_s - 
+                                                            a3_s*aa3_rVector - a3_r*aa3_sVector );
+
+                                        ///////////////////////////////////////////////////////////////////////////////////
+                                        /////////////// second derivative of curvature changes ///////////////////////////
+                                        temp(I*mDim+i, J*mDim+j) += (-( MathUtils<double>::Dot3(a_abrVector,a3_sVector)
+                                                                         +MathUtils<double>::Dot3(a_absVector,a3_rVector)
+                                                                         +MathUtils<double>::Dot3(a_ab[alpha][beta],a3_rsVector) ) )
+                                                            *MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]) ; 
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                noalias(kLocalVector_rs[gamma][delta])= temp;
+            }
+        }
+
+        kLocalVector_rs[0][1] *= 2;
+        kLocalVector_rs[1][0] *= 2;
+    }
+
+
+    void KirchhoffLoveLargeDeformationShell::CreatingBmatrix(Matrix& BMatrix, const boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& LocalStrainVector_r)
+    {
+        if(BMatrix.size1() != mStrainSize)
+            BMatrix.resize(mStrainSize, mNumberOfDof);
+        noalias(BMatrix) = ZeroMatrix(mStrainSize, mNumberOfDof);
+
+        for (int i=0; i< mNumberOfDof; i++)
+        {
+            BMatrix(0,i) = LocalStrainVector_r[0][0](i);
+            BMatrix(1,i) = LocalStrainVector_r[1][1](i);
+            BMatrix(2,i) = LocalStrainVector_r[0][1](i);
+        }
+
+    }
+
+
 
 
 } // Namespace Kratos
-
-#undef DEBUG_SHELL
