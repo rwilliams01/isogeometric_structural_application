@@ -23,6 +23,7 @@
 #include "isogeometric_application/custom_geometries/isogeometric_geometry.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "phase_field_application/custom_utilities/isotropic_tensor_utility.h"
+//#include "structural_application/constitutive_laws/J2_finite_strain_plasticity_plane_stress.h"
 
 
 namespace Kratos
@@ -155,6 +156,7 @@ public:
 
     void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
+    void FinalizeSolutionStep( ProcessInfo& CurrentProcessInfo );
 
     ////////////////////////////////////////////////////////////
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
@@ -200,11 +202,14 @@ private:
 
     IntegrationMethod mThisIntegrationMethod;
 
+    boost::numeric::ublas::vector<boost::numeric::ublas::vector<ConstitutiveLaw::Pointer>> mConstitutiveLawVector;
+
     int mDim ;
     int mNumberOfNodes;
     int mStrainSize;
     int mNumberOfDof;
     double mThickness;
+    double mTotalDomainInitialSize;
 
     // material parameters
     double mE, mNU , mLambda, mMu ,mKappa ;
@@ -239,103 +244,141 @@ private:
                        bool MaterialUpdateFlag = true );
 
     ///////////////////////////////////////// all components of residual vectors and stiffness matrices ///////////
-    ///////////////////// add left hand side contribution
-    void AddLinearMembraneStiffness(MatrixType& LeftHandSideMatrix, const Matrix& TanC, const Matrix& Bm, const double& DetJ, const double& Weight);
-
-    void AddLinearBendingStiffness(MatrixType& LeftHandSideMatrix, const Matrix& TanC, const Matrix& Bb,  const double& DetJ, const double& Weight);
-
-    void AddNonlinearMembraneStiffness( MatrixType& LeftHandSideMatrix,const Vector& nVector
-        , const boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& eVector_rs, const double& DetJ, const double& Weight);
-
-    void AddNonlinearBendingStiffness( MatrixType& LeftHandSideMatrix,const Vector& moVector
-        , const boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& kVector_rs, const double& DetJ, const double& Weight);
-
-    ////////////////////// add right hand side contribution
-    void AddInternalForces(VectorType& RightHandSideVector, const Vector& StressResultants, boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& StrainVector_r, const double& DetJ, const double& Weight);
+    void AddInternalForces(VectorType& RightHandSideVector, const Vector& StressResultants,
+        std::vector<std::vector<Vector> >& StrainVector_r, const double& DetJ, const double& Weight);
 
     void AddExternalForces(VectorType& RightHandSideVector, const Vector& N
         , const double& DetJ, const double& Weight );
-  
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    void AddLinearStiffnessMatrix(MatrixType& LeftHandSideMatrix, const Matrix& Di, const Matrix& BlhsMatrix
+        , const Matrix& BrhsMatrix, const double& DetJ, const double& Weight);
 
-    //////////////////// stress resultants
-    void computeNormalForces(Vector& nVector, const Matrix& C, const Vector& eVector);
-
+    void AddNonlinearStiffnessMatrix( MatrixType& LeftHandSideMatrix,const Vector& StressResultants
+            , const std::vector<std::vector<Matrix>>& StrainVector_rs, const double& DetJ, const double& Weight);
+    ///////////////////// add left hand side contribution
+    void computeMembraneStrain(Matrix& eTensor,  Matrix& Aab, Matrix& aab  );
     
-    void computeBendingMoments(Vector& moVector, const Matrix& C, const Vector& kVector); 
+    void computeCurvatureChange(Matrix& kTensor, Matrix& Bab, Matrix& bab);
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////// base vectors and their derivatives///////////
+    /////////////////////////////////////////////////////////////////////////
+    void DeformedCovariantBaseVector(std::vector<Vector>& a, std::vector<Vector>& A
+                    , std::vector<Vector>& u_a );
+
+    void ReferenceCovariantBaseVector(std::vector<Vector>& A, const Matrix& DN_De
+                                                                            , const std::vector<Vector>& X);
+
+    void FirstDerivativeDisplacement_a(std::vector<Vector>& u_a, const Matrix& DN_De , const Matrix& u);
+
+    void SecondDerivativeDisplacement_ab(std::vector<std::vector<Vector> >& u_ab
+        , const ShapeFunctionsSecondDerivativesType& D2N_De2 , const Matrix& u);
+
+    void NormalDirector(Vector& a3Vector, Vector& aa3Vector, double& a3,  std::vector<Vector>& a);
+
+    void ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab);
+
+    void DerivativeReferenceCovariantBaseVector(std::vector<std::vector<Vector> >& A_ab, 
+        const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X);
+
+    void DerivativeDeformedCovariantBaseVector(std::vector<std::vector<Vector> >& a_ab
+        , std::vector<std::vector<Vector> >& A_ab
+        , std::vector<std::vector<Vector> >& u_ab);
 
 
-    //////////////////// Strain Vectors
-    void computeMembraneStrain(Matrix& eTensor,  std::vector<Vector>& a,  std::vector<Vector>& A, std::vector<Vector>& EE, std::vector<Vector>& AA );
+    void DerivativeDeformedNormalDirector_a(std::vector<Vector>& a3Vector_a, std::vector<Vector>& a
+            , Vector& aa3Vector, double& a3, std::vector<std::vector<Vector> >& a_ab);
 
-    //void computeMembraneStrain(Vector& eVector,  std::vector<Vector>& a,  std::vector<Vector>& A);
+    void DerivativeReferenceNormalDirector_a(std::vector<Vector>& A3Vector_a, std::vector<Vector>& A
+                , Vector& AA3Vector, double& A3, std::vector<std::vector<Vector> >& A_ab);
 
-    void computeCurvatureChange(Matrix& kTensor,  boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab
-        , boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& a_ab, Vector& a3Vector,  Vector& A3Vector, std::vector<Vector>& EE, std::vector<Vector>& AA );
-    /////////////////////  B matrix
+    void ContinuumCovariantBaseVector(std::vector<Vector>& g, std::vector<Vector>& a
+                    , std::vector<Vector>& a3Vector_a, Vector& a3Vector, double& theta3);
+    //////////////////////////////////////////////////////////
+    ////////////////////// material matrix ///////////////////
+    //////////////////////////////////////////////////////////
+    void CalculateElasticMatrix(Matrix& C, const double& E, const double& NU);
 
-    ///////////////////// first derivarives of strains
-    void FirstDerivativeLocalMembraneStrain_r(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& eVector_r
-            , const Matrix& DN_De,  std::vector<Vector>& a, std::vector<Vector>& EE, std::vector<Vector>& AA) ;
+    /////////////////////////////////////////////////////////////////////////
+    ///// first derivative of membrane strain and necessary components //////
+    /////////////////////////////////////////////////////////////////////////
+    void DerivativeCovariantBaseVector_r(std::vector< std::vector<std::vector<Vector>> >& a_ar, const Matrix& DN_De, std::vector<Vector>& UnitBasisVector);
 
+    void DerivativeDisplacement_r(std::vector<std::vector<Vector>>& u_r, const Vector& N, std::vector<Vector>& UnitBasisVector);
 
-    void FirstDerivativeLocalCurvatureChange_r(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& kLocalVector_r
-                , std::vector<Vector>& a
-                , Vector& a3Vector, Vector& aa3Vector, double& a3 ,boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab
-                , const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2, std::vector<Vector>& EE, std::vector<Vector>& AA);
+    void DerivativeCovariantBaseVector_abr( std::vector< std::vector<std::vector<std::vector<Vector>>> >& a_abr
+            ,const ShapeFunctionsSecondDerivativesType& D2N_De2, std::vector<Vector>& UnitBasisVector);
 
-    ///////////////////// second derivatives of membrane strains and curvature changes
+    void FirstDerivativeLocalMembraneStrain_r(std::vector<std::vector<Vector> >& eLocalVector_r
+        , std::vector< std::vector<std::vector<Vector>> >& a_ar,  std::vector<Vector>& a, std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff);
 
-    void SecondDerivativeLocalMembraneStrain_rs(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& eLocalVector_rs,
-                const Matrix& DN_De, std::vector<Vector>& EE, std::vector<Vector>& AA);
+    void SecondDerivativeLocalMembraneStrain_rs(std::vector<std::vector<Matrix>>& eLocalVector_rs,
+            std::vector< std::vector<std::vector<Vector>> >& a_ar, std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff);
+    ///////////////////////////////////////////////////////////////////////////
+    ///// first derivative of curvature changes and necessary components //////
+    ///////////////////////////////////////////////////////////////////////////
+    void DerivativeDirector_r( std::vector<std::vector<Vector>>& a3_rVector
+        ,  std::vector<std::vector<Vector>>& aa3_rVector, std::vector<std::vector<double>>& a3_r, Vector& a3Vector, double& a3);
 
-    void SecondDerivativeLocalCurvatureChange_rs(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Matrix>>& kLocalVector_rs
-                    ,const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2
-                    ,boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab
-                    ,std::vector<Vector>& a,Vector& a3Vector, Vector& aa3Vector, const double& a3
-                    , std::vector<Vector>& EE, std::vector<Vector>& AA);
+    void DerivativeDirectorNorm_r(std::vector<std::vector<double>>& a3_r
+            , std::vector<std::vector<Vector>>& aa3_rVector, Vector& a3Vector);
 
-    ///////////////////// covariant base vectors                  
-    void CovariantBaseVector(std::vector<Vector>& A, const Matrix& DN_De
-        , const std::vector<Vector>& X);
+    void DerivativeNonNormalizedDirector_r( std::vector<std::vector<Vector>>& aa3_rVector
+                , std::vector< std::vector<std::vector<Vector>> >& a_ar, std::vector<Vector>& a);
 
-    void CovariantBaseVector(std::vector<Vector>& a, const Matrix& DN_De
-        , const std::vector<Vector>& X, const Matrix& u );
+    void SecondDerivativeDirectorNorm_rs(
+                    std::vector<std::vector<double>>& a3_rs
+                  , std::vector<std::vector<Vector>>& aa3_rsVector
+                  , Vector& aa3Vector, Vector& a3Vector, double& a3,  std::vector<std::vector<Vector>>& aa3_rVector);
 
-    void DeformedNormalDirector(Vector& a3Vector, Vector& aa3Vector, double& a3, std::vector<Vector>& a);
+    void SecondDerivativeNonNormalizedDirector_rs(
+                    std::vector< std::vector<Vector> >& aa3_rsVector
+                 , std::vector< std::vector<std::vector<Vector>> >& a_ar);
 
-    void ReferencedNormalDirector(Vector& A3Vector, Vector& AA3Vector, double& A3,  std::vector<Vector>& A);
- 
-    ///////////////////// derivative of covariant base vectors w.r.t curvilinear coordinates
+    void SecondDerivativeDirector_rs(
+                std::vector<std::vector<Vector>>& a3_rsVector
+              , std::vector<std::vector<Vector>>& aa3_rsVector
+              , std::vector<std::vector<double>>& a3_rs, Vector& a3Vector, double& a3
+              ,  std::vector<std::vector<Vector>>& aa3_rVector, std::vector<std::vector<double>>& a3_r);
 
-    void DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& a_ab
-                                    , const ShapeFunctionsSecondDerivativesType& D2N_De2,  const std::vector<Vector>& X, const Matrix& u);
+    void FirstDerivativeLocalCurvatureChange_r(std::vector<std::vector<Vector> >& kLocalVector_r
+        , std::vector< std::vector<std::vector<std::vector<Vector>>> >& a_abr
+        , std::vector<std::vector<Vector> >& a_ab
+        , Vector& a3Vector , std::vector<std::vector<Vector>>& a3_rVector
+        , std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff);
 
-    void DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab
-                                                        , const ShapeFunctionsSecondDerivativesType& D2N_De2,  const std::vector<Vector>& X);
+    void SecondDerivativeLocalCurvatureChange_rs(std::vector<std::vector<Matrix> >& kLocalVector_rs
+            ,std::vector< std::vector<std::vector<std::vector<Vector>>> >& a_abr, std::vector<std::vector<Vector>>& a3_rVector
+            , std::vector<std::vector<Vector> >& a_ab, std::vector<std::vector<Vector>>& a3_rsVector
+            , std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff);
+    ///////////////////////////////////////////////////////////////////
+    ////////// shell fundamental properties ///////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    void CovariantMetricCoefficient(Matrix& Aab, std::vector<Vector>& A);
 
+    void CovariantCurvatureCoefficient(Matrix& Bab, std::vector<std::vector<Vector> >& A_ab, Vector& A3Vector);
 
-    // material matrix
-    void CalculateElasticMatrix(Matrix& C,const double& E, const double& NU);
-
+    //////////////////////////////////////////////////////////////
+    //////////// addtional utilities /////////////////////////////
+    //////////////////////////////////////////////////////////////
+    void CreatingBmatrix(Matrix& BMatrix
+        , const std::vector<std::vector<Vector> >& LocalStrainVector_r);
 
     double KroneckerDelta(int i, int j);
 
+    void LocalTransformationOfTensor(Matrix& T, Matrix& M, std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff);
+
     void UnitBaseVectors(std::vector<Vector>& e);
 
+    void LocalCartesianBasisVector(std::vector<Vector>& EE, std::vector<Vector>& A, Vector& A3Vector);
 
-    //////////////////////////////////////////////////////////////////////////////
-    ///////////// transformation operator ///////////////////////////////////////
-    void LocalCartesianBasisVector(std::vector<Vector>& EE, std::vector<Vector>& A);
- 
-    void CovariantMetricCoefficient(Matrix& Aab, std::vector<Vector>& A);
-    
-    void ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab);
+    void LocalTransformationCoefficient(std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff, std::vector<Vector>& EE, std::vector<Vector>& AA);
 
-    void CreatingBmatrix(Matrix& BMatrix, const boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& LocalStrainVector_r);
 
-  
+
+
+    //int Check( const ProcessInfo& rCurrentProcessInfo );
+
 }; // Class KinematicLinearKirchoffLoveIsogeometricShell 
 
 }  // namespace Kratos.

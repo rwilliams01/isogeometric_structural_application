@@ -25,6 +25,19 @@
 namespace Kratos
 {
 
+    KRATOS_CREATE_VARIABLE( Vector, REF_BASE_VECTOR_1 )
+    KRATOS_CREATE_VARIABLE( Vector, REF_BASE_VECTOR_2 )
+    KRATOS_CREATE_VARIABLE( Vector, REF_BASE_VECTOR_3 )
+    KRATOS_CREATE_VARIABLE( Vector, REF_CONTRA_BASE_VECTOR_1 )
+    KRATOS_CREATE_VARIABLE( Vector, REF_CONTRA_BASE_VECTOR_2 )
+    KRATOS_CREATE_VARIABLE( Vector, REF_CONTRA_BASE_VECTOR_3 )
+    KRATOS_CREATE_VARIABLE( Vector, CURRENT_BASE_VECTOR_1 )
+    KRATOS_CREATE_VARIABLE( Vector, CURRENT_BASE_VECTOR_2 )
+    KRATOS_CREATE_VARIABLE( Vector, CURRENT_BASE_VECTOR_3 )
+    KRATOS_CREATE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_1 )
+    KRATOS_CREATE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_2 )
+    KRATOS_CREATE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_3 )
+
     KratosIsogeometricStructuralApplication::KratosIsogeometricStructuralApplication()
     :
       mKinematicLinearGeo1dNURBS( 0, Element::GeometryType::Pointer( new Geo1dNURBS<Node<3> >() ) )
@@ -64,6 +77,9 @@ namespace Kratos
     #endif
     #endif
     , mPenaltyStiffnessShell3D2N( 0, Element::GeometryType::Pointer( new Line3D2<Node<3> >( Element::GeometryType::PointsArrayType( 2, Node<3>() ) ) ) )
+    , mConvectiveLinearKirchhoffLoveShellBezier2D3( 0, Element::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mLinearBendingStripBezier2D3( 0, Element::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mNonLinearBendingStripBezier2D3( 0, Element::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
     {}
 
     void KratosIsogeometricStructuralApplication::Register()
@@ -71,6 +87,20 @@ namespace Kratos
         // calling base class register to register Kratos components
         KratosApplication::Register();
         std::cout << "Initializing KratosIsogeometricStructuralApplication... " << std::endl;
+
+        // register variables
+        KRATOS_REGISTER_VARIABLE( REF_BASE_VECTOR_1 )
+        KRATOS_REGISTER_VARIABLE( REF_BASE_VECTOR_2 )
+        KRATOS_REGISTER_VARIABLE( REF_BASE_VECTOR_3 )
+        KRATOS_REGISTER_VARIABLE( REF_CONTRA_BASE_VECTOR_1 )
+        KRATOS_REGISTER_VARIABLE( REF_CONTRA_BASE_VECTOR_2 )
+        KRATOS_REGISTER_VARIABLE( REF_CONTRA_BASE_VECTOR_3 )
+        KRATOS_REGISTER_VARIABLE( CURRENT_BASE_VECTOR_1 )
+        KRATOS_REGISTER_VARIABLE( CURRENT_BASE_VECTOR_2 )
+        KRATOS_REGISTER_VARIABLE( CURRENT_BASE_VECTOR_3 )
+        KRATOS_REGISTER_VARIABLE( LOCAL_CARTESIAN_VECTOR_1 )
+        KRATOS_REGISTER_VARIABLE( LOCAL_CARTESIAN_VECTOR_2 )
+        KRATOS_REGISTER_VARIABLE( LOCAL_CARTESIAN_VECTOR_3 )
 
         // register elements
         KRATOS_REGISTER_ELEMENT( "KinematicLinearGeo1dNURBS", mKinematicLinearGeo1dNURBS )

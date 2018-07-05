@@ -27,6 +27,10 @@ set( KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell_rev2.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/K_L_large_deformation_shell.cpp
+#    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/K_L_linear_shell.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/convective_linear_KL_shell.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/linear_bending_strip.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/nonlinear_bending_strip.cpp
     )
 
 set( KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES ${KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES}

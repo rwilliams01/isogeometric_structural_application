@@ -32,6 +32,9 @@
 #include "custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell.h"
 #include "custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell_rev2.h"
 #include "custom_elements/K_L_large_deformation_shell.h"
+#include "custom_elements/convective_linear_KL_shell.h"
+#include "custom_elements/linear_bending_strip.h"
+#include "custom_elements/nonlinear_bending_strip.h"
 #include "custom_conditions/line_force_isogeometric.h"
 #include "custom_conditions/line_force_isogeometric_2d.h"
 #include "custom_conditions/line_pressure_isogeometric_2d.h"
@@ -62,6 +65,19 @@
 namespace Kratos
 {
 
+KRATOS_DEFINE_VARIABLE( Vector, REF_BASE_VECTOR_1 )
+KRATOS_DEFINE_VARIABLE( Vector, REF_BASE_VECTOR_2 )
+KRATOS_DEFINE_VARIABLE( Vector, REF_BASE_VECTOR_3 )
+KRATOS_DEFINE_VARIABLE( Vector, REF_CONTRA_BASE_VECTOR_1 )
+KRATOS_DEFINE_VARIABLE( Vector, REF_CONTRA_BASE_VECTOR_2 )
+KRATOS_DEFINE_VARIABLE( Vector, REF_CONTRA_BASE_VECTOR_3 )
+KRATOS_DEFINE_VARIABLE( Vector, CURRENT_BASE_VECTOR_1 )
+KRATOS_DEFINE_VARIABLE( Vector, CURRENT_BASE_VECTOR_2 )
+KRATOS_DEFINE_VARIABLE( Vector, CURRENT_BASE_VECTOR_3 )
+KRATOS_DEFINE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_1 )
+KRATOS_DEFINE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_2 )
+KRATOS_DEFINE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_3 )
+    
     ///@name Kratos Globals
     ///@{
 
@@ -258,6 +274,10 @@ namespace Kratos
         const ElasticConstraint mElasticFaceConstraintBezier2D3;
 
         const PenaltyStiffnessShell mPenaltyStiffnessShell3D2N;
+
+        const ConvectiveLinearKirchhoffLoveShell mConvectiveLinearKirchhoffLoveShellBezier2D3;
+        const LinearBendingStrip mLinearBendingStripBezier2D3;
+        const NonLinearBendingStrip mNonLinearBendingStripBezier2D3;
 
         ///@}
         ///@name Private Operators
