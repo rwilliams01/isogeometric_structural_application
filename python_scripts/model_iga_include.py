@@ -24,8 +24,9 @@ from KratosMultiphysics.IsogeometricApplication import *
 from KratosMultiphysics.IsogeometricStructuralApplication import *
 from KratosMultiphysics.ExternalSolversApplication import *
 from KratosMultiphysics.MKLSolversApplication import *
-from KratosMultiphysics.MortarApplication import *
-from KratosMultiphysics.IsogeometricMortarApplication import *
+## REMARK: external applications must be imported separately in the other code
+#from KratosMultiphysics.MortarApplication import *
+#from KratosMultiphysics.IsogeometricMortarApplication import *
 kernel = Kernel()   #defining kernel
 
 ##################################################################
