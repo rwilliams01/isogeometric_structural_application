@@ -22,8 +22,7 @@
 #include "includes/variables.h"
 #include "isogeometric_application/custom_geometries/isogeometric_geometry.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
-#include "phase_field_application/custom_utilities/isotropic_tensor_utility.h"
-//#include "structural_application/constitutive_laws/J2_finite_strain_plasticity_plane_stress.h"
+#include "custom_utilities/isotropic_tensor_utility.h"
 
 
 namespace Kratos
@@ -212,7 +211,7 @@ private:
     double mTotalDomainInitialSize;
 
     // material parameters
-    double mE, mNU , mLambda, mMu ,mKappa ;
+    double mE, mNU;
     
 
     std::vector<Vector> mNodalCoordinates ;

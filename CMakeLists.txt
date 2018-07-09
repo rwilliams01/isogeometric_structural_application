@@ -14,6 +14,12 @@ if(ADOL_C_DIR AND (PLATE_AND_SHELL_APPLICATION MATCHES ON))
     add_definitions(-DPLATE_AND_SHELL_APPLICATION_USE_ADOL_C)
 endif()
 
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../phase_field_application/custom_utilities/isotropic_tensor_utility.h)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../phase_field_application/custom_utilities/isotropic_tensor_utility.h ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities COPYONLY)
+else()
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isotropic_tensor_utility.h.in)
+endif()
+
 ######### add compilation units here
 set( KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_structural_application.cpp
