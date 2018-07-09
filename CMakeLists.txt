@@ -17,7 +17,8 @@ endif()
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../phase_field_application/custom_utilities/isotropic_tensor_utility.h)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../phase_field_application/custom_utilities/isotropic_tensor_utility.h ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities COPYONLY)
 else()
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isotropic_tensor_utility.h.in)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isotropic_tensor_utility.h.in
+                   ${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isotropic_tensor_utility.h)
 endif()
 
 ######### add compilation units here
