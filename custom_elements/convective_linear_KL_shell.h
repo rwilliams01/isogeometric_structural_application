@@ -141,7 +141,7 @@ private:
     double mTotalDomainInitialSize;
 
     // material parameters
-    double mE, mNU , mLambda, mMu ,mKappa ;
+    double mE, mNU , mLambda, mMu /*,mKappa*/ ;
 
     std::vector<Vector> mNodalCoordinates ;
     std::vector<Vector> mCurrentStresses;

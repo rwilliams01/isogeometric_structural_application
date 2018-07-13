@@ -192,8 +192,8 @@ void FacePressureIsogeometric::Initialize()
             manual_initilization = true;
         }
         else if( this->Has( EXTRACTION_OPERATOR_CSR_ROWPTR )
-             and this->Has( EXTRACTION_OPERATOR_CSR_COLIND )
-             and this->Has( EXTRACTION_OPERATOR_CSR_VALUES ) )
+             && this->Has( EXTRACTION_OPERATOR_CSR_COLIND )
+             && this->Has( EXTRACTION_OPERATOR_CSR_VALUES ) )
         {
             Vector rowPtr = this->GetValue( EXTRACTION_OPERATOR_CSR_ROWPTR ); // must be 0-base
             Vector colInd = this->GetValue( EXTRACTION_OPERATOR_CSR_COLIND ); // must be 0-base
