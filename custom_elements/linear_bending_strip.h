@@ -67,7 +67,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "includes/serializer.h"
 #include "includes/variables.h"
 #include "isogeometric_application/custom_geometries/isogeometric_geometry.h"
-#include "phase_field_application/custom_utilities/isotropic_tensor_utility.h"
+#include "custom_utilities/isotropic_tensor_utility.h"
 
 namespace Kratos
 {

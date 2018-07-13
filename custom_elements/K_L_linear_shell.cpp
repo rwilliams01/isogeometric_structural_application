@@ -6,7 +6,8 @@
 //
 //
 // System includes 
-
+#include <cmath>
+#include <iostream>
 
 // External includes 
 
@@ -17,11 +18,6 @@
 #include "utilities/math_utils.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
-#include "phase_field_application/phase_field_application.h"
-#include "phase_field_application/custom_utilities/eig/eig3.h"
-#include <cmath>
-#include <iostream>
-using namespace std;
 
 
 namespace Kratos
