@@ -54,6 +54,7 @@
 #include "structural_application/custom_elements/total_lagrangian.h"
 #include "structural_application/custom_elements/unsaturated_soils_element_2phase_small_strain.h"
 #include "structural_application/custom_conditions/elastic_constraint.h"
+#include "structural_application/custom_conditions/elastic_face_springs.h"
 #ifdef PLATE_AND_SHELL_APPLICATION_IS_ON
 #include "plate_and_shell_application/custom_elements/kirchhoff_love_linear_shell.h"
 #ifdef PLATE_AND_SHELL_APPLICATION_USE_ADOL_C
@@ -272,6 +273,8 @@ KRATOS_DEFINE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_3 )
         const KirchhoffLoveLargeDeformationShell mKirchhoffLoveLargeDeformationShellBezier2D3;
 
         const ElasticConstraint mElasticFaceConstraintBezier2D3;
+
+        const ElasticFaceSprings mElasticFaceSpringsBezier2D3;
 
         const PenaltyStiffnessShell mPenaltyStiffnessShell3D2N;
 

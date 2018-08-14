@@ -61,6 +61,7 @@ namespace Kratos
     , mMasterContactFaceBezier2D3( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
     , mSlaveContactFaceBezier2D3( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
     , mElasticFaceConstraintBezier2D3( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
+    , mElasticFaceSpringsBezier2D3( 0, Condition::GeometryType::Pointer( new Geo2dBezier3<Node<3> >() ) )
     , mKinematicLinearBezier2D( 0, Element::GeometryType::Pointer( new Geo2dBezier<Node<3> >() ) )
     , mKinematicLinearBezier3D( 0, Element::GeometryType::Pointer( new Geo3dBezier<Node<3> >() ) )
     , mTotalLagrangianBezier2D( 0, Element::GeometryType::Pointer( new Geo2dBezier<Node<3> >() ) )
@@ -143,6 +144,7 @@ namespace Kratos
         KRATOS_REGISTER_CONDITION( "SlaveContactFaceBezier2D3", mSlaveContactFaceBezier2D3 )
         KRATOS_REGISTER_CONDITION( "PenaltyStiffnessShell3D2N", mPenaltyStiffnessShell3D2N )
         KRATOS_REGISTER_CONDITION( "ElasticFaceConstraintBezier2D3", mElasticFaceConstraintBezier2D3 )
+        KRATOS_REGISTER_CONDITION( "ElasticFaceSpringsBezier2D3", mElasticFaceSpringsBezier2D3 )
     }
 
 } // namespace Kratos
