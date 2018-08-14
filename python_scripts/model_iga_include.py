@@ -23,7 +23,7 @@ from KratosMultiphysics.StructuralApplication import *
 from KratosMultiphysics.IsogeometricApplication import *
 from KratosMultiphysics.IsogeometricStructuralApplication import *
 from KratosMultiphysics.ExternalSolversApplication import *
-from KratosMultiphysics.MKLSolversApplication import *
+#from KratosMultiphysics.MKLSolversApplication import *
 ## REMARK: external applications must be imported separately in the other code
 #from KratosMultiphysics.MortarApplication import *
 #from KratosMultiphysics.IsogeometricMortarApplication import *
@@ -78,6 +78,7 @@ def StaticParameters():
     analysis_parameters['analysis_type'] = 0
     analysis_parameters['dissipation_radius'] = 0.1
     analysis_parameters['decouple_build_and_solve'] = False
+    analysis_parameters['builder_and_solver_type'] = "residual-based elimination deactivation"
     analysis_parameters['solving_scheme'] = 'monolithic'
     analysis_parameters['stop_Newton_Raphson_if_not_converge'] = True
     analysis_parameters['abs_tol'] = 1.0e-10
@@ -114,12 +115,12 @@ class Model:
         number_of_time_steps = 1
         self.analysis_parameters = analysis_parameters
 
-        abs_tol = self.analysis_parameters['abs_tol']
-        rel_tol = self.analysis_parameters['rel_tol']
+        self.abs_tol = self.analysis_parameters['abs_tol']
+        self.rel_tol = self.analysis_parameters['rel_tol']
 
         ## generating solver
         import structural_solver_advanced
-        self.solver = structural_solver_advanced.SolverAdvanced( self.model_part, self.domain_size, number_of_time_steps, self.analysis_parameters, abs_tol, rel_tol )
+        self.solver = structural_solver_advanced.SolverAdvanced( self.model_part, self.domain_size, number_of_time_steps, self.analysis_parameters, self.abs_tol, self.rel_tol )
         ##################################################################
         ## POST_PROCESSING DEFINITIONS ###################################
         ##################################################################
@@ -142,7 +143,7 @@ class Model:
         ## INITIALISE SOLVER FOR PARTICULAR SOLUTION #####################
         ##################################################################
         #defining linear solver
-        plinear_solver = MKLPardisoSolver()
+        plinear_solver = SuperLUSolver() # MKLPardisoSolver()
         self.solver.structure_linear_solver = plinear_solver
         self.solver.Initialize()
         (self.solver.solver).SetEchoLevel(self.analysis_parameters['echo_level'])
