@@ -260,8 +260,8 @@ KRATOS_DEFINE_VARIABLE( Vector, LOCAL_CARTESIAN_VECTOR_3 )
         // the elements below use new interface, which means it exploits the NURBS geometry in the kernel so the element is not needed to modify to work with NURBS
         const KinematicLinear mKinematicLinearBezier2D;
         const KinematicLinear mKinematicLinearBezier3D;
-        const KinematicLinear mTotalLagrangianBezier2D;
-        const KinematicLinear mTotalLagrangianBezier3D;
+        const TotalLagrangian mTotalLagrangianBezier2D;
+        const TotalLagrangian mTotalLagrangianBezier3D;
         const UnsaturatedSoilsElement_2phase_SmallStrain mUnsaturatedSoilsElement_2phase_SmallStrainBezier3D;
         #ifdef PLATE_AND_SHELL_APPLICATION_IS_ON
         const KirchhoffLoveLinearShell mKirchhoffLoveLinearShellBezier2D3;
