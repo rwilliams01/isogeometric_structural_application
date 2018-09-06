@@ -281,16 +281,21 @@ def WriteGiD(post_model_part, time, params):
         gid_io.WriteNodalResults(var, post_model_part.Nodes, time, 0)
     gid_io.FinalizeResults()
 
-### Post-process a multipatch
-def PostMultiPatch(mpatch, dim, time, params):
+### Create a post_model_part out from mpatch
+def CreatePostModelPart(mpatch, dim, params):
     fem_mesh = CreatePostMesh(mpatch, dim, params)
 
     post_model_part = ModelPart("iga-fem mesh " + params['name'])
     for var in params['variables list']:
         post_model_part.AddNodalSolutionStepVariable(var)
     fem_mesh.WriteModelPart(post_model_part)
-    print(post_model_part)
 
+    return post_model_part
+
+### Post-process a multipatch
+def PostMultiPatch(mpatch, dim, time, params):
+    post_model_part = CreatePostModelPart(mpatch, dim, params)
+    print(post_model_part)
     WriteGiD(post_model_part, time, params)
 
 ##################################################################
