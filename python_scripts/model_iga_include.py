@@ -311,6 +311,18 @@ def ComputeStrainEnergy(model_part):
                 senergy = senergy + SE[i][0] * W[i][0] * J0[i][0]
     return senergy
 
+### Compute the absolute L2-error on element
+def ComputeL2errorOnElement(element, analytical_solution, process_info):
+    error = 0.0
+    u = element.GetValuesOnIntegrationPoints(DISPLACEMENT, process_info)
+    J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+    Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
+    W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+    for i in range(0, len(u)):
+        ana_u = analytical_solution.get_displacement(Q[i][0], Q[i][1], Q[i][2])
+        error = error + (pow(u[i][0] - ana_u[0], 2) + pow(u[i][1] - ana_u[1], 2) + pow(u[i][2] - ana_u[2], 2)) * W[i][0] * J0[i][0]
+    return error
+
 ### Compute the relative L2-error
 def ComputeL2error(model_part, analytical_solution):
     nom = 0.0
@@ -329,6 +341,18 @@ def ComputeL2error(model_part, analytical_solution):
     print("Global displacement (L2) error:", error)
     return error
 
+### Compute the absolute H1-error on element
+def ComputeH1error(element, analytical_solution):
+    error = 0.0
+    o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, model_part.ProcessInfo)
+    J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, model_part.ProcessInfo)
+    Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, model_part.ProcessInfo)
+    W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, model_part.ProcessInfo)
+    for i in range(0, len(o)):
+        ana_o = analytical_solution.get_stress_3d(Q[i][0], Q[i][1], Q[i][2])
+        error = error + (pow(o[i][0] - ana_o[0], 2) + pow(o[i][1] - ana_o[1], 2) + pow(o[i][2] - ana_o[2], 2) + 2.0*(pow(o[i][3] - ana_o[3], 2) + pow(o[i][4] - ana_o[4], 2) + pow(o[i][5] - ana_o[5], 2))) * W[i][0] * J0[i][0]
+    return error
+
 ### Compute the relative H1-error
 def ComputeH1error(model_part, analytical_solution):
     nom = 0.0
@@ -345,6 +369,18 @@ def ComputeH1error(model_part, analytical_solution):
                 denom = denom + (pow(ana_o[0], 2) + pow(ana_o[1], 2) + pow(ana_o[2], 2) + 2.0*(pow(ana_o[3], 2) + pow(ana_o[4], 2) + pow(ana_o[5], 2))) * W[i][0] * J0[i][0]
     error = math.sqrt(nom / denom)
     print("Global stress (H1) error:", math.sqrt(nom / denom))
+    return error
+
+### Compute the absolute H1-error on element
+def ComputeH1errorOnElement(element, analytical_solution, process_info):
+    error = 0.0
+    o = element.GetValuesOnIntegrationPoints(THREED_STRESSES, process_info)
+    J0 = element.GetValuesOnIntegrationPoints(JACOBIAN_0, process_info)
+    Q = element.GetValuesOnIntegrationPoints(INTEGRATION_POINT_GLOBAL, process_info)
+    W = element.GetValuesOnIntegrationPoints(INTEGRATION_WEIGHT, process_info)
+    for i in range(0, len(o)):
+        ana_o = analytical_solution.get_stress_3d(Q[i][0], Q[i][1], Q[i][2])
+        error = error + (pow(o[i][0] - ana_o[0], 2) + pow(o[i][1] - ana_o[1], 2) + pow(o[i][2] - ana_o[2], 2) + 2.0*(pow(o[i][3] - ana_o[3], 2) + pow(o[i][4] - ana_o[4], 2) + pow(o[i][5] - ana_o[5], 2))) * W[i][0] * J0[i][0]
     return error
 
 ### Compute energy norm error
