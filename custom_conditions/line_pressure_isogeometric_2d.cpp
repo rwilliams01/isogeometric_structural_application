@@ -170,16 +170,22 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
     //calculating shape function values and local gradients
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-        
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
         integration_points
     );
-    
+
     #ifdef DEBUG_LEVEL1
     KRATOS_WATCH(mThisIntegrationMethod)
     KRATOS_WATCH(integration_points.size())
+    KRATOS_WATCH(typeid(*mpIsogeometricGeometry).name())
+    KRATOS_WATCH(mpIsogeometricGeometry->size())
+    std::cout << "At condition " << Id() << ":";
+    for (int i = 0; i < mpIsogeometricGeometry->size(); ++i)
+        std::cout << " " << (*mpIsogeometricGeometry)[i].Id();
+    std::cout << std::endl;
     KRATOS_WATCH(Ncontainer)
     #endif
 
@@ -189,6 +195,7 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
     // loop over integration points
     Vector Load( dim );
     Vector t( dim );
+    Vector G( dim );
     double dL;
     for ( unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++PointNumber )
     {
@@ -199,13 +206,15 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
         // compute length
         noalias( t ) = ZeroVector( dim );//tangential vector
+        noalias( G ) = ZeroVector( dim );
         for ( unsigned int n = 0; n < GetGeometry().size(); ++n )
         {
             t[0] += GetGeometry().GetPoint( n ).X0() * DN_De[PointNumber]( n, 0 );
             t[1] += GetGeometry().GetPoint( n ).Y0() * DN_De[PointNumber]( n, 0 );
+            G[0] += GetGeometry().GetPoint( n ).X0() * Ncontainer( PointNumber, n );
+            G[1] += GetGeometry().GetPoint( n ).Y0() * Ncontainer( PointNumber, n );
         }
         dL = norm_2(t);
-//        KRATOS_WATCH(t)
 
         //calculating load 
         Load[0] = -P*t[1]/dL;
