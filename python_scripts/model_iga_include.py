@@ -240,12 +240,18 @@ def CreatePostMesh(mpatch, dim, params):
     if 'variables list' not in params:
         params['variables list'] = []
         params['variables list'].append(DISPLACEMENT)
+    if 'basis' not in params:
+        params['basis'] = "b-splines"
 
     #################POST PROCESSING##################################
     if dim == 2:
-        fem_mesh = NonConformingMultipatchLagrangeMesh2D(mpatch)
+        if (params['basis'] == "b-splines") or (params['basis'] == "hb-splines"):
+            fem_mesh = NonConformingMultipatchLagrangeMesh2D(mpatch)
+        if (params['basis'] == "t-splines"):
+            fem_mesh = NonConformingTSplinesMultipatchLagrangeMesh(mpatch)
     elif dim == 3:
-        fem_mesh = NonConformingMultipatchLagrangeMesh3D(mpatch)
+        if (params['basis'] == "b-splines") or (params['basis'] == "hb-splines"):
+            fem_mesh = NonConformingMultipatchLagrangeMesh3D(mpatch)
     fem_mesh.SetBaseElementName(params['base element name'])
     fem_mesh.SetLastNodeId(params['last node id'])
     fem_mesh.SetLastElemId(params['last element id'])
