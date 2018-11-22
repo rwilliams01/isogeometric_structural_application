@@ -185,7 +185,7 @@ protected:
         KRATOS_SERIALIZE_LOAD_BASE_CLASS ( rSerializer, Element )
     }
 
-    //virtual int Check( const ProcessInfo& rCurrentProcessInfo );
+    virtual int Check( const ProcessInfo& rCurrentProcessInfo );
 
 
 private:
@@ -195,8 +195,6 @@ private:
 
     bool mIsIsotropicMaterial;
 
-
-    
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
     IntegrationMethod mThisIntegrationMethod;

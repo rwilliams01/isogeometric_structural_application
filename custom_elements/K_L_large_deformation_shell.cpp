@@ -1967,6 +1967,20 @@ namespace Kratos
 
     }
 
+    int KirchhoffLoveLargeDeformationShell::Check( const Kratos::ProcessInfo& rCurrentProcessInfo )
+    {
+        KRATOS_TRY
 
+//	    unsigned int dimension = this->GetGeometry().WorkingSpaceDimension();
+
+        if ( this->Id() < 1 )
+        {
+            KRATOS_THROW_ERROR( std::logic_error, "Element found with Id 0 or negative, Id() =", Id() );
+        }
+
+        return 0;
+
+        KRATOS_CATCH( "" );
+    }
 
 } // Namespace Kratos
