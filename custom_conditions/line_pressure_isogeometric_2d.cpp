@@ -217,8 +217,8 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
         dL = norm_2(t);
 
         //calculating load 
-        Load[0] = -P*t[1]/dL;
-        Load[1] = P*t[0]/dL;
+        Load[0] = -P*t[1];
+        Load[1] = P*t[0];
 
         // contribute to RIGHT HAND SIDE VECTOR
         if ( CalculateResidualVectorFlag == true ) //calculation of the matrix is required
@@ -226,7 +226,7 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
             for ( unsigned int prim = 0; prim < GetGeometry().size(); ++prim )
                 for ( unsigned int i = 0; i < dim; ++i )
                     rRightHandSideVector( prim * dim + i ) +=
-                        Ncontainer( PointNumber, prim ) * Load( i ) * IntegrationWeight * dL;
+                        Ncontainer( PointNumber, prim ) * Load( i ) * IntegrationWeight;
         }
     }
 

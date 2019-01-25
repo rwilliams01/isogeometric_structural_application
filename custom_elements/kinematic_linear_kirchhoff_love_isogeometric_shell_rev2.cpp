@@ -191,7 +191,7 @@ namespace Kratos
                 this->GetValue(NURBS_KNOTS_1),
                 this->GetValue(NURBS_KNOTS_2),
                 this->GetValue(NURBS_KNOTS_3),
-                this->GetValue(NURBS_WEIGHT),
+                this->GetValue(NURBS_WEIGHTS),
                 ExtractionOperator,
                 this->GetValue(NURBS_DEGREE_1),
                 this->GetValue(NURBS_DEGREE_2),

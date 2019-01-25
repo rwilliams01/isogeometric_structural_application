@@ -114,7 +114,7 @@ namespace Kratos
 //        KRATOS_WATCH(GetValue(NURBS_KNOTS_1))
 //        KRATOS_WATCH(GetValue(NURBS_KNOTS_2))
 //        KRATOS_WATCH(GetValue(NURBS_KNOTS_3))
-//        KRATOS_WATCH(GetValue(NURBS_WEIGHT))
+//        KRATOS_WATCH(GetValue(NURBS_WEIGHTS))
 //        KRATOS_WATCH(GetValue(EXTRACTION_OPERATOR))
 //        KRATOS_WATCH(GetValue(NURBS_DEGREE_1))
 //        KRATOS_WATCH(GetValue(NURBS_DEGREE_2))
@@ -159,7 +159,7 @@ namespace Kratos
             this->GetValue(NURBS_KNOTS_1),
             this->GetValue(NURBS_KNOTS_2),
             this->GetValue(NURBS_KNOTS_3),
-            this->GetValue(NURBS_WEIGHT),
+            this->GetValue(NURBS_WEIGHTS),
             ExtractionOperator,
             this->GetValue(NURBS_DEGREE_1),
             this->GetValue(NURBS_DEGREE_2),
