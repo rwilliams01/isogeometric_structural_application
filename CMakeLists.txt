@@ -32,6 +32,7 @@ endif()
 set( KRATOS_ISOGEOMETRIC_STRUCTURAL_APPLICATION_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/isogeometric_structural_application.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_utilities_to_python.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_process_to_python.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/isogeometric_structural_python_application.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_utilities/isogeometric_posteriori_estimator.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/kinematic_linear_isogeometric.cpp

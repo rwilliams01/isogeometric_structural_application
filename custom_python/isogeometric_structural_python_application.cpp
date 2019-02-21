@@ -18,6 +18,7 @@
 // Project includes
 #include "includes/define.h"
 #include "add_utilities_to_python.h"
+#include "add_process_to_python.h"
 #include "isogeometric_structural_application.h"
 
 namespace Kratos
@@ -34,6 +35,7 @@ namespace Python
         ("KratosIsogeometricStructuralApplication");
 
         IsogeometricStructuralApplication_AddCustomUtilitiesToPython();
+        IsogeometricStructuralApplication_AddProcessToPython();
 
     }
 
