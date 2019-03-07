@@ -293,6 +293,7 @@ def CreatePostModelPart(mpatch, dim, params):
 
     post_model_part = ModelPart("iga-fem mesh " + params['name'])
     for var in params['variables list']:
+        print("variable '" + str(var) + "' is added to the post_model_part")
         post_model_part.AddNodalSolutionStepVariable(var)
     fem_mesh.WriteModelPart(post_model_part)
 

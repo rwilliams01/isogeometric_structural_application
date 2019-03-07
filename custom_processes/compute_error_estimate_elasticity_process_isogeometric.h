@@ -278,8 +278,8 @@ public:
 
         for (std::map<std::size_t, double>::iterator it = ErrorEstimate.begin(); it != ErrorEstimate.end(); ++it)
         {
-//            std::cout << "dof " << it->first << " level: " << DofLevel[it->first] << std::endl;
-//            std::cout << "dof " << it->first << " level element size: " << MaxElementSizePerLevel[DofLevel[it->first]] << std::endl;
+//            std::cout << "node " << it->first << " level: " << DofLevel[it->first] << std::endl;
+//            std::cout << "node " << it->first << " level element size: " << MaxElementSizePerLevel[DofLevel[it->first]] << std::endl;
             it->second = mC0_coeff * MaxElementSizePerLevel[DofLevel[it->first]] * std::sqrt(it->second);
         }
 
