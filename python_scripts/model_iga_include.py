@@ -219,7 +219,7 @@ class Model:
         self.solver.Solve()
 
 ##################################################################
-### Create FEM mesh for post
+### Create FEM mesh for post with GiD
 def CreatePostMesh(mpatch, dim, params):
     #################DEFAULT SETTINGS#################################
     if 'name' not in params:
@@ -267,6 +267,18 @@ def CreatePostMesh(mpatch, dim, params):
 
     return fem_mesh
 
+### Create a post_model_part out from mpatch
+def CreatePostModelPart(mpatch, dim, params):
+    fem_mesh = CreatePostMesh(mpatch, dim, params)
+
+    post_model_part = ModelPart("iga-fem mesh " + params['name'])
+    for var in params['variables list']:
+        print("variable '" + str(var) + "' is added to the post_model_part")
+        post_model_part.AddNodalSolutionStepVariable(var)
+    fem_mesh.WriteModelPart(post_model_part)
+
+    return post_model_part
+
 ### Write a post mesh to GiD
 def WriteGiD(post_model_part, time, params):
     #######WRITE TO GID
@@ -286,24 +298,27 @@ def WriteGiD(post_model_part, time, params):
     for var in params['variables list']:
         gid_io.WriteNodalResults(var, post_model_part.Nodes, time, 0)
     gid_io.FinalizeResults()
-
-### Create a post_model_part out from mpatch
-def CreatePostModelPart(mpatch, dim, params):
-    fem_mesh = CreatePostMesh(mpatch, dim, params)
-
-    post_model_part = ModelPart("iga-fem mesh " + params['name'])
-    for var in params['variables list']:
-        print("variable '" + str(var) + "' is added to the post_model_part")
-        post_model_part.AddNodalSolutionStepVariable(var)
-    fem_mesh.WriteModelPart(post_model_part)
-
-    return post_model_part
+### End post with GiD
+##################################################################
 
 ### Post-process a multipatch
 def PostMultiPatch(mpatch, dim, time, params):
-    post_model_part = CreatePostModelPart(mpatch, dim, params)
-    print(post_model_part)
-    WriteGiD(post_model_part, time, params)
+    if "backend" not in params:
+        params["backend"] = ["GiD"]
+
+    if "GiD" in params["backend"]:
+        post_model_part = CreatePostModelPart(mpatch, dim, params)
+        print(post_model_part)
+        WriteGiD(post_model_part, time, params)
+
+    if "Glvis" in params["backend"]:
+        mpatch_export = MultiNURBSPatchGLVisExporter()
+        mpatch_export.Export(mpatch, params["name"] + "_" + str(time) + ".mesh")
+        for var in params['variables list']:
+            if var == THREED_STRESSES:
+                mpatch_export.Export(mpatch, var, params["name"] + "_" + str(var).split()[0] + "_" + str(time) + ".gf", 6)
+            else:
+                mpatch_export.Export(mpatch, var, params["name"] + "_" + str(var).split()[0] + "_" + str(time) + ".gf")
 
 ##################################################################
 ### Compute the strain energy of the model_part
