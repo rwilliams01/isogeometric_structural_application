@@ -171,17 +171,17 @@ void LineForceIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
     //calculating shape function values and local gradients
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-        
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
         integration_points
     );
-    
+
     #ifdef DEBUG_LEVEL1
     KRATOS_WATCH(integration_points.size())
     #endif
-        
+
     // loop over integration points
     Vector Load( dim );
     Vector temp( dim );
@@ -199,14 +199,14 @@ void LineForceIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 Load( i ) += temp( i ) * Ncontainer( PointNumber, n );
             }
         }
-        
+
         #ifdef DEBUG_LEVEL1
         KRATOS_WATCH(Load)
         #endif
-        
+
         // compute integration weight
         double IntegrationWeight = integration_points[PointNumber].Weight();
-        
+
         #ifdef DEBUG_LEVEL1
         KRATOS_WATCH(integration_points[PointNumber])
         #endif
@@ -233,9 +233,9 @@ void LineForceIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
                     rRightHandSideVector( prim * dim + i ) +=
                         Ncontainer( PointNumber, prim ) * Load( i ) * IntegrationWeight * dL;
         }
-        
+
     }
-    
+
     #ifdef DEBUG_LEVEL1
     KRATOS_WATCH(rRightHandSideVector)
     #endif

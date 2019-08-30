@@ -79,11 +79,11 @@ namespace Kratos
 class LineForceIsogeometric2D : public LineForceIsogeometric
 {
 public:
-    
+
     typedef LineForceIsogeometric BaseType;
-    
+
     typedef GeometryData::IntegrationMethod IntegrationMethod;
-    
+
     typedef Geo1dNURBS<GeometryType::PointType> Geo1dNURBSType;
 
     // Counted pointer of LineForceIsogeometric2D
@@ -116,10 +116,10 @@ public:
     virtual void GetDofList(
         DofsVectorType& ElementalDofList,
         ProcessInfo& rCurrentProcessInfo );
-    
+
     //inherited from LineForceIsogeometric
 //    virtual void Initialize();
-    
+
 protected:
 
     //overridden from LineLoad
@@ -129,7 +129,7 @@ protected:
         const ProcessInfo& rCurrentProcessInfo,
         bool CalculateStiffnessMatrixFlag,
         bool CalculateResidualVectorFlag );
-        
+
 private:
     ///@name Static Member Variables
 
@@ -156,4 +156,4 @@ private:
 
 } // namespace Kratos.
 
-#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_2D_H_INCLUDED  defined 
+#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_2D_H_INCLUDED  defined

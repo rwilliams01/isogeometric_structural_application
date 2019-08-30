@@ -216,7 +216,7 @@ void LinePressureIsogeometric2D::CalculateAll( MatrixType& rLeftHandSideMatrix,
         }
         dL = norm_2(t);
 
-        //calculating load 
+        //calculating load
         Load[0] = -P*t[1];
         Load[1] = P*t[0];
 
