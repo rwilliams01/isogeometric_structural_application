@@ -79,13 +79,13 @@ class LinearBendingStrip : public Element
 {
 public:
     typedef GeometryData::IntegrationMethod IntegrationMethod;
-    
+
     typedef IsogeometricGeometry<GeometryType::PointType> IsogeometricGeometryType;
-    
+
     typedef GeometryType::CoordinatesArrayType CoordinatesArrayType;
-    
+
     typedef GeometryType::ShapeFunctionsSecondDerivativesType ShapeFunctionsSecondDerivativesType;
-    
+
 
     // Counted pointer of FacePressureIsogeometric
     KRATOS_CLASS_POINTER_DEFINITION( LinearBendingStrip);
@@ -113,7 +113,7 @@ public:
         IndexType NewId,
         GeometryType::Pointer pGeom,
         PropertiesType::Pointer pProperties ) const;
-    
+
 
     virtual void EquationIdVector(
         EquationIdVectorType& rResult,
@@ -123,8 +123,8 @@ public:
         DofsVectorType& ElementalDofList,
         ProcessInfo& rCurrentProcessInfo );
 
-    virtual void Initialize();
-    
+    virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
+
     virtual void CalculateLocalSystem(
         MatrixType& rLeftHandSideMatrix,
         VectorType& rRightHandSideVector,
@@ -133,13 +133,13 @@ public:
 protected:
 
 
-    
+
 private:
     ///@name Static Member Variables
 
     /// privat variables
     bool mIsInitialized;
-    
+
 
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
@@ -178,22 +178,22 @@ private:
     ///////////////////////////////////////// all components of residual vectors and stiffness matrices ///////////
     ///////////////////// add left hand side contribution
     void AddInternalForces(VectorType& RightHandSideVector, const Vector& StressResultants, boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& StrainVector_r, const double& DetJ, const double& Weight);
-    
+
     void AddExternalForces(VectorType& RightHandSideVector, const Vector& N
             , const double& DetJ, const double& Weight );
-    
+
     void AddStiffnessMatrixComponents(MatrixType& LeftHandSideMatrix, const Matrix& Di, const Matrix& BlhsMatrix
             , const Matrix& BrhsMatrix, const double& DetJ, const double& Weight);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////// base vectors and their derivatives///////////
-    /////////////////////////////////////////////////////////////////////////               
+    /////////////////////////////////////////////////////////////////////////
     void CovariantBaseVector(std::vector<Vector>& A, const Matrix& DN_De, const std::vector<Vector>& X);
-    
+
     void ReferenceNormalDirector(Vector& A3Vector, Vector& AA3Vector, double& A3,  std::vector<Vector>& A);
-    
+
     void ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab);
-    
+
     void DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab
                 , const ShapeFunctionsSecondDerivativesType& D2N_De2,  const std::vector<Vector>& X);
 
@@ -206,7 +206,7 @@ private:
         , std::vector<Vector>& EE, std::vector<Vector>& AA);
 
 
-        
+
     ///////////////////////////////////////////////////////////////////
     ////////// shell fundamental properties ///////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -217,11 +217,11 @@ private:
     //////////////////////////////////////////////////////////////
 
     void UnitBaseVectors(std::vector<Vector>& e);
-    
+
     void LocalCartesianBasisVector(std::vector<Vector>& EE, std::vector<Vector>& A);
-        
+
     void CreatingBmatrix(Matrix& BMatrix, const boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& LocalStrainVector_r);
-    
+
 
     /////////////// material matrix
     void CalculateConstitutiveMatrix(Matrix& D);
@@ -247,4 +247,4 @@ private:
 
 } // namespace Kratos.
 
-#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined 
+#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined

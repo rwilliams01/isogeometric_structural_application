@@ -116,8 +116,8 @@ public:
                                GeometryType::Pointer pGeometry,
                                PropertiesType::Pointer pProperties ) const;
 
-    virtual void Initialize();
-    
+    virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
+
     /**
      * returns closest point on current condition element with regard to given point in global coordinates
      * @param rResultGlobal a Point in global coordinates being overwritten by the desired information
@@ -250,4 +250,4 @@ private:
 
 }  // namespace Kratos.
 
-#endif // KRATOS_MASTER_CONTACT_FACE_3D_ISOGEOMETRIC_H_INCLUDED  defined 
+#endif // KRATOS_MASTER_CONTACT_FACE_3D_ISOGEOMETRIC_H_INCLUDED  defined

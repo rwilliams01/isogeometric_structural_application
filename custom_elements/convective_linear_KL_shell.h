@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: DongGiang $
 //   Date:                $Date: 25 August 17 $
 //   Revision:            $Revision: 1.0 $
@@ -9,7 +9,7 @@
 #define  KRATOS_CONVECTIVE_LINEAR_KL_SHELL_H_INCLUDED
 
 
-// External includes 
+// External includes
 #include "boost/smart_ptr.hpp"
 
 
@@ -32,7 +32,7 @@ namespace Kratos
 class ConvectiveLinearKirchhoffLoveShell: public Element
 {
 public:
- 
+
 
     typedef GeometryData::IntegrationMethod IntegrationMethod;
 
@@ -45,7 +45,7 @@ public:
     // Counted pointer of KinematicLinearKirchoffLoveIsogeometricShell
     KRATOS_CLASS_POINTER_DEFINITION(ConvectiveLinearKirchhoffLoveShell);
 
-    /** 
+    /**
      * Default constructor.
      */
     ConvectiveLinearKirchhoffLoveShell ( IndexType NewId, GeometryType::Pointer pGeometry );
@@ -69,31 +69,31 @@ public:
     /////////////////// getting method //////////////////////////////////////////////
 
     IntegrationMethod GetIntegrationMethod() const;
-    
+
     void EquationIdVector( EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo );
-    
+
     void GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo );
 
     /////////////////////////////////////////////////////////////////////////////////
     ///////////////////// starting-ending method ////////////////////////////////////
-    void Initialize();
+    void Initialize(const ProcessInfo& rCurrentProcessInfo);
     void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
     void FinalizeSolutionStep(ProcessInfo& CurrentProcessInfo);
 
     //////////////////////////////////////////////////////////////////////////////////
     //////////////////////// computing method //////////////////////////////////////
-    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                               VectorType& rRightHandSideVector, 
+    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                               VectorType& rRightHandSideVector,
                                ProcessInfo& rCurrentProcessInfo);
 
-    void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+    void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                  ProcessInfo& rCurrentProcessInfo);
 
     virtual void CalculateOnIntegrationPoints( const Variable<Vector>& rVariable, std::vector<Vector>& rValues, const ProcessInfo& rCurrentProcessInfo );
 
     virtual void GetValueOnIntegrationPoints( const Variable<Vector>& rVariable, std::vector<Vector>& rValues, const ProcessInfo& rCurrentProcessInfo );
 
-   
+
 
 
 protected:
@@ -127,7 +127,7 @@ private:
 
 
     bool mIsInitialized;
-    
+
 
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
@@ -155,7 +155,7 @@ private:
     GeometryType::JacobiansType mJ0;
     Vector mIntegrationWeight;
 
-    Vector mIntegrationPoint1D;   
+    Vector mIntegrationPoint1D;
     Vector mWeight1D;
     double mDetJ1D;
 
@@ -183,17 +183,17 @@ private:
 
     void AddStiffnessMatrixComponents(MatrixType& LeftHandSideMatrix, const Matrix& Di, const Matrix& BlhsMatrix
         , const Matrix& BrhsMatrix, const double& DetJ, const double& Weight);
-  
+
     //////////////////// local strain vectors
     void computeMembraneStrain(Matrix& eTensor,  std::vector<Vector>& A, std::vector<Vector>& u_a);
-    
-    void computeCurvatureChange(Matrix& kTensor, std::vector<Vector>& A, double& A3, Vector& A3Vector, std::vector<Vector>& u_a, 
+
+    void computeCurvatureChange(Matrix& kTensor, std::vector<Vector>& A, double& A3, Vector& A3Vector, std::vector<Vector>& u_a,
         boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& u_ab, boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab);
     /////////////////////  B matrix
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////// base vectors and their derivatives///////////
-    /////////////////////////////////////////////////////////////////////////               
+    /////////////////////////////////////////////////////////////////////////
     void CovariantBaseVector(std::vector<Vector>& A, const Matrix& DN_De, const std::vector<Vector>& X);
 
     void ReferenceNormalDirector(Vector& A3Vector, Vector& AA3Vector, double& A3,  std::vector<Vector>& A);
@@ -242,7 +242,7 @@ private:
     void UnitBaseVectors(std::vector<Vector>& e);
 
     void LocalCartesianBasisVector(std::vector<Vector>& EE, std::vector<Vector>& A);
-    
+
     void LocalTransformationOfTensor(Matrix& T, Matrix& M, std::vector<Vector>& EE, std::vector<Vector>& AA);
 
     void CreatingBmatrix(Matrix& BMatrix, const boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& LocalStrainVector_r);
@@ -253,8 +253,8 @@ private:
     void CalculateElasticMatrix(Matrix& C, const double& E, const double& NU,  Matrix& Aab);
 
 
-}; // Class KinematicLinearKirchoffLoveIsogeometricShell 
+}; // Class KinematicLinearKirchoffLoveIsogeometricShell
 
 }  // namespace Kratos.
 
-#endif // KRATOS_KINEMATIC_LINEAR_KIRCHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined 
+#endif // KRATOS_KINEMATIC_LINEAR_KIRCHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined

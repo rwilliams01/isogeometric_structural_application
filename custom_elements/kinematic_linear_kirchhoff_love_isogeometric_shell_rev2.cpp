@@ -1,18 +1,18 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: DongGiang $
 //   Date:                $Date: 25 August 2017$
 //   Revision:            $Revision: 1.0 $
 //
 //
-// System includes 
+// System includes
 #include <cmath>
 #include <iostream>
 
 
-// External includes 
+// External includes
 
-// Project includes 
+// Project includes
 #include "custom_elements/kinematic_linear_kirchhoff_love_isogeometric_shell_rev2.h"
 #include "isogeometric_structural_application/isogeometric_structural_application.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
@@ -46,9 +46,9 @@ namespace Kratos
             (IndexType NewId, GeometryType::Pointer pGeometry) : Element(NewId, pGeometry)
     {
         mIsInitialized = false;
-        //    mpIsogeometricGeometry = 
+        //    mpIsogeometricGeometry =
         //        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
-        mpIsogeometricGeometry = 
+        mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
         /*
         Important remarks:
@@ -62,7 +62,7 @@ namespace Kratos
                                                     Element(NewId, pGeometry, pProperties)
     {
         mIsInitialized = false;
-        //    mpIsogeometricGeometry = 
+        //    mpIsogeometricGeometry =
         //        boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
         mpIsogeometricGeometry = boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
     }
@@ -137,7 +137,7 @@ namespace Kratos
         }
     }
 
-    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::Initialize()
+    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::Initialize(const ProcessInfo& rCurrentProcessInfo)
     {
         KRATOS_TRY //EXCEPTION HANDLING (see corresponing KRATOS_CATCH("") )
 
@@ -211,7 +211,7 @@ namespace Kratos
         // material parameters
         mE = GetProperties()[YOUNG_MODULUS];
         mNU = GetProperties()[POISSON_RATIO];
-                                
+
         ////////////////////////////////////////////////////////////////
         // get nodal coordinates vector R in undeformed configuration //
         if(mNodalCoordinates.size() != mNumberOfNodes)
@@ -224,8 +224,8 @@ namespace Kratos
         {
             mNodalCoordinates[I](0) = (*mpIsogeometricGeometry)[I].X0();
             mNodalCoordinates[I](1) = (*mpIsogeometricGeometry)[I].Y0();
-            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0(); 
-        }      
+            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0();
+        }
 
 
         //Initialization of the constitutive law vector and
@@ -240,14 +240,14 @@ namespace Kratos
 
         //////////////////////////////////////////////////////////////
         ///// compute  Jacobian ,Inverse Jacobian, Det Jacobian /////
-        mInvJ0.resize(integration_points.size());   
+        mInvJ0.resize(integration_points.size());
         mN.resize(integration_points.size());
         mDN_De.resize(integration_points.size());
-        mDN_DX.resize(integration_points.size());  
-                 
+        mDN_DX.resize(integration_points.size());
+
         for (unsigned int i = 0; i < integration_points.size(); ++i)
         {
-    
+
             mInvJ0[i].resize(2, 2, false);
             noalias(mInvJ0[i]) = ZeroMatrix(2, 2);
 
@@ -260,9 +260,9 @@ namespace Kratos
             mDN_DX[i].resize(mNumberOfNodes, 2);
             noalias(mDN_DX[i]) = ZeroMatrix(mNumberOfNodes, 2);
         }
-        
 
-        mDetJ0.resize(integration_points.size(), false);        
+
+        mDetJ0.resize(integration_points.size(), false);
         // TODO remove the storage for Jacobian to save memory
         noalias(mDetJ0) = ZeroVector(integration_points.size());
 
@@ -274,9 +274,9 @@ namespace Kratos
         mJ0 = mpIsogeometricGeometry->Jacobian0(mJ0, mThisIntegrationMethod);
 
         double DetJ_temp;
-     
+
         for(unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++ PointNumber)
-        {       
+        {
             mN[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsValues( mN[PointNumber] , integration_points[PointNumber]);
             mDN_De[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsLocalGradients( mDN_De[PointNumber], integration_points[PointNumber]);
 
@@ -291,7 +291,7 @@ namespace Kratos
             J0_temp(1,1) = mJ0[PointNumber](1,1);
 
 
-  
+
             MathUtils<double>::InvertMatrix(J0_temp, mInvJ0[PointNumber], DetJ_temp);
 
             //MathUtils<double>::InvertMatrix(mJ0[PointNumber], mInvJ0[PointNumber], DetJ_temp);
@@ -316,7 +316,7 @@ namespace Kratos
 
 
 
-    
+
     void KinematicLinearKirchhoffLoveIsogeometricShellRev2::InitializeNonLinearIteration(ProcessInfo& CurrentProcessInfo)
     {
         // reset all resistant forces at node
@@ -328,7 +328,7 @@ namespace Kratos
 
         }
     }
-    //************************************************************************************ 
+    //************************************************************************************
     //************************************************************************************
     /**
     * calculates only the RHS vector
@@ -357,7 +357,7 @@ namespace Kratos
     /**
     * calculates this contact element's local contributions
     */
-    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
+    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                         VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
     {
         //calculation flags
@@ -370,8 +370,8 @@ namespace Kratos
 
     ////////////////////////////////////////////////////////////////////////////
     ////////////////////// private subroutines /////////////////////////////////
-    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::CalculateAll( MatrixType& rLeftHandSideMatrix, 
-        VectorType& rRightHandSideVector, 
+    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::CalculateAll( MatrixType& rLeftHandSideMatrix,
+        VectorType& rRightHandSideVector,
         ProcessInfo& rCurrentProcessInfo,
         bool CalculateStiffnessMatrixFlag,
         bool CalculateResidualVectorFlag,
@@ -400,9 +400,9 @@ namespace Kratos
         //initialize the geometry
         mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
         #endif
-    
+
         // get integration points
-        const GeometryType::IntegrationPointsArrayType& integration_points = 
+        const GeometryType::IntegrationPointsArrayType& integration_points =
             mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
 
         // Current displacements
@@ -419,7 +419,7 @@ namespace Kratos
 
             //////////// get shape function values and their derivatives
             ShapeFunctionsSecondDerivativesType D2N_De2;
-            D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);    
+            D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);
 
             //////////////////////////////////////////////////////////////
             //1. compute normal forces
@@ -435,7 +435,7 @@ namespace Kratos
             ////ii. derivative of covariant base vectors
             boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> > A_ab;
             DerivativeCovariantBaseVector( A_ab, D2N_De2, mNodalCoordinates);
-     
+
             double E = GetProperties()[YOUNG_MODULUS];
             double NU = GetProperties()[POISSON_RATIO];
 
@@ -446,13 +446,13 @@ namespace Kratos
             ///// 1.1 membrane strain
             Vector eVector;
             computeStrain(eVector,  Bm,  CurrentDisplacement);
-    
+
             //4. compute bending B operator
             Matrix Bb;
             computeBendingBMatrix( Bb, A3Vector, A3, A, mDN_De[PointNumber], D2N_De2,A_ab);
             //CalculateBendingBOperator(Bb,A,mDN_De[PointNumber],D2N_De2 );
 
-            ////iii. curvature changes 
+            ////iii. curvature changes
             Vector kVector;
             computeStrain(kVector,  Bb,  CurrentDisplacement);
 
@@ -460,7 +460,7 @@ namespace Kratos
             ///// local transformation /////////////////
             Matrix Aab(2,2);
             CovariantMetricCoefficient( Aab, A);
-            
+
             std::vector<Vector> AA;
             ContravariantBaseVector( AA, A, Aab);
 
@@ -507,7 +507,7 @@ namespace Kratos
 
             ///////////////////////////////////////////////
             ///////////////////////////////////////////////
-            
+
             #ifdef DEBUG2
             KRATOS_WATCH(Bm)
             KRATOS_WATCH(Bb)
@@ -524,7 +524,7 @@ namespace Kratos
                 AddLinearBendingStiffness(rLeftHandSideMatrix, TanC, BBb,  mDetJ0[PointNumber], mIntegrationWeight[PointNumber]);
                 //Add   GeometricallyBendingStiffness(rLeftHandSideMatrix, moVector, DN_De);
             }
-            
+
 
             ////////////////////////// compute RHS
             if(CalculateResidualVectorFlag==true)
@@ -574,7 +574,7 @@ namespace Kratos
         }
         //KRATOS_WATCH(rRightHandSideVector)
         //KRATOS_WATCH(rLeftHandSideMatrix)
-        
+
 
         KRATOS_CATCH("")
     }
@@ -624,13 +624,13 @@ namespace Kratos
     {
         moVector = ZeroVector(mStrainSize);
         noalias(moVector) = prod(C, pow(mThickness,3)/12*kVector);
-    } 
+    }
 
     void KinematicLinearKirchhoffLoveIsogeometricShellRev2::computeStrain(Vector& StrainVector,  const Matrix& B,  const Matrix& Displacements)
     {
         unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
         unsigned int strain_size = 3;
-   
+
         StrainVector = ZeroVector(strain_size);
 
         for(unsigned int i = 0; i < mpIsogeometricGeometry->size(); ++i)
@@ -657,8 +657,8 @@ namespace Kratos
         }
     }
 
-    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::computeBendingBMatrix(Matrix& Bb, Vector& A3Vector, double& A3,  std::vector<Vector>& A, 
-        const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2, 
+    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::computeBendingBMatrix(Matrix& Bb, Vector& A3Vector, double& A3,  std::vector<Vector>& A,
+        const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2,
         boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab )
     {
         if(Bb.size1() != mStrainSize)
@@ -692,7 +692,7 @@ namespace Kratos
             for(unsigned int j=0; j<2; j++)
             {
                 R_abxA2[i][j] = MathUtils<double>::CrossProduct(A_ab[i][j], A[1]);
-                A1xR_ab[i][j] = MathUtils<double>::CrossProduct(A[0], A_ab[i][j]); 
+                A1xR_ab[i][j] = MathUtils<double>::CrossProduct(A[0], A_ab[i][j]);
                 R_abA3[i][j] = MathUtils<double>::Dot3(A_ab[i][j], A3Vector);
             }
         }
@@ -724,15 +724,15 @@ namespace Kratos
         unsigned int dim = 3;
         unsigned int mat_size = number_of_ctrl_points*dim;
         unsigned int strain_size = 3;
-    
+
         if( Bb.size1() != strain_size || Bb.size2() != mat_size)
             Bb.resize(strain_size, mat_size, false);
-    
+
         noalias(Bb) = ZeroMatrix(strain_size, mat_size);
-        
+
          // bending Bb operator
          //////// covariant of unit normal base vector
-         Vector G3(3); 
+         Vector G3(3);
          Vector G1xG2;
          G1xG2=MathUtils<double>::CrossProduct(G[0],G[1]);
          G3 = G1xG2/MathUtils<double>::Norm3(G1xG2);
@@ -745,53 +745,53 @@ namespace Kratos
          Vector G11 = ZeroVector(3);
          Vector G12 = ZeroVector(3);
          Vector G22 = ZeroVector(3);
-    
+
          for(unsigned int j=0; j< number_of_ctrl_points; j++)
          {
              G11(0) += D2N_De2[j](0,0)*GetGeometry()[j].X0();
              G11(1) += D2N_De2[j](0,0)*GetGeometry()[j].Y0();
              G11(2) += D2N_De2[j](0,0)*GetGeometry()[j].Z0();
-    
+
              G22(0) += D2N_De2[j](1,1)*GetGeometry()[j].X0();
              G22(1) += D2N_De2[j](1,1)*GetGeometry()[j].Y0();
              G22(2) += D2N_De2[j](1,1)*GetGeometry()[j].Z0();
-    
+
              G12(0) += D2N_De2[j](0,1)*GetGeometry()[j].X0();
              G12(1) += D2N_De2[j](0,1)*GetGeometry()[j].Y0();
              G12(2) += D2N_De2[j](0,1)*GetGeometry()[j].Z0();
          }
-    
+
             #ifdef  DEBUG_LEVEL2
             KRATOS_WATCH(G11)
             KRATOS_WATCH(G22)
             KRATOS_WATCH(G12)
             #endif
-    
+
          //////// cross product of two vectors G1,1 x G2 ; G1 x G1,1; ...
          Vector G11xG2, G22xG2, G12xG2;
          Vector G1xG11, G1xG22, G1xG12 ;
          Vector G2xG3, G3xG3 ;
-     
-         G11xG2 =MathUtils<double>::CrossProduct(G11 ,G[1]); 
-         G22xG2 =MathUtils<double>::CrossProduct(G22 ,G[1]); 
-         G12xG2 =MathUtils<double>::CrossProduct(G12 ,G[1]); 
-         G1xG11 =MathUtils<double>::CrossProduct(G[0] ,G11); 
-         G1xG22 =MathUtils<double>::CrossProduct(G[0] ,G22); 
-         G1xG12 =MathUtils<double>::CrossProduct(G[0] ,G12); 
-         G2xG3 =MathUtils<double>::CrossProduct(G[1] ,G3); 
-         G3xG3 =MathUtils<double>::CrossProduct(G3 ,G3); 
-    
+
+         G11xG2 =MathUtils<double>::CrossProduct(G11 ,G[1]);
+         G22xG2 =MathUtils<double>::CrossProduct(G22 ,G[1]);
+         G12xG2 =MathUtils<double>::CrossProduct(G12 ,G[1]);
+         G1xG11 =MathUtils<double>::CrossProduct(G[0] ,G11);
+         G1xG22 =MathUtils<double>::CrossProduct(G[0] ,G22);
+         G1xG12 =MathUtils<double>::CrossProduct(G[0] ,G12);
+         G2xG3 =MathUtils<double>::CrossProduct(G[1] ,G3);
+         G3xG3 =MathUtils<double>::CrossProduct(G3 ,G3);
+
          /////// compute Bb
          Bb(strain_size, mat_size);
          for(unsigned int i=0; i< number_of_ctrl_points; i++)
          {
              for(unsigned int j=0; j< dim; j++)
              {
-                 Bb(0, i*dim+j) = -D2N_De2[i](0,0)*G3(j) + ( 1/MathUtils<double>::Norm3(G1xG2) )*( DN_De(i,0)*G11xG2(j) + DN_De(i,1)*G1xG11(j)  
+                 Bb(0, i*dim+j) = -D2N_De2[i](0,0)*G3(j) + ( 1/MathUtils<double>::Norm3(G1xG2) )*( DN_De(i,0)*G11xG2(j) + DN_De(i,1)*G1xG11(j)
                                     + MathUtils<double>::Dot3(G3, G11)*( DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG3(j)) );
-                 Bb(1, i*dim+j) = -D2N_De2[i](1,1)*G3(j) + ( 1/MathUtils<double>::Norm3(G1xG2) )*( DN_De(i,0)*G22xG2(j) + DN_De(i,1)*G1xG22(j)  
+                 Bb(1, i*dim+j) = -D2N_De2[i](1,1)*G3(j) + ( 1/MathUtils<double>::Norm3(G1xG2) )*( DN_De(i,0)*G22xG2(j) + DN_De(i,1)*G1xG22(j)
                                     + MathUtils<double>::Dot3(G3, G22)*(  DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG3(j) ) );
-                 Bb(2, i*dim+j) = 2*( -D2N_De2[i](0,1)*G3(j) + ( 1/MathUtils<double>::Norm3(G1xG2) )*( DN_De(i,0)*G12xG2(j) + DN_De(i,1)*G1xG12(j)  
+                 Bb(2, i*dim+j) = 2*( -D2N_De2[i](0,1)*G3(j) + ( 1/MathUtils<double>::Norm3(G1xG2) )*( DN_De(i,0)*G12xG2(j) + DN_De(i,1)*G1xG12(j)
                                     + MathUtils<double>::Dot3(G3, G12)*(  DN_De(i,0)*G2xG3(j) + DN_De(i,1)*G3xG3(j) ) ) );
              }
          }
@@ -807,26 +807,26 @@ namespace Kratos
         Aab(0, 1) = inner_prod(A[0], A[1]);
         Aab(1, 0) = inner_prod(A[1], A[0]);
         Aab(1, 1) = inner_prod(A[1], A[1]);
-    
+
         double temp_ab;
         Matrix InvAab(2,2);
         MathUtils<double>::InvertMatrix(Aab, InvAab, temp_ab);
-    
+
         // material parameters
         double E = GetProperties()[YOUNG_MODULUS];
         double NU = GetProperties()[POISSON_RATIO];
 
-    
+
         double aux = E/(1-pow(NU,2) );
-    
+
         if (TanC.size1() != 3 || TanC.size2() != 3)
             TanC.resize(3, 3, false);
-    
+
             TanC(0,0) = aux*pow(InvAab(0,0), 2);
-            TanC(0,1) = aux*( NU*InvAab(0,0)*InvAab(1,1) + (1-NU)*pow(InvAab(0,1), 2) ); 
+            TanC(0,1) = aux*( NU*InvAab(0,0)*InvAab(1,1) + (1-NU)*pow(InvAab(0,1), 2) );
             TanC(0,2) = aux*InvAab(0,0)*InvAab(0,1);
             TanC(1,0) = TanC(0,1);
-            TanC(1,1) = aux*pow(InvAab(1,1), 2); 
+            TanC(1,1) = aux*pow(InvAab(1,1), 2);
             TanC(1,2) = aux*InvAab(1,1)*InvAab(0,1);
             TanC(2,0) = TanC(0,2);
             TanC(2,1) = TanC(1,2);
@@ -864,7 +864,7 @@ namespace Kratos
                 }
             }
         }
-        
+
     }
 
     void KinematicLinearKirchhoffLoveIsogeometricShellRev2::ReferencedNormalDirector(Vector& A3Vector, Vector& AA3Vector, double& A3,  std::vector<Vector>& A)
@@ -874,7 +874,7 @@ namespace Kratos
         A3Vector = AA3Vector/A3;
     }
 
-    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& A_ab, 
+    void KinematicLinearKirchhoffLoveIsogeometricShellRev2::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& A_ab,
         const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X)
     {
         if (A_ab.size() != 2)
@@ -962,8 +962,8 @@ namespace Kratos
         noalias(EE2_temp) -=  MathUtils<double>::Dot3(A[1], EE[0])*EE[0];
         noalias(EE[1]) = ( EE2_temp )/MathUtils<double>::Norm3(EE2_temp);
 
-        EE[2] = A3Vector; 
-    }    
+        EE[2] = A3Vector;
+    }
 
     void KinematicLinearKirchhoffLoveIsogeometricShellRev2::TransformationTensor(Matrix& T, std::vector<Vector>& EE, std::vector<Vector> A)
     {
@@ -984,7 +984,7 @@ namespace Kratos
     }
 
 
-    
+
     void KinematicLinearKirchhoffLoveIsogeometricShellRev2::CalculateElasticMatrix(Matrix& C, const double& E, const double& NU)
     {
         unsigned int strain_size = 3;
@@ -1004,7 +1004,7 @@ namespace Kratos
             C( 2, 0 ) = 0.0;
             C( 2, 1 ) = 0.0;
             C( 2, 2 ) = c3;
-     
+
     }
 
     void KinematicLinearKirchhoffLoveIsogeometricShellRev2::UnitBaseVectors(std::vector<Vector>& e)

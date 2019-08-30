@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: DongGiang $
 //   Date:                $Date: 25 August 17 $
 //   Revision:            $Revision: 1.0 $
@@ -9,7 +9,7 @@
 #define  KRATOS_KINEMATIC_LINEAR_KIRCHHOFF_LOVE_ISOGEOMETRIC_SHELL_REV2_H_INCLUDED
 
 
-// External includes 
+// External includes
 #include "boost/smart_ptr.hpp"
 
 
@@ -40,7 +40,7 @@ public:
     // Counted pointer of KinematicLinearKirchhoffLoveIsogeometricShell
     KRATOS_CLASS_POINTER_DEFINITION(KinematicLinearKirchhoffLoveIsogeometricShellRev2);
 
-    /** 
+    /**
      * Default constructor.
      */
     KinematicLinearKirchhoffLoveIsogeometricShellRev2 ( IndexType NewId, GeometryType::Pointer pGeometry );
@@ -64,24 +64,24 @@ public:
     /////////////////// getting method //////////////////////////////////////////////
 
     IntegrationMethod GetIntegrationMethod() const;
-    
+
     void EquationIdVector( EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo );
-    
+
     void GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo );
 
     /////////////////////////////////////////////////////////////////////////////////
     ///////////////////// starting-ending method ////////////////////////////////////
-    void Initialize();
-    
+    void Initialize(const ProcessInfo& rCurrentProcessInfo);
+
     void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
     //////////////////////////////////////////////////////////////////////////////////
     //////////////////////// computing method //////////////////////////////////////
-    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                               VectorType& rRightHandSideVector, 
+    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                               VectorType& rRightHandSideVector,
                                ProcessInfo& rCurrentProcessInfo);
 
-    void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+    void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                  ProcessInfo& rCurrentProcessInfo);
 
 protected:
@@ -109,7 +109,7 @@ private:
 
     // flags
     bool mIsInitialized;
-    
+
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
     IntegrationMethod mThisIntegrationMethod;
@@ -154,18 +154,18 @@ private:
     ////////////////////// add right hand side contribution
     void AddInternalForces(VectorType& RightHandSideVector, const Vector& StressResultants, const Matrix& BMatrix, const double& DetJ, const double& Weight);
     void AddExternalForces(VectorType& RightHandSideVector, const Vector& N, const double& DetJ, const double& Weight );
-  
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////// stress resultants
     void computeNormalForces(Vector& nVector, const Matrix& C, const Vector& eVector);
 
-    void computeBendingMoments(Vector& moVector, const Matrix& C, const Vector& kVector); 
+    void computeBendingMoments(Vector& moVector, const Matrix& C, const Vector& kVector);
 
     void computeStrain(Vector& StrainVector,  const Matrix& B,  const Matrix& Displacements);
 
     void computeMembraneBMatrix(Matrix& Bm, const Matrix& DN_De, const std::vector<Vector>& A);
 
-    void computeBendingBMatrix(Matrix& Bb,  Vector& A3Vector, double& A3,  std::vector<Vector>& A, 
+    void computeBendingBMatrix(Matrix& Bb,  Vector& A3Vector, double& A3,  std::vector<Vector>& A,
         const Matrix& DN_De, const ShapeFunctionsSecondDerivativesType& D2N_De2,
         boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector>>& A_ab);
 
@@ -181,7 +181,7 @@ private:
 
     //////////////////////////////////////////////////////////////////
     ////////////// shell analysis utilities /////////////////////////
-        ///////////////////// covariant base vectors                  
+        ///////////////////// covariant base vectors
     void CovariantBaseVector(std::vector<Vector>& A, const Matrix& DN_De, const std::vector<Vector>& X);
 
     void ReferencedNormalDirector(Vector& A3Vector, Vector& AA3Vector, double& A3,  std::vector<Vector>& A);
@@ -199,15 +199,15 @@ private:
 
 
     void CovariantMetricCoefficient(Matrix& Aab, std::vector<Vector>& A);
-    
+
     void ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab);
 
 
 
     void UnitBaseVectors(std::vector<Vector>& e);
 
-}; // Class KinematicLinearKirchhoffLoveIsogeometricShell 
+}; // Class KinematicLinearKirchhoffLoveIsogeometricShell
 
 }  // namespace Kratos.
 
-#endif // KRATOS_KINEMATIC_LINEAR_Kirchhoff_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined 
+#endif // KRATOS_KINEMATIC_LINEAR_Kirchhoff_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined

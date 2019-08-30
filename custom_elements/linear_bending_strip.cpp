@@ -84,7 +84,7 @@ LinearBendingStrip::LinearBendingStrip()
 LinearBendingStrip::LinearBendingStrip( IndexType NewId, GeometryType::Pointer pGeometry )
     : Element( NewId, pGeometry )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -93,7 +93,7 @@ LinearBendingStrip::LinearBendingStrip( IndexType NewId, GeometryType::Pointer p
                           PropertiesType::Pointer pProperties )
     : Element( NewId, pGeometry, pProperties )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -164,10 +164,10 @@ void LinearBendingStrip::GetDofList( DofsVectorType& ElementalDofList,
 
 //***********************************************************************************
 //***********************************************************************************
-void LinearBendingStrip::Initialize()
+void LinearBendingStrip::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-    
+
 
         ////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////
@@ -241,7 +241,7 @@ void LinearBendingStrip::Initialize()
         mNU = GetProperties()[POISSON_RATIO];
         mLambda = mE*mNU /(1.0 +mNU)/(1.0 - 2.0*mNU);
         mMu = 0.5*mE/(1.0 + mNU);
-                                
+
         ////////////////////////////////////////////////////////////////
         // get nodal coordinates vector R in undeformed configuration //
         if(mNodalCoordinates.size() != mNumberOfNodes)
@@ -254,9 +254,9 @@ void LinearBendingStrip::Initialize()
         {
             mNodalCoordinates[I](0) = (*mpIsogeometricGeometry)[I].X0();
             mNodalCoordinates[I](1) = (*mpIsogeometricGeometry)[I].Y0();
-            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0(); 
-        }      
-        
+            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0();
+        }
+
         #ifdef ENABLE_BEZIER_GEOMETRY
         //initialize the geometry
         mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
@@ -272,10 +272,10 @@ void LinearBendingStrip::Initialize()
 
         //////////////////////////////////////////////////////////////
         ///// compute  Jacobian ,Inverse Jacobian, Det Jacobian /////
-        mInvJ0.resize(integration_points.size());   
+        mInvJ0.resize(integration_points.size());
         mN.resize(integration_points.size());
         mDN_De.resize(integration_points.size());
-                 
+
         for (unsigned int i = 0; i < integration_points.size(); ++i)
         {
             mInvJ0[i].resize(mDim, mDim, false);
@@ -288,9 +288,9 @@ void LinearBendingStrip::Initialize()
             noalias(mDN_De[i]) = ZeroMatrix(mNumberOfNodes,2);
 
         }
-        
 
-        mDetJ0.resize(integration_points.size(), false);        
+
+        mDetJ0.resize(integration_points.size(), false);
         // TODO remove the storage for Jacobian to save memory
         noalias(mDetJ0) = ZeroVector(integration_points.size());
 
@@ -303,9 +303,9 @@ void LinearBendingStrip::Initialize()
         mJ0 = mpIsogeometricGeometry->Jacobian0(mJ0, mThisIntegrationMethod);
         double DetJ_temp;
         mTotalDomainInitialSize = 0.0;
-     
+
         for(unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++ PointNumber)
-        {       
+        {
             mN[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsValues( mN[PointNumber] , integration_points[PointNumber]);
             mDN_De[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsLocalGradients( mDN_De[PointNumber], integration_points[PointNumber]);
 
@@ -321,7 +321,7 @@ void LinearBendingStrip::Initialize()
 
 
         }
-   
+
 
         mIsInitialized = true;
 
@@ -382,7 +382,7 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     #endif
 
     // get integration points
-    const GeometryType::IntegrationPointsArrayType& integration_points = 
+    const GeometryType::IntegrationPointsArrayType& integration_points =
         mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
 
     // Current displacements
@@ -406,7 +406,7 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
             //////////// get shape function values and their derivatives
             ShapeFunctionsSecondDerivativesType D2N_De2;
-            D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);    
+            D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);
 
             /////// i. covariant base vectors
             std::vector<Vector> A;  // covarianti base vector of undeformed configuration
@@ -464,7 +464,7 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
     //KRATOS_WATCH(rRightHandSideVector)
 
- 
+
     #ifdef ENABLE_BEZIER_GEOMETRY
     // clean the geometry internal data
     mpIsogeometricGeometry->Clean();
@@ -525,7 +525,7 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 }
             }
         }
-        
+
     }
 
 
@@ -559,7 +559,7 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     }
 
 
-    void LinearBendingStrip::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& A_ab, 
+    void LinearBendingStrip::DerivativeCovariantBaseVector(boost::numeric::ublas::vector<boost::numeric::ublas::vector<Vector> >& A_ab,
         const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X)
     {
         A_ab.resize(2);
@@ -652,20 +652,20 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                             {
                                 Vector A_abxA2(mDim);
                                 A_abxA2 = MathUtils<double>::CrossProduct(A_ab[alpha][beta], A[1]);
-                
+
                                 Vector A1xA_ab(mDim);
                                 A1xA_ab = MathUtils<double>::CrossProduct(A[0], A_ab[alpha][beta]);
-                
+
                                 Vector A2xA3(mDim);
                                 A2xA3 = MathUtils<double>::CrossProduct(A[1], A3Vector);
-                
+
                                 Vector A3xA1(mDim);
                                 A3xA1 = MathUtils<double>::CrossProduct(A3Vector, A[0]);
-                
-                                temp(I*mDim + i) +=  (- A3Vector(i)*D2N_De2[I](alpha,beta) + (1/A3)*( A_abxA2(i)*DN_De(I,0) 
+
+                                temp(I*mDim + i) +=  (- A3Vector(i)*D2N_De2[I](alpha,beta) + (1/A3)*( A_abxA2(i)*DN_De(I,0)
                                            + A1xA_ab(i)*DN_De(I,1) + MathUtils<double>::Dot3(A_ab[alpha][beta], A3Vector)*
                                              ( A2xA3(i)*DN_De(I,0) + A3xA1(i)*DN_De(I,1) ) ) )*
-                                             MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]); 
+                                             MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]);
                             }
                         }
                     }
@@ -680,7 +680,7 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     }
 
 
- 
+
     //////////////////////////////////////////////////////////////
     //////////// addtional utilities /////////////////////////////
     //////////////////////////////////////////////////////////////
@@ -699,9 +699,9 @@ void LinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
         noalias(EE2_temp) -=  MathUtils<double>::Dot3(A[1], EE[0])*EE[0];
         noalias(EE[1]) = ( EE2_temp )/MathUtils<double>::Norm3(EE2_temp);
 
-        EE[2] = MathUtils<double>::CrossProduct(EE[0], EE[1]); 
+        EE[2] = MathUtils<double>::CrossProduct(EE[0], EE[1]);
 
-        
+
     }
 
 

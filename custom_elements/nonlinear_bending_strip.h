@@ -79,13 +79,13 @@ class NonLinearBendingStrip : public Element
 {
 public:
     typedef GeometryData::IntegrationMethod IntegrationMethod;
-    
+
     typedef IsogeometricGeometry<GeometryType::PointType> IsogeometricGeometryType;
-    
+
     typedef GeometryType::CoordinatesArrayType CoordinatesArrayType;
-    
+
     typedef GeometryType::ShapeFunctionsSecondDerivativesType ShapeFunctionsSecondDerivativesType;
-    
+
 
     // Counted pointer of FacePressureIsogeometric
     KRATOS_CLASS_POINTER_DEFINITION( NonLinearBendingStrip);
@@ -113,7 +113,7 @@ public:
         IndexType NewId,
         GeometryType::Pointer pGeom,
         PropertiesType::Pointer pProperties ) const;
-    
+
 
     virtual void EquationIdVector(
         EquationIdVectorType& rResult,
@@ -123,8 +123,8 @@ public:
         DofsVectorType& ElementalDofList,
         ProcessInfo& rCurrentProcessInfo );
 
-    virtual void Initialize();
-    
+    virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
+
     virtual void CalculateLocalSystem(
         MatrixType& rLeftHandSideMatrix,
         VectorType& rRightHandSideVector,
@@ -133,13 +133,13 @@ public:
 protected:
 
 
-    
+
 private:
     ///@name Static Member Variables
 
     /// privat variables
     bool mIsInitialized;
-    
+
 
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
 
@@ -177,7 +177,7 @@ private:
     ///////////////////// add left hand side contribution
     void AddInternalForces(VectorType& RightHandSideVector, const Vector& StressResultants,
         std::vector<std::vector<Vector> >& StrainVector_r, const double& DetJ, const double& Weight);
-    
+
 
     void AddLinearStiffnessMatrix(MatrixType& LeftHandSideMatrix, const Matrix& Di, const Matrix& BlhsMatrix
         , const Matrix& BrhsMatrix, const double& DetJ, const double& Weight);
@@ -245,7 +245,7 @@ private:
 
     void ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab);
 
-    void DerivativeReferenceCovariantBaseVector(std::vector<std::vector<Vector> >& A_ab, 
+    void DerivativeReferenceCovariantBaseVector(std::vector<std::vector<Vector> >& A_ab,
     const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X);
 
     void DerivativeDeformedCovariantBaseVector(std::vector<std::vector<Vector> >& a_ab
@@ -259,17 +259,17 @@ private:
     void CovariantMetricCoefficient(Matrix& Aab, std::vector<Vector>& A);
     void CovariantCurvatureCoefficient(Matrix& Bab, std::vector<std::vector<Vector> >& A_ab, Vector& A3Vector);
 
-        
+
     //////////////////////////////////////////////////////////////
     //////////// addtional utilities /////////////////////////////
     //////////////////////////////////////////////////////////////
 
     void UnitBaseVectors(std::vector<Vector>& e);
-    
+
     void LocalCartesianBasisVector(std::vector<Vector>& EE, std::vector<Vector>& A, Vector& A3Vector);
-        
+
     void CreatingBmatrix(Matrix& BMatrix, const std::vector<std::vector<Vector> >& LocalStrainVector_r);
-    
+
     void LocalTransformationOfTensor(Matrix& T, Matrix& M, std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff);
 
     void LocalTransformationCoefficient(std::vector< std::vector<std::vector<std::vector<double>>> >& TransformationCoeff, std::vector<Vector>& EE, std::vector<Vector>& AA);
@@ -297,4 +297,4 @@ private:
 
 } // namespace Kratos.
 
-#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined 
+#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined

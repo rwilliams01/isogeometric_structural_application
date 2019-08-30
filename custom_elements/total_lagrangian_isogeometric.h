@@ -122,10 +122,10 @@ public:
     ///@{
     ///Reference type definition for constitutive laws
     typedef ConstitutiveLaw ConstitutiveLawType;
-    
+
     ///Pointer type for constitutive laws
     typedef ConstitutiveLawType::Pointer ConstitutiveLawPointerType;
-    
+
     ///Type definition for integration methods
     typedef GeometryData::IntegrationMethod IntegrationMethod;
 
@@ -160,7 +160,7 @@ public:
 
     Element::Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const;
 
-    void Initialize();
+    void Initialize(const ProcessInfo& rCurrentProcessInfo);
 
     void ResetConstitutiveLaw();
 
@@ -288,7 +288,7 @@ private:
 
     /**
      * Pointer to underlying isogeometric geometry
-     */    
+     */
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
     /**
      * Currently selected integration methods
@@ -422,4 +422,4 @@ return rOStream;
 ///@}
 
 } // namespace Kratos.
-#endif // KRATOS_ISOGEOMETRIC_APPLICATION_TOTAL_LAGRANGIAN_ELEMENT_H_INCLUDED  defined 
+#endif // KRATOS_ISOGEOMETRIC_APPLICATION_TOTAL_LAGRANGIAN_ELEMENT_H_INCLUDED  defined

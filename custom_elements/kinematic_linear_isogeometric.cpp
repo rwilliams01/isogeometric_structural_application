@@ -142,7 +142,7 @@ KinematicLinearIsogeometric::~KinematicLinearIsogeometric()
  * Initialization of the element, called at the begin of each simulation.
  * Membervariables and the Material law are initialized here
  */
-void KinematicLinearIsogeometric::Initialize()
+void KinematicLinearIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY		//EXCEPTION HANDLING (see corresponing KRATOS_CATCH("") )
 

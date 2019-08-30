@@ -84,7 +84,7 @@ NonLinearBendingStrip::NonLinearBendingStrip()
 NonLinearBendingStrip::NonLinearBendingStrip( IndexType NewId, GeometryType::Pointer pGeometry )
     : Element( NewId, pGeometry )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -93,7 +93,7 @@ NonLinearBendingStrip::NonLinearBendingStrip( IndexType NewId, GeometryType::Poi
                           PropertiesType::Pointer pProperties )
     : Element( NewId, pGeometry, pProperties )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -164,10 +164,10 @@ void NonLinearBendingStrip::GetDofList( DofsVectorType& ElementalDofList,
 
 //***********************************************************************************
 //***********************************************************************************
-void NonLinearBendingStrip::Initialize()
+void NonLinearBendingStrip::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-    
+
 
         mThisIntegrationMethod = GeometryData::GI_GAUSS_1;
 
@@ -182,7 +182,7 @@ void NonLinearBendingStrip::Initialize()
         mNU = GetProperties()[POISSON_RATIO];
         mLambda = mE*mNU /(1.0 +mNU)/(1.0 - 2.0*mNU);
         mMu = 0.5*mE/(1.0 + mNU);
-                                
+
         ////////////////////////////////////////////////////////////////
         // get nodal coordinates vector R in undeformed configuration //
         if(mNodalCoordinates.size() != mNumberOfNodes)
@@ -195,9 +195,9 @@ void NonLinearBendingStrip::Initialize()
         {
             mNodalCoordinates[I](0) = (*mpIsogeometricGeometry)[I].X0();
             mNodalCoordinates[I](1) = (*mpIsogeometricGeometry)[I].Y0();
-            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0(); 
-        }      
-        
+            mNodalCoordinates[I](2) = (*mpIsogeometricGeometry)[I].Z0();
+        }
+
         #ifdef ENABLE_BEZIER_GEOMETRY
         //initialize the geometry
         mpIsogeometricGeometry->Initialize(mThisIntegrationMethod);
@@ -213,10 +213,10 @@ void NonLinearBendingStrip::Initialize()
 
         //////////////////////////////////////////////////////////////
         ///// compute  Jacobian ,Inverse Jacobian, Det Jacobian /////
-        mInvJ0.resize(integration_points.size());   
+        mInvJ0.resize(integration_points.size());
         mN.resize(integration_points.size());
         mDN_De.resize(integration_points.size());
-                 
+
         for (unsigned int i = 0; i < integration_points.size(); ++i)
         {
             mInvJ0[i].resize(mDim, mDim, false);
@@ -229,9 +229,9 @@ void NonLinearBendingStrip::Initialize()
             noalias(mDN_De[i]) = ZeroMatrix(mNumberOfNodes,2);
 
         }
-        
 
-        mDetJ0.resize(integration_points.size(), false);        
+
+        mDetJ0.resize(integration_points.size(), false);
         // TODO remove the storage for Jacobian to save memory
         noalias(mDetJ0) = ZeroVector(integration_points.size());
 
@@ -244,9 +244,9 @@ void NonLinearBendingStrip::Initialize()
         mJ0 = mpIsogeometricGeometry->Jacobian0(mJ0, mThisIntegrationMethod);
         double DetJ_temp;
         mTotalDomainInitialSize = 0.0;
-     
+
         for(unsigned int PointNumber = 0; PointNumber < integration_points.size(); ++ PointNumber)
-        {       
+        {
             mN[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsValues( mN[PointNumber] , integration_points[PointNumber]);
             mDN_De[PointNumber] = mpIsogeometricGeometry->ShapeFunctionsLocalGradients( mDN_De[PointNumber], integration_points[PointNumber]);
 
@@ -262,7 +262,7 @@ void NonLinearBendingStrip::Initialize()
 
 
         }
-   
+
 
         mIsInitialized = true;
 
@@ -323,7 +323,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     #endif
 
     // get integration points
-    const GeometryType::IntegrationPointsArrayType& integration_points = 
+    const GeometryType::IntegrationPointsArrayType& integration_points =
         mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
 
     // Current displacements
@@ -338,7 +338,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
             //////////// get shape function values and their derivatives
             ShapeFunctionsSecondDerivativesType D2N_De2;
-            D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);    
+            D2N_De2 = mpIsogeometricGeometry->ShapeFunctionsSecondDerivatives(D2N_De2, integration_points[PointNumber]);
 
             /////// i. covariant base vectors
             std::vector<Vector> u_a;
@@ -425,7 +425,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
             Matrix kTensor;
             computeCurvatureChange(kTensor,  Bab, bab);
 
-            // transform strains to local form   
+            // transform strains to local form
             Matrix kkTensor = ZeroMatrix(2,2);
             Vector kkVector(3);
             LocalTransformationOfTensor(kkTensor , kTensor, TransformationCoeff);
@@ -463,7 +463,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
             if(CalculateResidualVectorFlag == true)
             {
                 AddInternalForces(rRightHandSideVector , moVector,kLocalVector_r, detJA , mIntegrationWeight[PointNumber]);
-        
+
             }
 
 
@@ -472,7 +472,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
     //KRATOS_WATCH(rRightHandSideVector)
 
- 
+
     #ifdef ENABLE_BEZIER_GEOMETRY
     // clean the geometry internal data
     mpIsogeometricGeometry->Clean();
@@ -509,14 +509,14 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     ///////////////////// strain tensors ///////////////////
     ////////////////////////////////////////////////////////
 
-    
+
     void NonLinearBendingStrip::computeCurvatureChange(Matrix& kTensor, Matrix& Bab, Matrix& bab)
     {
         kTensor.resize(2,2);
         kTensor = ZeroMatrix(2,2);
-    
+
         noalias(kTensor) = Bab - bab;
-    
+
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -538,7 +538,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
             noalias(a[alpha]) = A[alpha] + u_a[alpha];
         }
     }
-    
+
 
     void NonLinearBendingStrip::ReferenceCovariantBaseVector(std::vector<Vector>& A, const Matrix& DN_De
                                                                             , const std::vector<Vector>& X)
@@ -588,7 +588,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                     u_a[alpha](i) += DN_De(I,alpha)*u(I,i) ;
                 }
             }
-        }    
+        }
     }
 
     void NonLinearBendingStrip::SecondDerivativeDisplacement_ab(std::vector<std::vector<Vector> >& u_ab
@@ -602,10 +602,10 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
             for(unsigned int beta=0; beta<2; beta++)
             {
-       
+
                     u_ab[alpha][beta].resize(mDim);
                     u_ab[alpha][beta] = ZeroVector(mDim);
-               
+
             }
         }
 
@@ -632,7 +632,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
         a3Vector = aa3Vector/a3;
     }
 
-  
+
 
     void NonLinearBendingStrip::ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab)
     {
@@ -653,7 +653,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
         noalias(AA[1]) = AAab(1,0)*A[0] + AAab(1,1)*A[1] ;
     }
 
-    void NonLinearBendingStrip::DerivativeReferenceCovariantBaseVector(std::vector<std::vector<Vector> >& A_ab, 
+    void NonLinearBendingStrip::DerivativeReferenceCovariantBaseVector(std::vector<std::vector<Vector> >& A_ab,
         const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X)
     {
         A_ab.resize(2);
@@ -664,10 +664,10 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
             for(unsigned int beta=0; beta<2; beta++)
             {
-       
+
                     A_ab[alpha][beta].resize(mDim);
                     A_ab[alpha][beta] = ZeroVector(mDim);
-               
+
             }
         }
 
@@ -714,7 +714,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
         }
 
     }
- 
+
     ///////////////////////////////////////////////////////////////////
     ////////// shell fundamental properties ///////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -787,7 +787,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
             }
         }
 
-        
+
     }
 
     void NonLinearBendingStrip::DerivativeCovariantBaseVector_r(std::vector< std::vector<std::vector<Vector>> >& a_ar, const Matrix& DN_De, std::vector<Vector>& UnitBasisVector)
@@ -799,7 +799,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
             for(unsigned int I=0; I< mNumberOfNodes; I++)
             {
                 a_ar[alpha][I].resize(mDim);
-    
+
                 for(unsigned int i=0; i<mDim; i++)
                 {
                     a_ar[alpha][I][i].resize(mDim);
@@ -847,7 +847,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 aa3_rVector[I][i] = MathUtils<double>::CrossProduct(a_ar[0][I][i] ,a[1]) + MathUtils<double>::CrossProduct(a[0], a_ar[1][I][i] );
             }
         }
-        
+
 
     }
 
@@ -857,7 +857,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     {
         aa3_rsVector.resize(mNumberOfNodes);
         for(unsigned int I = 0; I< mNumberOfNodes; I++)
-        {   
+        {
             aa3_rsVector[I].resize(mNumberOfNodes);
             for(unsigned int J = 0; J< mNumberOfNodes; J++)
             {
@@ -876,7 +876,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
 
         for(unsigned int I = 0; I< mNumberOfNodes; I++)
-        {   
+        {
             for(unsigned int J = 0; J< mNumberOfNodes; J++)
             {
                 for(unsigned int i=0; i< mDim; i++)
@@ -888,7 +888,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 }
             }
         }
-        
+
 
     }
 
@@ -913,7 +913,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 a3_r[I][i] = MathUtils<double>::Dot3(a3Vector ,aa3_rVector[I][i]) ;
             }
         }
-        
+
 
     }
 
@@ -924,7 +924,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     {
         a3_rs.resize(mNumberOfNodes);
         for(unsigned int I = 0; I< mNumberOfNodes; I++)
-        {   
+        {
             a3_rs[I].resize(mNumberOfNodes);
             for(unsigned int J = 0; J< mNumberOfNodes; J++)
             {
@@ -942,21 +942,21 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
 
         for(unsigned int I = 0; I< mNumberOfNodes; I++)
-        {   
+        {
             for(unsigned int J = 0; J< mNumberOfNodes; J++)
             {
                 for(unsigned int i=0; i< mDim; i++)
                 {
                     for(unsigned int j=0; j< mDim; j++)
                     {
-                        a3_rs[I][J][i][j] = ( MathUtils<double>::Dot3(aa3_rsVector[I][J][i][j], aa3Vector) 
+                        a3_rs[I][J][i][j] = ( MathUtils<double>::Dot3(aa3_rsVector[I][J][i][j], aa3Vector)
                          + MathUtils<double>::Dot3(aa3_rVector[I][i], aa3_rVector[J][j])
                          - MathUtils<double>::Dot3(aa3_rVector[I][i], a3Vector)*MathUtils<double>::Dot3(aa3_rVector[J][j], a3Vector) )/a3;
                     }
                 }
             }
         }
-    
+
     }
 
     void NonLinearBendingStrip::DerivativeDirector_r( std::vector<std::vector<Vector>>& a3_rVector
@@ -981,7 +981,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 a3_rVector[I][i] = (aa3_rVector[I][i] - a3_r[I][i]*a3Vector)/a3;
             }
         }
-        
+
 
     }
 
@@ -993,7 +993,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     {
         a3_rsVector.resize(mNumberOfNodes);
         for(unsigned int I = 0; I< mNumberOfNodes; I++)
-        {   
+        {
             a3_rsVector[I].resize(mNumberOfNodes);
             for(unsigned int J = 0; J< mNumberOfNodes; J++)
             {
@@ -1012,20 +1012,20 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
 
         for(unsigned int I = 0; I< mNumberOfNodes; I++)
-        {   
+        {
             for(unsigned int J = 0; J< mNumberOfNodes; J++)
             {
                 for(unsigned int i=0; i< mDim; i++)
                 {
                     for(unsigned int j=0; j< mDim; j++)
                     {
-                        a3_rsVector[I][J][i][j] = (aa3_rsVector[I][J][i][j] - a3_rs[I][J][i][j]*a3Vector)/a3 
+                        a3_rsVector[I][J][i][j] = (aa3_rsVector[I][J][i][j] - a3_rs[I][J][i][j]*a3Vector)/a3
                             + (2.0*a3_r[I][i]*a3_r[J][j]*a3Vector - a3_r[I][i]*aa3_rVector[J][j] - a3_r[J][j]*aa3_rVector[I][i])*pow(a3,-2.0);
                     }
                 }
             }
         }
-    
+
     }
 
     void NonLinearBendingStrip::FirstDerivativeLocalCurvatureChange_r(std::vector<std::vector<Vector> >& kLocalVector_r
@@ -1120,11 +1120,11 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                 {
                                     for(unsigned int j=0; j< mDim; ++j)
                                     {
-                                        temp(I*mDim+i, J*mDim+j) += ( MathUtils<double>::Dot3(a_abr[alpha][beta][I][i], a3_rVector[J][j]) 
-                                           + MathUtils<double>::Dot3(a_abr[alpha][beta][J][j], a3_rVector[I][i]) 
+                                        temp(I*mDim+i, J*mDim+j) += ( MathUtils<double>::Dot3(a_abr[alpha][beta][I][i], a3_rVector[J][j])
+                                           + MathUtils<double>::Dot3(a_abr[alpha][beta][J][j], a3_rVector[I][i])
                                            + MathUtils<double>::Dot3(a_ab[alpha][beta], a3_rsVector[I][J][i][j]) )
                                            *TransformationCoeff[gamma][delta][alpha][beta] ;
-                            
+
                                     }
                                 }
                             }
@@ -1189,12 +1189,12 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     {
             if (e.size() != 3)
                 e.resize(3);
-    
+
             e[0]=e[1]=e[2]=ZeroVector(mDim);
             e[0](0)=e[1](1)=e[2](2)= 1.0;
     }
-    
-    
+
+
 
     void NonLinearBendingStrip::LocalCartesianBasisVector(std::vector<Vector>& EE, std::vector<Vector>& A, Vector& A3Vector)
     {
@@ -1211,9 +1211,9 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
         noalias(EE2_temp) -=  MathUtils<double>::Dot3(A[1], EE[0])*EE[0];
         noalias(EE[1]) = ( EE2_temp )/MathUtils<double>::Norm3(EE2_temp);
 
-        EE[2] = A3Vector; 
+        EE[2] = A3Vector;
 
-        
+
     }
 
 
@@ -1230,13 +1230,13 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 for(unsigned int alpha=0; alpha< 2; alpha++)
                 {
                     TransformationCoeff[gamma][delta][alpha].resize(2);
-        
+
                     for(unsigned int beta=0; beta<2; beta++)
                     {
                         TransformationCoeff[gamma][delta][alpha][beta] = 0.0;
                     }
                 }
-    
+
             }
         }
 
@@ -1252,7 +1252,7 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
                         TransformationCoeff[gamma][delta][alpha][beta] = MathUtils<double>::Dot3(EE[gamma],AA[alpha])*MathUtils<double>::Dot3(AA[beta],EE[delta]);
                     }
                 }
-    
+
             }
         }
 
@@ -1269,5 +1269,5 @@ void NonLinearBendingStrip::CalculateAll( MatrixType& rLeftHandSideMatrix,
     }
 
 
-    
+
 } // Namespace Kratos.

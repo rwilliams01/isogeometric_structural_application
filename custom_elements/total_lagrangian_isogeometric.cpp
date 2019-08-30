@@ -102,14 +102,14 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 
-    void TotalLagrangianIsogeometric::Initialize()
+    void TotalLagrangianIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
     {
         KRATOS_TRY
 
         ///////////////////////////////////////////////////////////////
         // One time initialisation
         ///////////////////////////////////////////////////////////////
-        
+
         ////////////////////Initialize geometry_data/////////////////////////////
 //        KRATOS_WATCH(GetValue(NURBS_KNOTS_1))
 //        KRATOS_WATCH(GetValue(NURBS_KNOTS_2))
@@ -119,7 +119,7 @@ namespace Kratos
 //        KRATOS_WATCH(GetValue(NURBS_DEGREE_1))
 //        KRATOS_WATCH(GetValue(NURBS_DEGREE_2))
 //        KRATOS_WATCH(GetValue(NURBS_DEGREE_3))
-    
+
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
         if( this->Has( EXTRACTION_OPERATOR ) )
@@ -151,7 +151,7 @@ namespace Kratos
             Vector values = this->GetValue( EXTRACTION_OPERATOR_CSR_VALUES );
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
         }
-        
+
 //        KRATOS_WATCH(ExtractionOperator)
 
         // initialize the geometry
@@ -166,10 +166,10 @@ namespace Kratos
             this->GetValue(NURBS_DEGREE_3),
             2 // only need to compute 2 integration rules
         );
-        
+
 //        mThisIntegrationMethod = mpIsogeometricGeometry->GetDefaultIntegrationMethod();
         mThisIntegrationMethod = GeometryData::GI_GAUSS_2;
-        
+
         const GeometryType::IntegrationPointsArrayType& integration_points =
                 mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
 
@@ -220,7 +220,7 @@ namespace Kratos
         KRATOS_TRY
         const unsigned int number_of_nodes = mpIsogeometricGeometry->size();
         const unsigned int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
-        unsigned int StrainSize = dim * (dim + 1) / 2; 
+        unsigned int StrainSize = dim * (dim + 1) / 2;
 
         Matrix B( StrainSize, number_of_nodes * dim );
 
@@ -263,7 +263,7 @@ namespace Kratos
         //calculating shape function values and local gradients
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
@@ -278,12 +278,12 @@ namespace Kratos
         //auxiliary terms
         Vector BodyForce(dim);
         noalias(BodyForce) = ZeroVector(dim);
-        
+
         if(GetProperties().Has(BODY_FORCE))
         {
             noalias(BodyForce) += GetProperties()[BODY_FORCE];
         }
-        
+
         if(GetProperties().Has(DENSITY) && GetProperties().Has(GRAVITY))
         {
             Vector gravity = GetProperties()[GRAVITY];
@@ -658,24 +658,24 @@ namespace Kratos
 //        unsigned int dimension = mpIsogeometricGeometry->WorkingSpaceDimension();
 //        unsigned int NumberOfNodes = mpIsogeometricGeometry->size();
 //        unsigned int MatSize = dimension * NumberOfNodes;
-// 
+//
 //        if ( rMassMatrix.size1() != MatSize )
 //            rMassMatrix.resize( MatSize, MatSize, false );
-// 
+//
 //        rMassMatrix = ZeroMatrix( MatSize, MatSize );
-// 
+//
 //        double TotalMass = mTotalDomainInitialSize * GetProperties()[DENSITY];
-// 
+//
 //        if ( dimension == 2 ) TotalMass *= GetProperties()[THICKNESS];
-// 
+//
 //        Vector LumpFact;
-// 
+//
 //        LumpFact = mpIsogeometricGeometry->LumpingFactors( LumpFact );
-// 
+//
 //        for ( unsigned int i = 0; i < NumberOfNodes; ++i )
 //        {
 //            double temp = LumpFact[i] * TotalMass;
-// 
+//
 //            for ( unsigned int j = 0; j < dimension; ++j )
 //            {
 //                unsigned int index = i * dimension + j;
@@ -697,16 +697,16 @@ namespace Kratos
 
         GeometryType::ShapeFunctionsGradientsType DN_De;
         Matrix Ncontainer;
-        
+
         mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
             Ncontainer,
             DN_De,
             mThisIntegrationMethod
         );
-        
+
         const GeometryType::IntegrationPointsArrayType& integration_points =
             mpIsogeometricGeometry->IntegrationPoints(mThisIntegrationMethod);
-        
+
         for(unsigned int Point = 0; Point < integration_points.size(); ++Point)
         {
             double IntToReferenceWeight = integration_points[Point].Weight();

@@ -81,7 +81,7 @@ FacePressureIsogeometric::FacePressureIsogeometric()
 FacePressureIsogeometric::FacePressureIsogeometric( IndexType NewId, GeometryType::Pointer pGeometry )
     : Condition( NewId, pGeometry )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
@@ -90,7 +90,7 @@ FacePressureIsogeometric::FacePressureIsogeometric( IndexType NewId, GeometryTyp
                           PropertiesType::Pointer pProperties )
     : Condition( NewId, pGeometry, pProperties )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
@@ -156,7 +156,7 @@ void FacePressureIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
 
 //***********************************************************************************
 //***********************************************************************************
-void FacePressureIsogeometric::Initialize()
+void FacePressureIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
 
@@ -227,12 +227,12 @@ void FacePressureIsogeometric::Initialize()
         mThisIntegrationMethod =
 //            GetGeometry().GetDefaultIntegrationMethod(); //default method
             GeometryData::GI_GAUSS_1;
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
         #endif
-        
+
     KRATOS_CATCH("")
 }
 
@@ -289,7 +289,7 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     //calculating shape function values and local gradients
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-        
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
@@ -325,7 +325,7 @@ void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
         double dA = sqrt( v3[0] * v3[0] + v3[1] * v3[1] + v3[2] * v3[2] );
         v3 *= 1.0 / dA; //normalize v3
-        
+
         //calculating load vector
         Vector Load = P * v3;
 

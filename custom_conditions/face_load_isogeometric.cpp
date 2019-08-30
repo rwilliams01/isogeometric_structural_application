@@ -81,7 +81,7 @@ FaceLoadIsogeometric::FaceLoadIsogeometric()
 FaceLoadIsogeometric::FaceLoadIsogeometric( IndexType NewId, GeometryType::Pointer pGeometry )
     : Condition( NewId, pGeometry )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -90,7 +90,7 @@ FaceLoadIsogeometric::FaceLoadIsogeometric( IndexType NewId, GeometryType::Point
                           PropertiesType::Pointer pProperties )
     : Condition( NewId, pGeometry, pProperties )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -150,15 +150,15 @@ void FaceLoadIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
 
 //***********************************************************************************
 //***********************************************************************************
-void FaceLoadIsogeometric::Initialize()
+void FaceLoadIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-    
+
         ////////////////////Initialize geometry_data/////////////////////////////
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
         #endif
-        
+
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
         if( this->Has( EXTRACTION_OPERATOR ) )
@@ -190,7 +190,7 @@ void FaceLoadIsogeometric::Initialize()
             Vector values = this->GetValue( EXTRACTION_OPERATOR_CSR_VALUES );
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
         }
-        
+
 //        KRATOS_WATCH(ExtractionOperator)
 
         // initialize the geometry
@@ -205,16 +205,16 @@ void FaceLoadIsogeometric::Initialize()
             this->GetValue(NURBS_DEGREE_3),
             2 // only need to compute 2 integration rules
         );
-        
+
         mThisIntegrationMethod =
 //            GetGeometry().GetDefaultIntegrationMethod(); //default method
             GeometryData::GI_GAUSS_1;
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
         #endif
-        
+
     KRATOS_CATCH("")
 }
 
@@ -271,7 +271,7 @@ void FaceLoadIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     //calculating shape function values and local gradients
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-        
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
@@ -303,7 +303,7 @@ void FaceLoadIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
 
         double dA = sqrt( v3[0] * v3[0] + v3[1] * v3[1] + v3[2] * v3[2] );
         v3 *= 1.0 / dA; //normalize v3
-        
+
         //calculating load vector
         Vector Load( 3 );
         noalias( Load ) = ZeroVector( 3 );

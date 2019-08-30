@@ -80,9 +80,9 @@ extern Variable<array_1d<double, 3> > FACE_LOAD;
 class LineForceIsogeometric : public Condition
 {
 public:
-    
+
     typedef GeometryData::IntegrationMethod IntegrationMethod;
-    
+
     typedef IsogeometricGeometry<GeometryType::PointType> IsogeometricGeometryType;
 
     // Counted pointer of LineForceIsogeometric
@@ -107,8 +107,8 @@ public:
         GeometryType::Pointer pGeom,
         PropertiesType::Pointer pProperties ) const;
 
-    virtual void Initialize();
-    
+    virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
+
     virtual void EquationIdVector(
         EquationIdVectorType& rResult,
         ProcessInfo& rCurrentProcessInfo );
@@ -138,7 +138,7 @@ private:
     ///@name Static Member Variables
 
     /// privat variables
-    
+
     // privat name Operations
 
 
@@ -164,4 +164,4 @@ private:
 
 } // namespace Kratos.
 
-#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined 
+#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined

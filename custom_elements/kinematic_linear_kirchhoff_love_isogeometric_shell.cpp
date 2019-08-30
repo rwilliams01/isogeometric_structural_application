@@ -79,7 +79,7 @@ Element::Pointer KinematicLinearKirchhoffLoveIsogeometricShell::Create(IndexType
                     pGeom, pProperties));
 }
 
-void KinematicLinearKirchhoffLoveIsogeometricShell::Initialize()
+void KinematicLinearKirchhoffLoveIsogeometricShell::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY        //EXCEPTION HANDLING (see corresponing KRATOS_CATCH("") )
 

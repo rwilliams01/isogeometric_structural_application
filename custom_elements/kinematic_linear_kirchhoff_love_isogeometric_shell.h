@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: hbui $
 //   Date:                $Date: 27 Apr 17 $
 //   Revision:            $Revision: 1.0 $
@@ -9,7 +9,7 @@
 #define  KRATOS_KINEMATIC_LINEAR_KIRCHHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED
 
 
-// External includes 
+// External includes
 #include "boost/smart_ptr.hpp"
 
 // Project includes
@@ -47,7 +47,7 @@ public:
     // Counted pointer of KinematicLinearKirchhoffLoveIsogeometricShell
     KRATOS_CLASS_POINTER_DEFINITION(KinematicLinearKirchhoffLoveIsogeometricShell);
 
-    /** 
+    /**
      * Default constructor.
      */
     KinematicLinearKirchhoffLoveIsogeometricShell( IndexType NewId, GeometryType::Pointer pGeometry );
@@ -66,7 +66,7 @@ public:
 
     virtual Element::Pointer Create( IndexType NewId, GeometryType::Pointer pGeom, PropertiesType::Pointer pProperties ) const;
 
-    void Initialize();
+    void Initialize(const ProcessInfo& rCurrentProcessInfo);
 
     void InitializeJacobian();
 
@@ -74,11 +74,11 @@ public:
 
     void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
-    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                               VectorType& rRightHandSideVector, 
+    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                               VectorType& rRightHandSideVector,
                                ProcessInfo& rCurrentProcessInfo);
 
-    void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+    void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                  ProcessInfo& rCurrentProcessInfo);
 
     void CalculateMassMatrix( MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo );
@@ -87,7 +87,7 @@ public:
 
     IntegrationMethod GetIntegrationMethod() const;
 
-    void EquationIdVector( EquationIdVectorType& rResult, 
+    void EquationIdVector( EquationIdVectorType& rResult,
                            ProcessInfo& rCurrentProcessInfo);
 
     void GetDofList( DofsVectorType& ElementalDofList,
@@ -149,7 +149,7 @@ protected:
 private:
 
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
-    
+
     std::vector<ConstitutiveLaw::Pointer> mConstitutiveLawVector;
 
     IntegrationMethod mThisIntegrationMethod;
@@ -174,7 +174,7 @@ private:
 
     void CalculateStrain(Vector& StrainVector, const Matrix& B, const Matrix& Displacements);
 
-    void CalculateAndAddExtForceContribution(VectorType& rRightHandSideVector, const Vector& N, 
+    void CalculateAndAddExtForceContribution(VectorType& rRightHandSideVector, const Vector& N,
 					     const double& weight, const double& detJ);
 
     void AddBodyForcesToRHS(VectorType& rRightHandSideVector, const Vector& N, const double& Weight, const double& DetJ);
@@ -184,14 +184,14 @@ private:
 
     void CalculateMembraneBOperator(Matrix& Bm, const array_1d<double,3>& G1,const array_1d<double,3>& G2, const Matrix& DN_De);
 
-    void CalculateBendingBOperator (Matrix& Bb, const array_1d<double,3>& G1, const array_1d<double,3>& G2, const Matrix& DN_De, 
+    void CalculateBendingBOperator (Matrix& Bb, const array_1d<double,3>& G1, const array_1d<double,3>& G2, const Matrix& DN_De,
 														 const ShapeFunctionsSecondDerivativesType& D2N_De2 ) ;
 
     void CalculateHookeanMatrix(Matrix& D, const Vector& G1, const Vector& G2, const double& E, const double& NU);
 
-}; // Class KinematicLinearKirchhoffLoveIsogeometricShell 
+}; // Class KinematicLinearKirchhoffLoveIsogeometricShell
 
 }  // namespace Kratos.
-  
 
-#endif // KRATOS_KINEMATIC_LINEAR_Kirchhoff_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined 
+
+#endif // KRATOS_KINEMATIC_LINEAR_Kirchhoff_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined

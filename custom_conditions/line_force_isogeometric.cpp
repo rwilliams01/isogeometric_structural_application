@@ -83,7 +83,7 @@ LineForceIsogeometric::LineForceIsogeometric()
 LineForceIsogeometric::LineForceIsogeometric( IndexType NewId, GeometryType::Pointer pGeometry )
     : Condition( NewId, pGeometry )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 
 }
@@ -93,7 +93,7 @@ LineForceIsogeometric::LineForceIsogeometric( IndexType NewId, GeometryType::Poi
                           PropertiesType::Pointer pProperties )
     : Condition( NewId, pGeometry, pProperties )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -156,7 +156,7 @@ ProcessInfo& rCurrentProcessInfo )
 
 //***********************************************************************************
 //***********************************************************************************
-void LineForceIsogeometric::Initialize()
+void LineForceIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
 
@@ -164,7 +164,7 @@ void LineForceIsogeometric::Initialize()
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
         #endif
-        
+
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
         bool manual_initilization = false;
@@ -200,7 +200,7 @@ void LineForceIsogeometric::Initialize()
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
             manual_initilization = true;
         }
-        
+
 //        KRATOS_WATCH(manual_initilization)
 //        KRATOS_WATCH(ExtractionOperator)
 
@@ -217,7 +217,7 @@ void LineForceIsogeometric::Initialize()
                 this->GetValue(NURBS_DEGREE_3),
                 2 // only need to compute 2 integration rules
             );
-        
+
         // integration rule
         if(this->Has( INTEGRATION_ORDER ))
         {
@@ -335,7 +335,7 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
     //calculating shape function values and local gradients
     GeometryType::ShapeFunctionsGradientsType DN_De;
     Matrix Ncontainer;
-        
+
     mpIsogeometricGeometry->CalculateShapeFunctionsIntegrationPointsValuesAndLocalGradients(
         Ncontainer,
         DN_De,
@@ -359,7 +359,7 @@ void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
                 Load( i ) += temp( i ) * Ncontainer( PointNumber, n );
             }
         }
-        
+
         // integration weight
         double IntegrationWeight = integration_points[PointNumber].Weight();
 

@@ -76,7 +76,7 @@ SlaveContactFace3DIsogeometric::SlaveContactFace3DIsogeometric( IndexType NewId,
                                                                 GeometryType::Pointer pGeometry )
 : Condition( NewId, pGeometry )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
@@ -106,10 +106,10 @@ Condition::Pointer SlaveContactFace3DIsogeometric::Create( IndexType NewId,
 
 //***********************************************************************************
 //***********************************************************************************
-void SlaveContactFace3DIsogeometric::Initialize()
+void SlaveContactFace3DIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-    
+
         ////////////////////Initialize geometry_data/////////////////////////////
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
@@ -172,7 +172,7 @@ void SlaveContactFace3DIsogeometric::Initialize()
         mThisIntegrationMethod =
 //            GetGeometry().GetDefaultIntegrationMethod(); //default method
             GeometryData::GI_GAUSS_1;
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
@@ -206,12 +206,12 @@ void SlaveContactFace3DIsogeometric::Initialize()
         GetValue( NORMAL_CONTACT_STRESS ) = 0.0;
         GetValue( TANGENTIAL_CONTACT_STRESS ) = 0.0;
         GetValue( CONTACT_STICK ) = 0.0;
-    
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
         #endif
-        
+
     KRATOS_CATCH("")
 }
 

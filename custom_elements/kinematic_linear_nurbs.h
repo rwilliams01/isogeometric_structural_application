@@ -141,12 +141,12 @@ public:
     ///@}
     ///@name Operations
     ///@{
-    
+
     Element::Pointer Create( IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties ) const;
-    
+
     Element::Pointer Create( IndexType NewId, NodesArrayType const& ThisNodes ) const;
 
-    void Initialize();
+    void Initialize(const ProcessInfo& rCurrentProcessInfo);
 
     void InitializeJacobian1D();
 
@@ -309,5 +309,5 @@ private:
 }
   // namespace Kratos.
 
-#endif // KRATOS_KINEMATIC_LINEAR2_INCLUDED defined 
+#endif // KRATOS_KINEMATIC_LINEAR2_INCLUDED defined
 

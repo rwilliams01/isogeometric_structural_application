@@ -81,7 +81,7 @@ PenaltyStiffnessShell::PenaltyStiffnessShell()
 PenaltyStiffnessShell::PenaltyStiffnessShell( IndexType NewId, GeometryType::Pointer pGeometry )
     : Condition( NewId, pGeometry )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
@@ -90,7 +90,7 @@ PenaltyStiffnessShell::PenaltyStiffnessShell( IndexType NewId, GeometryType::Poi
                           PropertiesType::Pointer pProperties )
     : Condition( NewId, pGeometry, pProperties )
 {
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
@@ -156,7 +156,7 @@ void PenaltyStiffnessShell::GetDofList( DofsVectorType& ElementalDofList,
 
 //***********************************************************************************
 //***********************************************************************************
-void PenaltyStiffnessShell::Initialize()
+void PenaltyStiffnessShell::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
 
@@ -222,7 +222,7 @@ void PenaltyStiffnessShell::Initialize()
         mThisIntegrationMethod =
 //            GetGeometry().GetDefaultIntegrationMethod(); //default method
             GeometryData::GI_GAUSS_1;
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
@@ -249,7 +249,7 @@ void PenaltyStiffnessShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
 {
     KRATOS_TRY
 
-   
+
     unsigned int number_of_nodes = GetGeometry().size();
     unsigned int mat_size = 6;
 
@@ -277,7 +277,7 @@ void PenaltyStiffnessShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
              DispVector(i*3+j) = CurrentDisp(i,j);
 
     const double& W = GetProperties()[INITIAL_PENALTY];
- 
+
     rLeftHandSideMatrix(0,0) = W;
     rLeftHandSideMatrix(0,3) = -W;
     rLeftHandSideMatrix(1,1) = W;

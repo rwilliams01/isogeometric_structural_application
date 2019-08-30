@@ -125,7 +125,7 @@ public:
                                GeometryType::Pointer pGeometry,
                                PropertiesType::Pointer pProperties) const;
 
-    virtual void Initialize();
+    virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
 
     /**
      * searches the contact partner for a given integration point of the current
@@ -265,4 +265,4 @@ private:
 
 }  // namespace Kratos.
 
-#endif // KRATOS_SLAVE_CONTACT_FACE_3D_ISOGEOMETRIC_H_INCLUDED  defined 
+#endif // KRATOS_SLAVE_CONTACT_FACE_3D_ISOGEOMETRIC_H_INCLUDED  defined

@@ -126,7 +126,7 @@ public:
     typedef GeometryData::IntegrationMethod IntegrationMethod;
 
     typedef ConstitutiveLaw ConstitutiveLawType;
-    
+
     typedef IsogeometricGeometry<GeometryType::PointType> IsogeometricGeometryType;
 
     typedef ConstitutiveLawType::Pointer ConstitutiveLawPointerType;
@@ -157,8 +157,8 @@ public:
 
     Element::Pointer Create( IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties ) const;
 
-    virtual void Initialize();
-    
+    virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
+
     void InitializeJacobian();
 
     virtual void ResetConstitutiveLaw();
@@ -168,7 +168,7 @@ public:
     virtual void GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo );
 
     virtual void InitializeSolutionStep( ProcessInfo& CurrentProcessInfo );
-    
+
     virtual void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
     virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo );
@@ -176,7 +176,7 @@ public:
     virtual void CalculateRightHandSide( VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo );
 
     virtual void DampMatrix( MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo );
-    
+
     virtual void MassMatrix( MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo);
 
     virtual void FinalizeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
@@ -212,7 +212,7 @@ public:
 
 //    void GetValueOnIntegrationPoints(const Variable<Matrix>& rVariable, std::vector<Matrix>& rValues, const ProcessInfo& rCurrentProcessInfo);
 
-    
+
     ///@}
     ///@name Access
     ///@{
@@ -286,7 +286,7 @@ protected:
      * @param rCurrentProcessInfo
      */
     virtual int Check( const ProcessInfo& rCurrentProcessInfo );
-    
+
     ///@}
 
 private:
@@ -296,11 +296,11 @@ private:
     ///@}
     ///@name Member Variables
     ///@{
-    
+
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
-    
+
     bool mIsInitialized;
-    
+
     std::vector<ConstitutiveLaw::Pointer> mConstitutiveLawVector;
 
     IntegrationMethod mThisIntegrationMethod;
@@ -589,6 +589,6 @@ private:
 
 }  // namespace Kratos.
 
-#endif // KRATOS_UNSATURATED_SOILS_ELEMENT_INCLUDED defined 
+#endif // KRATOS_UNSATURATED_SOILS_ELEMENT_INCLUDED defined
 
 

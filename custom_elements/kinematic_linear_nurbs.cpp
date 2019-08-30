@@ -81,7 +81,7 @@ KinematicLinearNURBS::KinematicLinearNURBS(IndexType NewId,
 {
     KRATOS_WATCH("At KinematicLinearNURBS Default Constructor")
     mIsInitialized = false;
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -99,7 +99,7 @@ KinematicLinearNURBS::KinematicLinearNURBS(IndexType NewId,
 {
     KRATOS_WATCH("At KinematicLinearNURBS Constructor")
     mIsInitialized = false;
-    mpIsogeometricGeometry = 
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGetGeometry());
 }
 
@@ -133,7 +133,7 @@ KinematicLinearNURBS::~KinematicLinearNURBS()
  * Initialization of the element, called at the begin of each simulation.
  * Membervariables and the Material law are initialized here
  */
-void KinematicLinearNURBS::Initialize()
+void KinematicLinearNURBS::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY		//EXCEPTION HANDLING (see corresponing KRATOS_CATCH("") )
 
@@ -159,13 +159,13 @@ void KinematicLinearNURBS::Initialize()
         ///////////////////////////////////////////////////////////////
         // One time initialisation
         ///////////////////////////////////////////////////////////////
-        
+
         ////////////////////Initialize geometry_data/////////////////////////////
         #ifdef ENABLE_PROFILING
         double start_compute, end_compute;
         start_compute = OpenMPUtils::GetCurrentTime();
         #endif
-        
+
         //initialize the nurbs geometry
         // try to read the extraction operator from the elemental data
         Matrix ExtractionOperator;
@@ -198,7 +198,7 @@ void KinematicLinearNURBS::Initialize()
             Vector values = this->GetValue( EXTRACTION_OPERATOR_CSR_VALUES );
             ExtractionOperator = IsogeometricMathUtils::Triplet2CSR(rowPtr, colInd, values);
         }
-        
+
 //        KRATOS_WATCH(ExtractionOperator)
 
         mpIsogeometricGeometry->AssignGeometryData(
@@ -212,17 +212,17 @@ void KinematicLinearNURBS::Initialize()
             this->GetValue(NURBS_DEGREE_3),
             2 // only need to compute 2 integration rules
         );
-        
+
         mThisIntegrationMethod = mpIsogeometricGeometry->GetDefaultIntegrationMethod(); //default method
-                    
+
         InitializeJacobian();
-        
+
         #ifdef ENABLE_PROFILING
         end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for element " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
         #endif
         ////////////////////End Initialize geometry_data/////////////////////////////
-        
+
         unsigned int dim = GetGeometry().WorkingSpaceDimension();
         //Set Up Initial displacement for StressFreeActivation of Elements
         mInitialDisp.resize(GetGeometry().size(), dim, false);
@@ -301,7 +301,7 @@ void KinematicLinearNURBS::InitializeJacobian()
 int KinematicLinearNURBS::Check(const Kratos::ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-        
+
         unsigned int dimension = this->GetGeometry().WorkingSpaceDimension();
 
         if (this->Id() < 1)
@@ -315,7 +315,7 @@ int KinematicLinearNURBS::Check(const Kratos::ProcessInfo& rCurrentProcessInfo)
             std::cout << "error on element -> " << this->Id() << std::endl;
             KRATOS_THROW_ERROR(std::logic_error, "Length can not be less than 0. Please check Jacobian.", __FUNCTION__);
         }
-        
+
         if (this->GetGeometry().Area() < 0)
         {
             std::cout << "error on element -> " << this->Id() << std::endl;
@@ -374,7 +374,7 @@ int KinematicLinearNURBS::Check(const Kratos::ProcessInfo& rCurrentProcessInfo)
             {
                 KRATOS_THROW_ERROR(std::logic_error, "Something wrong with the consitutive law", __FUNCTION__)
             }
-                
+
 //			if( mConstitutiveLawVector[i]->IsIncremental() )
 //				KRATOS_THROW_ERROR( std::logic_error, "This element does not provide incremental strains!", "" );
 //			if( mConstitutiveLawVector[i]->GetStrainMeasure() != ConstitutiveLaw::StrainMeasure_Linear )
@@ -382,17 +382,17 @@ int KinematicLinearNURBS::Check(const Kratos::ProcessInfo& rCurrentProcessInfo)
 //			if( mConstitutiveLawVector[i]->GetStressMeasure() != ConstitutiveLaw::StressMeasure_PK1 )
 //				KRATOS_THROW_ERROR( std::logic_error, "This element is formulated in PK1 stresses", "" );
         }
-        
+
         //check Jacobian
         #ifdef CHECK_JACOBIAN
         GeometryType::CoordinatesArrayType P;
-        
+
         P[0] = 0.0;
         P[1] = 0.0;
         P[2] = 0.0;
-        
+
         double J0 = GetGeometry().DeterminantOfJacobian( P );
-        
+
         if(J0 < 0.0)
         {
             KRATOS_THROW_ERROR(std::logic_error, "Negative Jacobian is detected", __FUNCTION__)

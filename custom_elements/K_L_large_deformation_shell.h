@@ -1,5 +1,5 @@
-//   
-//   Project Name:        Kratos       
+//
+//   Project Name:        Kratos
 //   Last Modified by:    $Author: DongGiang $
 //   Date:                $Date: 25 August 17 $
 //   Revision:            $Revision: 1.0 $
@@ -9,7 +9,7 @@
 #define  KRATOS_KIRCHHOFF_LOVE_LARGE_DEFORMATION_SHELL_H_INCLUDED
 
 
-// External includes 
+// External includes
 #include "boost/smart_ptr.hpp"
 
 
@@ -122,7 +122,7 @@ public:
     // Counted pointer of KinematicLinearKirchoffLoveIsogeometricShell
     KRATOS_CLASS_POINTER_DEFINITION(KirchhoffLoveLargeDeformationShell);
 
-    /** 
+    /**
      * Default constructor.
      */
     KirchhoffLoveLargeDeformationShell ( IndexType NewId, GeometryType::Pointer pGeometry );
@@ -143,26 +143,26 @@ public:
 
     ///////////////////////////////////////////////////////////
     IntegrationMethod GetIntegrationMethod() const;
-    
-    void EquationIdVector( EquationIdVectorType& rResult, 
+
+    void EquationIdVector( EquationIdVectorType& rResult,
                                ProcessInfo& rCurrentProcessInfo);
-    
+
     void GetDofList( DofsVectorType& ElementalDofList,
                          ProcessInfo& CurrentProcessInfo);
 
     ////////////////////////////////////////////////////////////
-    void Initialize();
+    void Initialize(const ProcessInfo& rCurrentProcessInfo);
 
     void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
     void FinalizeSolutionStep( ProcessInfo& CurrentProcessInfo );
 
     ////////////////////////////////////////////////////////////
-    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, 
-                               VectorType& rRightHandSideVector, 
+    void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
+                               VectorType& rRightHandSideVector,
                                ProcessInfo& rCurrentProcessInfo);
 
-    void CalculateRightHandSide( VectorType& rRightHandSideVector, 
+    void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                  ProcessInfo& rCurrentProcessInfo);
 
 protected:
@@ -210,7 +210,7 @@ private:
 
     // material parameters
     double mE, mNU;
-    
+
 
     std::vector<Vector> mNodalCoordinates ;
 
@@ -224,7 +224,7 @@ private:
     GeometryType::JacobiansType mJ0;
     Vector mIntegrationWeight;
 
-    Vector mIntegrationPoint1D;   
+    Vector mIntegrationPoint1D;
     Vector mWeight1D;
     double mDetJ1D;
 
@@ -254,7 +254,7 @@ private:
             , const std::vector<std::vector<Matrix>>& StrainVector_rs, const double& DetJ, const double& Weight);
     ///////////////////// add left hand side contribution
     void computeMembraneStrain(Matrix& eTensor,  Matrix& Aab, Matrix& aab  );
-    
+
     void computeCurvatureChange(Matrix& kTensor, Matrix& Bab, Matrix& bab);
 
     /////////////////////////////////////////////////////////////////////////
@@ -275,7 +275,7 @@ private:
 
     void ContravariantBaseVector(std::vector<Vector>& AA, std::vector<Vector>& A, Matrix& Aab);
 
-    void DerivativeReferenceCovariantBaseVector(std::vector<std::vector<Vector> >& A_ab, 
+    void DerivativeReferenceCovariantBaseVector(std::vector<std::vector<Vector> >& A_ab,
         const ShapeFunctionsSecondDerivativesType& D2N_De2, const std::vector<Vector>& X);
 
     void DerivativeDeformedCovariantBaseVector(std::vector<std::vector<Vector> >& a_ab
@@ -376,8 +376,8 @@ private:
 
     //int Check( const ProcessInfo& rCurrentProcessInfo );
 
-}; // Class KinematicLinearKirchoffLoveIsogeometricShell 
+}; // Class KinematicLinearKirchoffLoveIsogeometricShell
 
 }  // namespace Kratos.
 
-#endif // KRATOS_KINEMATIC_LINEAR_KIRCHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined 
+#endif // KRATOS_KINEMATIC_LINEAR_KIRCHOFF_LOVE_ISOGEOMETRIC_SHELL_H_INCLUDED defined

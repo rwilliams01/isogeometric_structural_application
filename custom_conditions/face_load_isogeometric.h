@@ -78,9 +78,9 @@ namespace Kratos
 class FaceLoadIsogeometric : public Condition
 {
 public:
-    
+
     typedef GeometryData::IntegrationMethod IntegrationMethod;
-    
+
     typedef IsogeometricGeometry<GeometryType::PointType> IsogeometricGeometryType;
 
     // Counted pointer of FaceLoadIsogeometric
@@ -105,8 +105,8 @@ public:
         NodesArrayType const& ThisNodes,
         PropertiesType::Pointer pProperties ) const;
 
-    virtual void Initialize();
-    
+    virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
+
     virtual void EquationIdVector(
         EquationIdVectorType& rResult,
         ProcessInfo& rCurrentProcessInfo );
@@ -125,12 +125,12 @@ protected:
     IntegrationMethod mThisIntegrationMethod;
 
     IsogeometricGeometryType::Pointer mpIsogeometricGeometry;
-    
+
 private:
     ///@name Static Member Variables
 
     /// privat variables
-    
+
     // privat name Operations
 
     void CalculateAll(
@@ -139,7 +139,7 @@ private:
         const ProcessInfo& rCurrentProcessInfo,
         bool CalculateStiffnessMatrixFlag,
         bool CalculateResidualVectorFlag );
-    
+
     ///@}
     ///@name Serialization
     ///@{
@@ -162,4 +162,4 @@ private:
 
 } // namespace Kratos.
 
-#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined 
+#endif // KRATOS_LINE_LOAD_ISOGEOMETRIC_H_INCLUDED  defined

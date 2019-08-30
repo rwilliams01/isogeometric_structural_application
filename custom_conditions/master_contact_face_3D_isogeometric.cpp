@@ -75,8 +75,8 @@ MasterContactFace3DIsogeometric::MasterContactFace3DIsogeometric( IndexType NewI
     //DO NOT ADD DOFS HERE!!!
     GetValue( IS_CONTACT_SLAVE  )  = 0;
     GetValue( IS_CONTACT_MASTER )  = 1;
-    
-    mpIsogeometricGeometry = 
+
+    mpIsogeometricGeometry =
         boost::dynamic_pointer_cast<IsogeometricGeometryType>(pGeometry);
 }
 
@@ -106,10 +106,10 @@ Condition::Pointer MasterContactFace3DIsogeometric::Create( IndexType NewId,
 
 //***********************************************************************************
 //***********************************************************************************
-void MasterContactFace3DIsogeometric::Initialize()
+void MasterContactFace3DIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 {
     KRATOS_TRY
-    
+
         ////////////////////Initialize geometry_data/////////////////////////////
         #ifdef ENABLE_PROFILING
         double start_compute = OpenMPUtils::GetCurrentTime();
@@ -172,7 +172,7 @@ void MasterContactFace3DIsogeometric::Initialize()
         mThisIntegrationMethod =
 //            GetGeometry().GetDefaultIntegrationMethod(); //default method
             GeometryData::GI_GAUSS_1;
-        
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
@@ -194,12 +194,12 @@ void MasterContactFace3DIsogeometric::Initialize()
         noalias( GetValue( PENALTY_T ) ) = ZeroVector( GetGeometry().IntegrationPoints().size() );
         GetValue( IS_CONTACT_MASTER ) = 1;
         GetValue( IS_CONTACT_SLAVE ) = 0;
-    
+
         #ifdef ENABLE_PROFILING
         double end_compute = OpenMPUtils::GetCurrentTime();
         std::cout << "GenerateGeometryData for condition " << Id() << " completed: " << end_compute - start_compute << " s" << std::endl;
         #endif
-        
+
     KRATOS_CATCH("")
 }
 
