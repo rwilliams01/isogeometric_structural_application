@@ -204,6 +204,7 @@ class Model:
 
         self.deac = DeactivationUtility()
         self.deac.Initialize( self.model_part )
+        self.solver.solver.Initialize()
         self.model_part.Check(self.model_part.ProcessInfo)
         print ("activation utility initialized")
         ##################################################################
@@ -255,21 +256,23 @@ def CreatePostMesh(mpatch, dim, params):
     fem_mesh.SetBaseElementName(params['base element name'])
     fem_mesh.SetLastNodeId(params['last node id'])
     fem_mesh.SetLastElemId(params['last element id'])
-    fem_mesh.SetLastPropId(params['last condition id'])
     if params['division mode'] == "uniform":
         fem_mesh.SetUniformDivision(params['uniform division number'])
     elif params['division mode'] == "non-uniform":
         for patch_ptr in mpatch.Patches():
             patch = patch_ptr.GetReference()
             fem_mesh.SetDivision(patch.Id, 0, params['division number u'])
-            fem_mesh.SetDivision(patch.Id, 1, params['division number v'])
-            fem_mesh.SetDivision(patch.Id, 2, params['division number w'])
+            if dim > 1:
+                fem_mesh.SetDivision(patch.Id, 1, params['division number v'])
+            if dim > 2:
+                fem_mesh.SetDivision(patch.Id, 2, params['division number w'])
 
     return fem_mesh
 
 ### Create a post_model_part out from mpatch
 def CreatePostModelPart(mpatch, dim, params):
     fem_mesh = CreatePostMesh(mpatch, dim, params)
+    # fem_mesh.SetEchoLevel(3)
 
     post_model_part = ModelPart("iga-fem mesh " + params['name'])
     for var in params['variables list']:
@@ -279,13 +282,33 @@ def CreatePostModelPart(mpatch, dim, params):
 
     return post_model_part
 
+def AddConditionsToPostModelPart(post_model_part, patch, dim, sample_cond_name, divs):
+    if dim == 1:
+        fem_mesh = PatchLagrangeMesh1D()
+    elif dim == 2:
+        fem_mesh = PatchLagrangeMesh2D()
+    elif dim == 3:
+        fem_mesh = PatchLagrangeMesh3D()
+
+    mpatch_util = MultiPatchUtility()
+    last_node_id = mpatch_util.GetLastNodeId(post_model_part)
+    last_cond_id = mpatch_util.GetLastConditionId(post_model_part)
+    prop = post_model_part.Properties[patch.LayerIndex]
+    echo_level = 0
+    fem_mesh.WriteConditions(post_model_part, patch, sample_cond_name, divs, last_node_id, last_cond_id, prop, echo_level)
+
 ### Write a post mesh to GiD
 def WriteGiD(post_model_part, time, params):
+    if 'output format' not in params:
+        params['output format'] = "binary"
     #######WRITE TO GID
     write_deformed_flag = WriteDeformedMeshFlag.WriteUndeformed
     write_elements = WriteConditionsFlag.WriteConditions
     #write_elements = WriteConditionsFlag.WriteElementsOnly
-    post_mode = GiDPostMode.GiD_PostBinary
+    if params['output format'] == "binary":
+        post_mode = GiDPostMode.GiD_PostBinary
+    elif params['output format'] == "ascii":
+        post_mode = GiDPostMode.GiD_PostAscii
     multi_file_flag = MultiFileFlag.MultipleFiles
     gid_io = StructuralGidIO(params['name'], post_mode, multi_file_flag, write_deformed_flag, write_elements)
     gid_io.InitializeMesh( time )
