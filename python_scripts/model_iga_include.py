@@ -97,7 +97,7 @@ def QuasiStaticParameters():
 ##################################################################
 ### Interface class with KRATOS to perform analysis
 class Model:
-    def __init__( self, problem_name, path, model_part, analysis_parameters ):
+    def __init__( self, problem_name, path, model_part, analysis_parameters, results_path = None ):
         #setting the domain size for the problem to be solved
         ##################################################################
         ## DEFINE MODELPART ##############################################
@@ -106,6 +106,10 @@ class Model:
         self.model_part.Name = problem_name
         self.model_part.SetBufferSize(2)
         self.path = path
+        if results_path == None:
+            self.results_path = self.path
+        else:
+            self.results_path = results_path
         self.problem_name = problem_name
         self.domain_size = 2
         ##################################################################
@@ -130,14 +134,16 @@ class Model:
         #write_elements = WriteConditionsFlag.WriteElementsOnly
         post_mode = GiDPostMode.GiD_PostAscii
         multi_file_flag = MultiFileFlag.MultipleFiles
-        self.gid_io = StructuralGidIO( self.path+self.problem_name, post_mode, multi_file_flag, write_deformed_flag, write_elements )
-        self.isogeometric_classtical_post_utility = BezierClassicalPostUtility(self.model_part)
+        self.gid_io = StructuralGidIO( self.results_path+self.problem_name, post_mode, multi_file_flag, write_deformed_flag, write_elements )
+        self.isogeometric_classical_post_utility = BezierClassicalPostUtility(self.model_part)
+        self.model_part_post = ModelPart("post")
         self.generate_post_model_part = False
 
         ##################################################################
         ## ADD DOFS ######################################################
         ##################################################################
         structural_solver_advanced.AddDofs( self.model_part )
+        structural_solver_advanced.AddVariables( self.model_part_post )
 
         ##################################################################
         ## INITIALISE SOLVER FOR PARTICULAR SOLUTION #####################
@@ -159,14 +165,14 @@ class Model:
     def WriteOutput( self, time ):
         if self.generate_post_model_part == False:
             print ('Before GenerateModelPart')
-            self.isogeometric_post_utility.GenerateModelPart(self.model_part_post, PostElementType.Quadrilateral)
-            self.isogeometric_post_utility.GenerateModelPart2(self.model_part_post)
+            # self.isogeometric_classical_post_utility.GenerateModelPart(self.model_part_post, PostElementType.Quadrilateral)
+            self.isogeometric_classical_post_utility.GenerateModelPart2(self.model_part_post)
             self.generate_post_model_part = True
             print ('Generate PostModelPart completed')
         if self.generate_post_model_part == True:
-            self.isogeometric_post_utility.TransferNodalResults(DISPLACEMENT, self.model_part_post)
-            self.isogeometric_post_utility.TransferNodalResults(REACTION, self.model_part_post)
-#            self.isogeometric_post_utility.TransferIntegrationPointResults(STRESSES, self.model_part_post, self.solver_post)
+            self.isogeometric_classical_post_utility.TransferNodalResults(DISPLACEMENT, self.model_part_post)
+            self.isogeometric_classical_post_utility.TransferNodalResults(REACTION, self.model_part_post)
+#            self.isogeometric_classical_post_utility.TransferIntegrationPointResults(STRESSES, self.model_part_post, self.solver_post)
             print ('Synchronize PostModelPart completed')
         self.gid_io.InitializeMesh( time )
         post_mesh = self.model_part_post.GetMesh()
@@ -213,11 +219,30 @@ class Model:
     def FinalizeModel( self ):
         self.gid_io.CloseResultFile()
 
+    # solve with deactivation/reactivation
+    # element/condition with nonzero ACTIVATION_LEVEL in [from_deac, to_deac] will be deactivated
+    # element/condition with negative ACTIVATION_LEVEL will also be deactivated
+    # element/condition with ACTIVATION_LEVEL in [from_reac, to_reac] will be re-activated
     def Solve( self, time, from_deac, to_deac, from_reac, to_reac ):
         self.deac.Reactivate( self.model_part, from_reac, to_reac )
         self.deac.Deactivate( self.model_part, from_deac, to_deac )
         self.model_part.CloneTimeStep(time)
         self.solver.Solve()
+
+    # solve nothing (good for debugging) with deactivation/reactivation
+    def DrySolve( self, time, from_deac, to_deac, from_reac, to_reac ):
+        self.deac.Reactivate( self.model_part, from_reac, to_reac )
+        self.deac.Deactivate( self.model_part, from_deac, to_deac )
+        self.model_part.CloneTimeStep(time)
+
+    # solve without deactivation
+    def SolveModel(self, time):
+        self.model_part.CloneTimeStep(time)
+        self.solver.Solve()
+
+    # solve nothing without deactivation
+    def DrySolveModel(self, time):
+        self.model_part.CloneTimeStep(time)
 
 ##################################################################
 ### Create FEM mesh for post with GiD
@@ -301,6 +326,8 @@ def AddConditionsToPostModelPart(post_model_part, patch, dim, sample_cond_name, 
 def WriteGiD(post_model_part, time, params):
     if 'output format' not in params:
         params['output format'] = "binary"
+    if 'path' not in params:
+        params['path'] = "."
     #######WRITE TO GID
     write_deformed_flag = WriteDeformedMeshFlag.WriteUndeformed
     write_elements = WriteConditionsFlag.WriteConditions
@@ -310,7 +337,7 @@ def WriteGiD(post_model_part, time, params):
     elif params['output format'] == "ascii":
         post_mode = GiDPostMode.GiD_PostAscii
     multi_file_flag = MultiFileFlag.MultipleFiles
-    gid_io = StructuralGidIO(params['name'], post_mode, multi_file_flag, write_deformed_flag, write_elements)
+    gid_io = StructuralGidIO(params['path'] + "/" + params['name'], post_mode, multi_file_flag, write_deformed_flag, write_elements)
     gid_io.InitializeMesh( time )
     post_mesh = post_model_part.GetMesh()
     gid_io.WriteMesh( post_mesh )
