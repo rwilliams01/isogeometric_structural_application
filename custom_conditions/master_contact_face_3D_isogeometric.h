@@ -154,16 +154,16 @@ public:
      */
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               ProcessInfo& rCurrentProcessInfo );
+                               const ProcessInfo& rCurrentProcessInfo );
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 ProcessInfo& rCurrentProcessInfo );
+                                 const ProcessInfo& rCurrentProcessInfo );
 
     void EquationIdVector( EquationIdVectorType& rResult,
-                           ProcessInfo& rCurrentProcessInfo );
+                           const ProcessInfo& rCurrentProcessInfo ) const;
 
     void GetDofList( DofsVectorType& ConditionalDofList,
-                     ProcessInfo& CurrentProcessInfo );
+                     const ProcessInfo& CurrentProcessInfo ) const;
 
     void GetValueOnIntegrationPoints( const Variable<array_1d<double, 3> >& rVariable, std::vector<array_1d<double, 3> >& rValues, const ProcessInfo& rCurrentProcessInfo );
 
@@ -195,7 +195,7 @@ private:
 
     void CalculateAll( MatrixType& rLeftHandSideMatrix,
                        VectorType& rRightHandSideVector,
-                       ProcessInfo& rCurrentProcessInfo,
+                       const ProcessInfo& rCurrentProcessInfo,
                        bool CalculateStiffnessMatrixFlag,
                        bool CalculateResidualVectorFlag );
 

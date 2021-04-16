@@ -117,18 +117,18 @@ public:
 
     virtual void EquationIdVector(
         EquationIdVectorType& rResult,
-        ProcessInfo& rCurrentProcessInfo );
+        const ProcessInfo& rCurrentProcessInfo ) const; 
 
     virtual void GetDofList(
         DofsVectorType& ElementalDofList,
-        ProcessInfo& rCurrentProcessInfo );
+        const ProcessInfo& rCurrentProcessInfo ) const;
 
     virtual void Initialize(const ProcessInfo& rCurrentProcessInfo);
 
     virtual void CalculateLocalSystem(
         MatrixType& rLeftHandSideMatrix,
         VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo );
+        const ProcessInfo& rCurrentProcessInfo );
 
 protected:
 

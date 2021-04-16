@@ -93,7 +93,7 @@ namespace Kratos
     /**
     * Setting up the EquationIdVector
     */
-    void ConvectiveLinearKirchhoffLoveShell::EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo)
+    void ConvectiveLinearKirchhoffLoveShell::EquationIdVector(EquationIdVectorType& rResult, const ProcessInfo& rCurrentProcessInfo) const
     {
         DofsVectorType ElementalDofList;
         GetDofList(ElementalDofList, rCurrentProcessInfo);
@@ -110,7 +110,7 @@ namespace Kratos
 /**
 * Setting up the DOF list
 */
-    void ConvectiveLinearKirchhoffLoveShell::GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo)
+    void ConvectiveLinearKirchhoffLoveShell::GetDofList( DofsVectorType& ElementalDofList, const ProcessInfo& CurrentProcessInfo) const
     {
         ElementalDofList.resize( 0 );
 
@@ -308,7 +308,7 @@ namespace Kratos
     /**
     * calculates only the RHS vector
     */
-    void ConvectiveLinearKirchhoffLoveShell::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+    void ConvectiveLinearKirchhoffLoveShell::CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo)
     {
         MatrixType temp = Matrix();
 
@@ -333,7 +333,7 @@ namespace Kratos
     * calculates this contact element's local contributions
     */
     void ConvectiveLinearKirchhoffLoveShell::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
-                                        VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+                                        VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo)
     {
         //calculation flags
         bool CalculateStiffnessMatrixFlag = true;
@@ -347,7 +347,7 @@ namespace Kratos
     ////////////////////// private subroutines /////////////////////////////////
     void ConvectiveLinearKirchhoffLoveShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
         VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo,
+        const ProcessInfo& rCurrentProcessInfo,
         bool CalculateStiffnessMatrixFlag,
         bool CalculateResidualVectorFlag,
         bool MaterialUpdateFlag)

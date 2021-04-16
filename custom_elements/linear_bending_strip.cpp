@@ -125,7 +125,7 @@ LinearBendingStrip::~LinearBendingStrip()
 //***********************************************************************************
 //***********************************************************************************
 void LinearBendingStrip::EquationIdVector( EquationIdVectorType& rResult,
-                                    ProcessInfo& rCurrentProcessInfo )
+                                    const ProcessInfo& rCurrentProcessInfo ) const
 {
     KRATOS_TRY
     unsigned int number_of_nodes = GetGeometry().size();
@@ -150,7 +150,7 @@ void LinearBendingStrip::EquationIdVector( EquationIdVectorType& rResult,
 //***********************************************************************************
 //***********************************************************************************
 void LinearBendingStrip::GetDofList( DofsVectorType& ElementalDofList,
-                              ProcessInfo& rCurrentProcessInfo )
+                              const ProcessInfo& rCurrentProcessInfo ) const
 {
     ElementalDofList.resize( 0 );
 
@@ -338,7 +338,7 @@ void LinearBendingStrip::Initialize(const ProcessInfo& rCurrentProcessInfo)
 //***********************************************************************************
 void LinearBendingStrip::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                 VectorType& rRightHandSideVector,
-                                                ProcessInfo& rCurrentProcessInfo )
+                                                const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;

@@ -122,7 +122,7 @@ FacePressureIsogeometric::~FacePressureIsogeometric()
 //***********************************************************************************
 //***********************************************************************************
 void FacePressureIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
-                                    ProcessInfo& rCurrentProcessInfo )
+                                    const ProcessInfo& rCurrentProcessInfo ) const
 {
     unsigned int number_of_nodes = GetGeometry().size();
     unsigned int dim = number_of_nodes * 3;
@@ -142,7 +142,7 @@ void FacePressureIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
 //***********************************************************************************
 //***********************************************************************************
 void FacePressureIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
-                              ProcessInfo& rCurrentProcessInfo )
+                              const ProcessInfo& rCurrentProcessInfo ) const
 {
     ElementalDofList.resize( 0 );
 
@@ -240,7 +240,7 @@ void FacePressureIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo
 //***********************************************************************************
 void FacePressureIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                 VectorType& rRightHandSideVector,
-                                                ProcessInfo& rCurrentProcessInfo )
+                                                const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;

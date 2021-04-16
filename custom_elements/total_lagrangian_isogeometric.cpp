@@ -213,7 +213,7 @@ namespace Kratos
 
     void TotalLagrangianIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                         VectorType& rRightHandSideVector,
-                                        ProcessInfo& rCurrentProcessInfo,
+                                        const ProcessInfo& rCurrentProcessInfo,
                                         bool CalculateStiffnessMatrixFlag,
                                         bool CalculateResidualVectorFlag )
     {
@@ -351,7 +351,7 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 
-    void TotalLagrangianIsogeometric::CalculateRightHandSide( VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo )
+    void TotalLagrangianIsogeometric::CalculateRightHandSide( VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo )
     {
         //calculation flags
         bool CalculateStiffnessMatrixFlag = false;
@@ -364,7 +364,7 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 
-    void TotalLagrangianIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo )
+    void TotalLagrangianIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo )
     {
         //calculation flags
         bool CalculateStiffnessMatrixFlag = true;
@@ -607,7 +607,7 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 
-    void TotalLagrangianIsogeometric::EquationIdVector( EquationIdVectorType& rResult, ProcessInfo& CurrentProcessInfo )
+    void TotalLagrangianIsogeometric::EquationIdVector( EquationIdVectorType& rResult, const ProcessInfo& CurrentProcessInfo ) const
     {
         int number_of_nodes = mpIsogeometricGeometry->size();
         int dim = mpIsogeometricGeometry->WorkingSpaceDimension();
@@ -631,7 +631,7 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 
-    void TotalLagrangianIsogeometric::GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo )
+    void TotalLagrangianIsogeometric::GetDofList( DofsVectorType& ElementalDofList, const ProcessInfo& CurrentProcessInfo ) const
     {
         ElementalDofList.resize( 0 );
 
@@ -650,7 +650,7 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 
-    void TotalLagrangianIsogeometric::MassMatrix( MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo )
+    void TotalLagrangianIsogeometric::MassMatrix( MatrixType& rMassMatrix, const ProcessInfo& rCurrentProcessInfo )
     {
         KRATOS_TRY
 
@@ -724,7 +724,7 @@ namespace Kratos
 //************************************************************************************
 //************************************************************************************
 
-    void TotalLagrangianIsogeometric::DampMatrix( MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo )
+    void TotalLagrangianIsogeometric::DampMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo )
     {
         KRATOS_TRY
         unsigned int number_of_nodes = mpIsogeometricGeometry->size();

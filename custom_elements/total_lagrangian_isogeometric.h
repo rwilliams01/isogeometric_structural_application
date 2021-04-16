@@ -164,23 +164,23 @@ public:
 
     void ResetConstitutiveLaw();
 
-    void CalculateLocalSystem(MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo);
+    void CalculateLocalSystem(MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo);
 
-    void CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo);
+    void CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo);
 
     //virtual void CalculateLeftHandSide(MatrixType& rLeftHandSideMatrix, ProcessInfo& rCurrentProcessInfo);
 
-    void EquationIdVector(EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo);
+    void EquationIdVector(EquationIdVectorType& rResult, const ProcessInfo& rCurrentProcessInfo) const;
 
-    void GetDofList(DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo);
+    void GetDofList(DofsVectorType& ElementalDofList, const ProcessInfo& CurrentProcessInfo) const;
 
     void InitializeSolutionStep(ProcessInfo& CurrentProcessInfo);
 
     void FinalizeSolutionStep(ProcessInfo& CurrentProcessInfo);
 
-    void MassMatrix(MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo);
+    void MassMatrix(MatrixType& rMassMatrix, const ProcessInfo& rCurrentProcessInfo);
 
-    void DampMatrix(MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo);
+    void DampMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo);
 
     void CalculateOnIntegrationPoints(const Variable<double>& rVariable, Vector& Output, const ProcessInfo& rCurrentProcessInfo);
 
@@ -262,7 +262,7 @@ protected:
      * \f$ r^e \f$
      */
     virtual void CalculateAll(MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector,
-                              ProcessInfo& rCurrentProcessInfo,
+                              const ProcessInfo& rCurrentProcessInfo,
                               bool CalculateStiffnessMatrixFlag,
                               bool CalculateResidualVectorFlag);
     ///@}

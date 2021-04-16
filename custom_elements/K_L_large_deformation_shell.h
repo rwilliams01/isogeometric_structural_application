@@ -145,10 +145,10 @@ public:
     IntegrationMethod GetIntegrationMethod() const;
 
     void EquationIdVector( EquationIdVectorType& rResult,
-                               ProcessInfo& rCurrentProcessInfo);
+                               const ProcessInfo& rCurrentProcessInfo) const;
 
     void GetDofList( DofsVectorType& ElementalDofList,
-                         ProcessInfo& CurrentProcessInfo);
+                         const ProcessInfo& CurrentProcessInfo) const;
 
     ////////////////////////////////////////////////////////////
     void Initialize(const ProcessInfo& rCurrentProcessInfo);
@@ -160,10 +160,10 @@ public:
     ////////////////////////////////////////////////////////////
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               ProcessInfo& rCurrentProcessInfo);
+                               const ProcessInfo& rCurrentProcessInfo);
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 ProcessInfo& rCurrentProcessInfo);
+                                 const ProcessInfo& rCurrentProcessInfo);
 
 protected:
 
@@ -235,7 +235,7 @@ private:
 
     void CalculateAll( MatrixType& rLeftHandSideMatrix,
                        VectorType& rRightHandSideVector,
-                       ProcessInfo& rCurrentProcessInfo,
+                       const ProcessInfo& rCurrentProcessInfo,
                        bool CalculateStiffnessMatrixFlag = true,
                        bool CalculateResidualVectorFlag = true,
                        bool MaterialUpdateFlag = true );

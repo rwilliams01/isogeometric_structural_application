@@ -155,19 +155,19 @@ public:
      */
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               ProcessInfo& rCurrentProcessInfo );
+                               const ProcessInfo& rCurrentProcessInfo );
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 ProcessInfo& rCurrentProcessInfo);
+                                 const ProcessInfo& rCurrentProcessInfo);
 
     void EquationIdVector( EquationIdVectorType& rResult,
-                           ProcessInfo& rCurrentProcessInfo);
+                           const ProcessInfo& rCurrentProcessInfo) const;
 
     void MasterElementsEquationIdVectors( EquationIdVectorContainerType& rResult,
                                           ProcessInfo& rCurrentProcessInfo );
 
     void GetDofList( DofsVectorType& ConditionalDofList,
-                     ProcessInfo& CurrentProcessInfo);
+                     const ProcessInfo& CurrentProcessInfo) const;
 
     void CalculateOnIntegrationPoints(const Variable<double>& rVariable, Vector& Output, const ProcessInfo& rCurrentProcessInfo);
 

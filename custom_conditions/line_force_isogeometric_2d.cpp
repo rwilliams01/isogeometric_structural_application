@@ -58,6 +58,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "includes/define.h"
 #include "line_force_isogeometric_2d.h"
 #include "utilities/math_utils.h"
+#include "structural_application/structural_application_variables.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"
 
@@ -119,7 +120,7 @@ LineForceIsogeometric2D::~LineForceIsogeometric2D()
 //***********************************************************************************
 //***********************************************************************************
 void LineForceIsogeometric2D::GetDofList( DofsVectorType& ConditionalDofList,
-                              ProcessInfo& rCurrentProcessInfo )
+                              const ProcessInfo& rCurrentProcessInfo ) const
 {
     ConditionalDofList.resize( 0 );
 

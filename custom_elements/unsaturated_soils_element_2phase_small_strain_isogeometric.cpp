@@ -381,7 +381,7 @@ void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::InitializeNonLinea
 //************************************************************************************
 //************************************************************************************
 void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
-        VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo,
+        VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo,
         bool CalculateStiffnessMatrixFlag, bool CalculateResidualVectorFlag )
 {
     KRATOS_TRY
@@ -622,7 +622,7 @@ void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::CalculateAll( Matr
 //************************************************************************************
 
 void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::CalculateRightHandSide( VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo )
+        const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = false;
@@ -635,7 +635,7 @@ void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::CalculateRightHand
 //************************************************************************************
 
 void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
-        VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo )
+        VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;
@@ -646,7 +646,7 @@ void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::CalculateLocalSyst
 ////************************************************************************************
 ////************************************************************************************
 
-void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::MassMatrix( MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo )
+void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::MassMatrix( MatrixType& rMassMatrix, const ProcessInfo& rCurrentProcessInfo )
 {
     DampMatrix(rMassMatrix, rCurrentProcessInfo);
 }
@@ -654,7 +654,7 @@ void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::MassMatrix( Matrix
 ////************************************************************************************
 ////************************************************************************************
 
-void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::DampMatrix( MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo )
+void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::DampMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo )
 {
     KRATOS_TRY
 
@@ -923,7 +923,7 @@ inline void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::CalculateAn
 //************************************************************************************
 
 void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::EquationIdVector( EquationIdVectorType& rResult,
-        ProcessInfo& CurrentProcessInfo )
+        const ProcessInfo& CurrentProcessInfo ) const
 {
     unsigned int dim_press = 1; //one pressure dofs
     unsigned int dim_disp = ( GetGeometry().WorkingSpaceDimension() );//3 displacement dofs
@@ -955,8 +955,8 @@ void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::EquationIdVector( 
 //************************************************************************************
 //************************************************************************************
 
-void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::GetDofList( DofsVectorType& ElementalDofList, ProcessInfo&
-        CurrentProcessInfo )
+void UnsaturatedSoilsElement_2phase_SmallStrain_Isogeometric::GetDofList( DofsVectorType& ElementalDofList, const ProcessInfo&
+        CurrentProcessInfo ) const
 {
     ElementalDofList.resize( 0 );
 

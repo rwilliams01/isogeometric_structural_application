@@ -295,7 +295,7 @@ Vector ContactLink3D_Kinematic_Linear_Isogeometric::NormalVector(
  */
 void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateRightHandSide(
     VectorType& rRightHandSideVector,
-    ProcessInfo& rCurrentProcessInfo )
+    const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = false;
@@ -315,7 +315,7 @@ void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateRightHandSide(
 void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateLocalSystem(
     MatrixType& rLeftHandSideMatrix,
     VectorType& rRightHandSideVector,
-    ProcessInfo& rCurrentProcessInfo )
+    const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;
@@ -332,7 +332,7 @@ void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateLocalSystem(
 void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateAll(
     MatrixType& rLeftHandSideMatrix,
     VectorType& rRightHandSideVector,
-    ProcessInfo& rCurrentProcessInfo,
+    const ProcessInfo& rCurrentProcessInfo,
     bool CalculateStiffnessMatrixFlag,
     bool CalculateResidualVectorFlag )
 {
@@ -827,7 +827,7 @@ void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateAll(
  * with regard to the current master and slave partners.
  * All Conditions are assumed to be defined in 3D space and havin 3 DOFs per node
  */
-void ContactLink3D_Kinematic_Linear_Isogeometric::DampMatrix( MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo )
+void ContactLink3D_Kinematic_Linear_Isogeometric::DampMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo )
 {
 
     KRATOS_TRY
@@ -1543,7 +1543,7 @@ void ContactLink3D_Kinematic_Linear_Isogeometric::UpdateMasterLocalPoint()
  */
 void ContactLink3D_Kinematic_Linear_Isogeometric::EquationIdVector(
     EquationIdVectorType& rResult,
-    ProcessInfo& CurrentProcessInfo )
+    const ProcessInfo& CurrentProcessInfo ) const
 {
     //determining size of DOF list
     //dimension of space
@@ -1580,7 +1580,7 @@ void ContactLink3D_Kinematic_Linear_Isogeometric::EquationIdVector(
  */
 void ContactLink3D_Kinematic_Linear_Isogeometric::GetDofList(
     DofsVectorType& ConditionalDofList,
-    ProcessInfo& CurrentProcessInfo )
+    const ProcessInfo& CurrentProcessInfo ) const
 {
     //determining size of DOF list
     //dimension of space

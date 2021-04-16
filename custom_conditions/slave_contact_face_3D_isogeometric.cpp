@@ -300,7 +300,7 @@ void SlaveContactFace3DIsogeometric::GetValueOnIntegrationPoints( const Variable
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
 void SlaveContactFace3DIsogeometric::CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                                             ProcessInfo& rCurrentProcessInfo )
+                                                             const ProcessInfo& rCurrentProcessInfo )
 {
     unsigned int ndof = (*mpIsogeometricGeometry).size() * 3;
 
@@ -317,7 +317,7 @@ void SlaveContactFace3DIsogeometric::CalculateRightHandSide( VectorType& rRightH
  */
 void SlaveContactFace3DIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                            VectorType& rRightHandSideVector,
-                                                           ProcessInfo& rCurrentProcessInfo )
+                                                           const ProcessInfo& rCurrentProcessInfo )
 {
     unsigned int ndof = (*mpIsogeometricGeometry).size() * 3;
 
@@ -381,7 +381,7 @@ void SlaveContactFace3DIsogeometric::CalculateAndAdd_PressureForce( Vector& resi
  * REMOVED: the DOFs are managed by the linking conditions
  */
 void SlaveContactFace3DIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
-                                                       ProcessInfo& CurrentProcessInfo )
+                                                       const ProcessInfo& CurrentProcessInfo ) const
 {
     KRATOS_TRY
     unsigned int number_of_nodes = (*mpIsogeometricGeometry).size();
@@ -414,7 +414,7 @@ void SlaveContactFace3DIsogeometric::MasterElementsEquationIdVectors( EquationId
  * REMOVED: the DOFs are managed by the linking conditions
  */
 void SlaveContactFace3DIsogeometric::GetDofList( DofsVectorType& ConditionalDofList,
-                                                 ProcessInfo& CurrentProcessInfo )
+                                                const ProcessInfo& CurrentProcessInfo ) const
 {
     ConditionalDofList.resize( 0 );
 

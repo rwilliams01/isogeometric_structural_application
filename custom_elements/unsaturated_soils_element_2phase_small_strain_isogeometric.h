@@ -163,21 +163,21 @@ public:
 
     virtual void ResetConstitutiveLaw();
 
-    virtual void EquationIdVector( EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo );
+    virtual void EquationIdVector( EquationIdVectorType& rResult, const ProcessInfo& rCurrentProcessInfo ) const;
 
-    virtual void GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo );
+    virtual void GetDofList( DofsVectorType& ElementalDofList, const ProcessInfo& CurrentProcessInfo ) const;
 
     virtual void InitializeSolutionStep( ProcessInfo& CurrentProcessInfo );
 
     virtual void InitializeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
-    virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo );
+    virtual void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo );
 
-    virtual void CalculateRightHandSide( VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo );
+    virtual void CalculateRightHandSide( VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo );
 
-    virtual void DampMatrix( MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo );
+    virtual void DampMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo );
 
-    virtual void MassMatrix( MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo);
+    virtual void MassMatrix( MatrixType& rMassMatrix, const ProcessInfo& rCurrentProcessInfo);
 
     virtual void FinalizeNonLinearIteration( ProcessInfo& CurrentProcessInfo );
 
@@ -323,7 +323,7 @@ private:
     ///@{
     /** K += weight*Btrans*D*B */
     void CalculateAll( MatrixType& rLeftHandSideMatrix, VectorType& rRightHandSideVector,
-                       ProcessInfo& rCurrentProcessInfo,
+                       const ProcessInfo& rCurrentProcessInfo,
                        bool CalculateStiffnessMatrixFlag,
                        bool CalculateResidualVectorFlag );
 

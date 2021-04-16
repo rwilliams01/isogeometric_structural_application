@@ -76,22 +76,22 @@ public:
 
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               ProcessInfo& rCurrentProcessInfo);
+                               const ProcessInfo& rCurrentProcessInfo);
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 ProcessInfo& rCurrentProcessInfo);
+                                 const ProcessInfo& rCurrentProcessInfo);
 
-    void CalculateMassMatrix( MatrixType& rMassMatrix, ProcessInfo& rCurrentProcessInfo );
+    void CalculateMassMatrix( MatrixType& rMassMatrix, const ProcessInfo& rCurrentProcessInfo );
 
-    void CalculateDampingMatrix( MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo );
+    void CalculateDampingMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo );
 
     IntegrationMethod GetIntegrationMethod() const;
 
     void EquationIdVector( EquationIdVectorType& rResult,
-                           ProcessInfo& rCurrentProcessInfo);
+                           const ProcessInfo& rCurrentProcessInfo) const;
 
     void GetDofList( DofsVectorType& ElementalDofList,
-                     ProcessInfo& CurrentProcessInfo);
+                     const ProcessInfo& CurrentProcessInfo) const;
 
     void GetValueOnIntegrationPoints( const Variable<Vector>& rVariable, std::vector<Vector>& rValues, const ProcessInfo& rCurrentProcessInfo );
 
@@ -167,7 +167,7 @@ private:
     ////////////////////////////////////////////////////////////////////////////
     void CalculateAll( MatrixType& rLeftHandSideMatrix,
                        VectorType& rRightHandSideVector,
-                       ProcessInfo& rCurrentProcessInfo,
+                       const ProcessInfo& rCurrentProcessInfo,
                        bool CalculateStiffnessMatrixFlag = true,
                        bool CalculateResidualVectorFlag = true,
                        bool MaterialUpdateFlag = true );

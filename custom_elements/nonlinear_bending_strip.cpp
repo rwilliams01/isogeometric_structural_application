@@ -125,7 +125,7 @@ NonLinearBendingStrip::~NonLinearBendingStrip()
 //***********************************************************************************
 //***********************************************************************************
 void NonLinearBendingStrip::EquationIdVector( EquationIdVectorType& rResult,
-                                    ProcessInfo& rCurrentProcessInfo )
+                                    const ProcessInfo& rCurrentProcessInfo ) const
 {
     KRATOS_TRY
     unsigned int number_of_nodes = GetGeometry().size();
@@ -150,7 +150,7 @@ void NonLinearBendingStrip::EquationIdVector( EquationIdVectorType& rResult,
 //***********************************************************************************
 //***********************************************************************************
 void NonLinearBendingStrip::GetDofList( DofsVectorType& ElementalDofList,
-                              ProcessInfo& rCurrentProcessInfo )
+                              const ProcessInfo& rCurrentProcessInfo ) const
 {
     ElementalDofList.resize( 0 );
 
@@ -279,7 +279,7 @@ void NonLinearBendingStrip::Initialize(const ProcessInfo& rCurrentProcessInfo)
 //***********************************************************************************
 void NonLinearBendingStrip::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                 VectorType& rRightHandSideVector,
-                                                ProcessInfo& rCurrentProcessInfo )
+                                                const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;

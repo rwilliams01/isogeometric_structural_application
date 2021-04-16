@@ -58,6 +58,7 @@
 #include "custom_elements/kinematic_linear_isogeometric.h"
 #include "utilities/math_utils.h"
 #include "utilities/openmp_utils.h"
+#include "structural_application/structural_application_variables.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
 #include "isogeometric_application/isogeometric_application.h"

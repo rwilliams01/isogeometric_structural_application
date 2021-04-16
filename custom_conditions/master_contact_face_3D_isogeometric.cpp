@@ -229,7 +229,7 @@ bool MasterContactFace3DIsogeometric::ClosestPoint( GeometryType::CoordinatesArr
  * calculates only the RHS vector (certainly to be removed due to contact algorithm)
  */
 void MasterContactFace3DIsogeometric::CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                                              ProcessInfo& rCurrentProcessInfo )
+                                                             const ProcessInfo& rCurrentProcessInfo )
 {
     unsigned int ndof = GetGeometry().size() * 3;
 
@@ -247,7 +247,7 @@ void MasterContactFace3DIsogeometric::CalculateRightHandSide( VectorType& rRight
  */
 void MasterContactFace3DIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                             VectorType& rRightHandSideVector,
-                                                            ProcessInfo& rCurrentProcessInfo )
+                                                            const ProcessInfo& rCurrentProcessInfo )
 {
     unsigned int ndof = GetGeometry().size() * 3;
 
@@ -270,7 +270,7 @@ void MasterContactFace3DIsogeometric::CalculateLocalSystem( MatrixType& rLeftHan
  */
 void MasterContactFace3DIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                                     VectorType& rRightHandSideVector,
-                                                    ProcessInfo& rCurrentProcessInfo,
+                                                    const ProcessInfo& rCurrentProcessInfo,
                                                     bool CalculateStiffnessMatrixFlag,
                                                     bool CalculateResidualVectorFlag )
 {
@@ -310,7 +310,7 @@ void MasterContactFace3DIsogeometric::CalculateAndAdd_PressureForce( Vector& res
  * REMOVED: the DOFs are managed by the linking conditions
  */
 void MasterContactFace3DIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
-                                                        ProcessInfo& CurrentProcessInfo )
+                                                        const ProcessInfo& CurrentProcessInfo ) const
 {
     KRATOS_TRY
     unsigned int number_of_nodes = GetGeometry().size();
@@ -336,7 +336,7 @@ void MasterContactFace3DIsogeometric::EquationIdVector( EquationIdVectorType& rR
  * REMOVED: the DOFs are managed by the linking conditions
  */
 void MasterContactFace3DIsogeometric::GetDofList( DofsVectorType& ConditionalDofList,
-                                                  ProcessInfo& CurrentProcessInfo )
+                                                  const ProcessInfo& CurrentProcessInfo ) const
 {
     ConditionalDofList.resize( 0 );
 

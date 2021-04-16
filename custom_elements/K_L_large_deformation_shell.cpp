@@ -110,7 +110,7 @@ namespace Kratos
     * Setting up the EquationIdVector
     */
     void KirchhoffLoveLargeDeformationShell::EquationIdVector( EquationIdVectorType& rResult,
-        ProcessInfo& rCurrentProcessInfo)
+        const ProcessInfo& rCurrentProcessInfo) const
     {
         DofsVectorType ElementalDofList;
         GetDofList(ElementalDofList, rCurrentProcessInfo);
@@ -122,8 +122,8 @@ namespace Kratos
             rResult[i] = ElementalDofList[i]->EquationId();
     }
 
-    void KirchhoffLoveLargeDeformationShell::GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo)
-    {
+    void KirchhoffLoveLargeDeformationShell::GetDofList( DofsVectorType& ElementalDofList, const ProcessInfo& CurrentProcessInfo) const
+    { 
         ElementalDofList.resize( 0 );
 
         for ( unsigned int i = 0 ; i < GetGeometry().size() ; ++i )
@@ -312,7 +312,7 @@ namespace Kratos
     /**
     * calculates only the RHS vector
     */
-    void KirchhoffLoveLargeDeformationShell::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+    void KirchhoffLoveLargeDeformationShell::CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo)
     {
         MatrixType temp = Matrix();
 
@@ -337,7 +337,7 @@ namespace Kratos
     * calculates this contact element's local contributions
     */
     void KirchhoffLoveLargeDeformationShell::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
-                                        VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+                                        VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo)
     {
         //calculation flags
         bool CalculateStiffnessMatrixFlag = true;
@@ -354,7 +354,7 @@ namespace Kratos
 
     void KirchhoffLoveLargeDeformationShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
         VectorType& rRightHandSideVector,
-        ProcessInfo& rCurrentProcessInfo,
+        const ProcessInfo& rCurrentProcessInfo,
         bool CalculateStiffnessMatrixFlag,
         bool CalculateResidualVectorFlag,
         bool MaterialUpdateFlag)

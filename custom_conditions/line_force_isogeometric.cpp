@@ -59,6 +59,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "custom_conditions/line_force_isogeometric.h"
 #include "utilities/math_utils.h"
 #include "utilities/openmp_utils.h"
+#include "structural_application/structural_application_variables.h"
 #include "structural_application/custom_utilities/sd_math_utils.h"
 #include "structural_application/structural_application.h"
 #include "isogeometric_application/custom_utilities/isogeometric_math_utils.h"
@@ -117,7 +118,7 @@ LineForceIsogeometric::~LineForceIsogeometric()
 //***********************************************************************************
 //***********************************************************************************
 void LineForceIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
-    ProcessInfo& rCurrentProcessInfo )
+    const ProcessInfo& rCurrentProcessInfo ) const
 {
     KRATOS_TRY
 
@@ -140,7 +141,7 @@ void LineForceIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
 //***********************************************************************************
 //***********************************************************************************
 void LineForceIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
-ProcessInfo& rCurrentProcessInfo )
+const ProcessInfo& rCurrentProcessInfo ) const 
 {
     const unsigned int dim = 3;
 
@@ -284,7 +285,7 @@ void LineForceIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 //***********************************************************************************
 void LineForceIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                 VectorType& rRightHandSideVector,
-                                                ProcessInfo& rCurrentProcessInfo )
+                                                const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;

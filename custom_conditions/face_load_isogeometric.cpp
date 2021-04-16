@@ -113,7 +113,7 @@ FaceLoadIsogeometric::~FaceLoadIsogeometric()
 //***********************************************************************************
 //***********************************************************************************
 void FaceLoadIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
-                                    ProcessInfo& rCurrentProcessInfo )
+                                    const ProcessInfo& rCurrentProcessInfo ) const
 {
     KRATOS_TRY
     unsigned int number_of_nodes = GetGeometry().size();
@@ -136,7 +136,7 @@ void FaceLoadIsogeometric::EquationIdVector( EquationIdVectorType& rResult,
 //***********************************************************************************
 //***********************************************************************************
 void FaceLoadIsogeometric::GetDofList( DofsVectorType& ElementalDofList,
-                              ProcessInfo& rCurrentProcessInfo )
+                              const ProcessInfo& rCurrentProcessInfo ) const
 {
     ElementalDofList.resize( 0 );
 
@@ -222,7 +222,7 @@ void FaceLoadIsogeometric::Initialize(const ProcessInfo& rCurrentProcessInfo)
 //***********************************************************************************
 void FaceLoadIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                 VectorType& rRightHandSideVector,
-                                                ProcessInfo& rCurrentProcessInfo )
+                                                const ProcessInfo& rCurrentProcessInfo )
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;

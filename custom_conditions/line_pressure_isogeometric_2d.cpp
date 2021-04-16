@@ -118,7 +118,7 @@ LinePressureIsogeometric2D::~LinePressureIsogeometric2D()
 //***********************************************************************************
 //***********************************************************************************
 void LinePressureIsogeometric2D::GetDofList( DofsVectorType& ConditionalDofList,
-                              ProcessInfo& rCurrentProcessInfo )
+                              const ProcessInfo& rCurrentProcessInfo ) const
 {
     ConditionalDofList.resize( 0 );
 

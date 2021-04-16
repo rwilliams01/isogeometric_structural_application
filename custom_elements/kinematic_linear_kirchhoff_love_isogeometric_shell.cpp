@@ -314,7 +314,7 @@ void KinematicLinearKirchhoffLoveIsogeometricShell::InitializeNonLinearIteration
 /**
  * calculates only the RHS vector
  */
-void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateRightHandSide(VectorType& rRightHandSideVector, ProcessInfo& rCurrentProcessInfo)
+void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo)
 {
     MatrixType temp = Matrix();
 
@@ -340,7 +340,7 @@ void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateRightHandSide(Vecto
  */
 void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                           VectorType& rRightHandSideVector,
-                                          ProcessInfo& rCurrentProcessInfo)
+                                          const ProcessInfo& rCurrentProcessInfo)
 {
     //calculation flags
     bool CalculateStiffnessMatrixFlag = true;
@@ -357,7 +357,7 @@ void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateLocalSystem( Matrix
  */
 void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                   VectorType& rRightHandSideVector,
-                                  ProcessInfo& rCurrentProcessInfo,
+                                  const ProcessInfo& rCurrentProcessInfo,
                                   bool CalculateStiffnessMatrixFlag,
                                   bool CalculateResidualVectorFlag,
                                   bool MaterialUpdateFlag)
@@ -549,7 +549,7 @@ void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateAll( MatrixType& rL
  * This function calculates the damping matrix
  */
 void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateDampingMatrix( MatrixType& rDampMatrix,
-                                    ProcessInfo& rCurrentProcessInfo )
+                                    const ProcessInfo& rCurrentProcessInfo )
 {
     KRATOS_TRY
 //TODO
@@ -562,7 +562,7 @@ void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateDampingMatrix( Matr
  * This function calculates the mass matrix
  */
 void KinematicLinearKirchhoffLoveIsogeometricShell::CalculateMassMatrix( MatrixType& rMassMatrix,
-                                    ProcessInfo& rCurrentProcessInfo )
+                                    const ProcessInfo& rCurrentProcessInfo )
 {
     KRATOS_TRY
 //TODO
@@ -585,7 +585,7 @@ KinematicLinearKirchhoffLoveIsogeometricShell::IntegrationMethod KinematicLinear
 * Setting up the EquationIdVector
 */
 void KinematicLinearKirchhoffLoveIsogeometricShell::EquationIdVector( EquationIdVectorType& rResult,
-                                     ProcessInfo& rCurrentProcessInfo)
+                                     const ProcessInfo& rCurrentProcessInfo) const
 {
     unsigned int number_of_nodes = GetGeometry().size();
     unsigned int dim = number_of_nodes * 3;
@@ -607,7 +607,7 @@ void KinematicLinearKirchhoffLoveIsogeometricShell::EquationIdVector( EquationId
 /**
  * Setting up the DOF list
  */
-void KinematicLinearKirchhoffLoveIsogeometricShell::GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo)
+void KinematicLinearKirchhoffLoveIsogeometricShell::GetDofList( DofsVectorType& ElementalDofList, const ProcessInfo& CurrentProcessInfo) const
 {
     ElementalDofList.resize( 0 );
 

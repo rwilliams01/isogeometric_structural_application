@@ -113,9 +113,10 @@ public:
         GeometryType::Pointer pGeom,
         PropertiesType::Pointer pProperties ) const;
 
+
     virtual void GetDofList(
         DofsVectorType& ElementalDofList,
-        ProcessInfo& rCurrentProcessInfo );
+        const ProcessInfo& rCurrentProcessInfo ) const;
 
     //inherited from LineForceIsogeometric
 //    virtual void Initialize();

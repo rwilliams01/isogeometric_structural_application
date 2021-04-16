@@ -122,7 +122,7 @@ PenaltyStiffnessShell::~PenaltyStiffnessShell()
 //***********************************************************************************
 //***********************************************************************************
 void PenaltyStiffnessShell::EquationIdVector( EquationIdVectorType& rResult,
-                                    ProcessInfo& rCurrentProcessInfo )
+                                    const ProcessInfo& rCurrentProcessInfo ) const
 {
     unsigned int number_of_nodes = GetGeometry().size();
     unsigned int dim = number_of_nodes * 3;
@@ -142,7 +142,7 @@ void PenaltyStiffnessShell::EquationIdVector( EquationIdVectorType& rResult,
 //***********************************************************************************
 //***********************************************************************************
 void PenaltyStiffnessShell::GetDofList( DofsVectorType& ElementalDofList,
-                              ProcessInfo& rCurrentProcessInfo )
+                              const ProcessInfo& rCurrentProcessInfo ) const
 {
     ElementalDofList.resize( 0 );
 
@@ -235,7 +235,7 @@ void PenaltyStiffnessShell::Initialize(const ProcessInfo& rCurrentProcessInfo)
 //***********************************************************************************
 void PenaltyStiffnessShell::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                                 VectorType& rRightHandSideVector,
-                                                ProcessInfo& rCurrentProcessInfo )
+                                                const ProcessInfo& rCurrentProcessInfo )
 {
 
     CalculateAll( rLeftHandSideMatrix, rRightHandSideVector, rCurrentProcessInfo );

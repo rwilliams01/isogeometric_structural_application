@@ -120,18 +120,18 @@ public:
      */
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               ProcessInfo& rCurrentProcessInfo );
+                               const ProcessInfo& rCurrentProcessInfo );
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 ProcessInfo& rCurrentProcessInfo );
+                                 const ProcessInfo& rCurrentProcessInfo );
 
-    void DampMatrix(MatrixType& rDampMatrix, ProcessInfo& rCurrentProcessInfo);
+    void DampMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo);
 
     void EquationIdVector( EquationIdVectorType& rResult,
-                           ProcessInfo& rCurrentProcessInfo );
+                           const ProcessInfo& rCurrentProcessInfo )const;
 
     void GetDofList( DofsVectorType& ConditionalDofList,
-                     ProcessInfo& CurrentProcessInfo );
+                     const ProcessInfo& CurrentProcessInfo ) const;
 
     /**
      * Turn back information as a string.
@@ -155,7 +155,7 @@ protected:
 private:
     void CalculateAll( MatrixType& rLeftHandSideMatrix,
                        VectorType& rRightHandSideVector,
-                       ProcessInfo& rCurrentProcessInfo,
+                       const ProcessInfo& rCurrentProcessInfo,
                        bool CalculateStiffnessMatrixFlag,
                        bool CalculateResidualVectorFlag);
 

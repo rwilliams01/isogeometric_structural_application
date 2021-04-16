@@ -87,11 +87,11 @@ double IsogeometricPosterioriEstimator::ComputeSimplePosterioriError(ModelPart& 
 
                 // get the stress at integration_points
                 std::vector<Vector> IntegrationPointStresses;
-                (*it)->GetValueOnIntegrationPoints(STRESSES, IntegrationPointStresses, r_model_part.GetProcessInfo());
+                (*it)->CalculateOnIntegrationPoints(STRESSES, IntegrationPointStresses, r_model_part.GetProcessInfo());
 
                 // get the strain at integration_points
                 std::vector<Vector> IntegrationPointStrains;
-                (*it)->GetValueOnIntegrationPoints(STRAIN, IntegrationPointStrains, r_model_part.GetProcessInfo());
+                (*it)->CalculateOnIntegrationPoints(STRAIN, IntegrationPointStrains, r_model_part.GetProcessInfo());
 
                 #ifdef DEBUG_ESTIMATOR
                 for(unsigned int i = 0; i < IntegrationPointStresses.size(); ++i)
@@ -216,11 +216,11 @@ void IsogeometricPosterioriEstimator::ComputeSimplePosterioriErrorOnNodes(
 
                 // get the stress at integration_points
                 std::vector<Vector> IntegrationPointStresses;
-                (*it)->GetValueOnIntegrationPoints(STRESSES, IntegrationPointStresses, r_model_part.GetProcessInfo());
+                (*it)->CalculateOnIntegrationPoints(STRESSES, IntegrationPointStresses, r_model_part.GetProcessInfo());
 
                 // get the strain at integration_points
                 std::vector<Vector> IntegrationPointStrains;
-                (*it)->GetValueOnIntegrationPoints(STRAIN, IntegrationPointStrains, r_model_part.GetProcessInfo());
+                (*it)->CalculateOnIntegrationPoints(STRAIN, IntegrationPointStrains, r_model_part.GetProcessInfo());
 
                 // compute the  Jacobian
                 GeometryType::JacobiansType J(integration_points.size());

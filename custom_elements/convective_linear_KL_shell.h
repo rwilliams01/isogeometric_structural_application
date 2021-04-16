@@ -70,9 +70,9 @@ public:
 
     IntegrationMethod GetIntegrationMethod() const;
 
-    void EquationIdVector( EquationIdVectorType& rResult, ProcessInfo& rCurrentProcessInfo );
+    void EquationIdVector( EquationIdVectorType& rResult, const ProcessInfo& rCurrentProcessInfo ) const;
 
-    void GetDofList( DofsVectorType& ElementalDofList, ProcessInfo& CurrentProcessInfo );
+    void GetDofList( DofsVectorType& ElementalDofList, const ProcessInfo& CurrentProcessInfo ) const;
 
     /////////////////////////////////////////////////////////////////////////////////
     ///////////////////// starting-ending method ////////////////////////////////////
@@ -84,10 +84,10 @@ public:
     //////////////////////// computing method //////////////////////////////////////
     void CalculateLocalSystem( MatrixType& rLeftHandSideMatrix,
                                VectorType& rRightHandSideVector,
-                               ProcessInfo& rCurrentProcessInfo);
+                               const ProcessInfo& rCurrentProcessInfo) ;
 
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
-                                 ProcessInfo& rCurrentProcessInfo);
+                                 const ProcessInfo& rCurrentProcessInfo) ;
 
     virtual void CalculateOnIntegrationPoints( const Variable<Vector>& rVariable, std::vector<Vector>& rValues, const ProcessInfo& rCurrentProcessInfo );
 
@@ -169,7 +169,7 @@ private:
 
     void CalculateAll( MatrixType& rLeftHandSideMatrix,
                        VectorType& rRightHandSideVector,
-                       ProcessInfo& rCurrentProcessInfo,
+                       const ProcessInfo& rCurrentProcessInfo,
                        bool CalculateStiffnessMatrixFlag=true ,
                        bool CalculateResidualVectorFlag =true,
                        bool MaterialUpdateFlag=true );
