@@ -132,6 +132,14 @@ void LineForceIsogeometric2D::GetDofList( DofsVectorType& ConditionalDofList,
 }
 
 //***********************************************************************************
+void LineForceIsogeometric2D::CalculateDampingMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_TRY
+    rDampMatrix.resize(0,0,false);
+    KRATOS_CATCH("")
+}
+
+//***********************************************************************************
 //***********************************************************************************
 //***********************************************************************************
 //***********************************************************************************

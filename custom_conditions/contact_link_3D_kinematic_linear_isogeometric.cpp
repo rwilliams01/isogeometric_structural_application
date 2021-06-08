@@ -822,12 +822,18 @@ void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateAll(
     KRATOS_CATCH( "" )
 } // CalculateAll
 
+//***********************************************************************************
+void ContactLink3D_Kinematic_Linear_Isogeometric::DampMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_THROW_ERROR(std::logic_error, "Deprecated method", "")
+}
+
 /**
  * This function calculates the system contributions to the global damp matrix due to the contact problem
  * with regard to the current master and slave partners.
  * All Conditions are assumed to be defined in 3D space and havin 3 DOFs per node
  */
-void ContactLink3D_Kinematic_Linear_Isogeometric::DampMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo )
+void ContactLink3D_Kinematic_Linear_Isogeometric::CalculateDampingMatrix( MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo )
 {
 
     KRATOS_TRY

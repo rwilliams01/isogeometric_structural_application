@@ -117,6 +117,10 @@ public:
         DofsVectorType& ElementalDofList,
         const ProcessInfo& rCurrentProcessInfo ) const;
 
+    virtual void CalculateDampingMatrix(
+            MatrixType& rDampMatrix,
+            const ProcessInfo& rCurrentProcessInfo);
+
 
     //inherited from LineForceIsogeometric
 //    virtual void Initialize();

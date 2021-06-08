@@ -252,6 +252,14 @@ void FacePressureIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMa
 
 //***********************************************************************************
 //***********************************************************************************
+void FacePressureIsogeometric::CalculateDampingMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_TRY
+    rDampMatrix.resize(0,0,false);
+    KRATOS_CATCH("")
+}
+//***********************************************************************************
+//***********************************************************************************
 void FacePressureIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,
                                 VectorType& rRightHandSideVector,
                                 const ProcessInfo& rCurrentProcessInfo,

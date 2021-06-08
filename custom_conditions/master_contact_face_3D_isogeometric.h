@@ -159,6 +159,10 @@ public:
     void CalculateRightHandSide( VectorType& rRightHandSideVector,
                                  const ProcessInfo& rCurrentProcessInfo );
 
+    void CalculateDampingMatrix(
+            MatrixType& rDampMatrix,
+            const ProcessInfo& rCurrentProcessInfo);
+
     void EquationIdVector( EquationIdVectorType& rResult,
                            const ProcessInfo& rCurrentProcessInfo ) const;
 

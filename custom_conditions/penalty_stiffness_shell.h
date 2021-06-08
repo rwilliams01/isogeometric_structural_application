@@ -125,6 +125,10 @@ public:
         VectorType& rRightHandSideVector,
         const ProcessInfo& rCurrentProcessInfo );
 
+    virtual void CalculateDampingMatrix(
+            MatrixType& rDampMatrix,
+            const ProcessInfo& rCurrentProcessInfo);
+
 protected:
 
     IntegrationMethod mThisIntegrationMethod;

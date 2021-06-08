@@ -294,7 +294,14 @@ void LineForceIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatri
     CalculateAll( rLeftHandSideMatrix, rRightHandSideVector, rCurrentProcessInfo,
                   CalculateStiffnessMatrixFlag, CalculateResidualVectorFlag );
 }
-
+//***********************************************************************************
+//***********************************************************************************
+void LineForceIsogeometric::CalculateDampingMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_TRY
+    rDampMatrix.resize(0,0,false);
+    KRATOS_CATCH("")
+}
 //***********************************************************************************
 //***********************************************************************************
 void LineForceIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,

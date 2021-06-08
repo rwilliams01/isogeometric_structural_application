@@ -240,7 +240,14 @@ void PenaltyStiffnessShell::CalculateLocalSystem( MatrixType& rLeftHandSideMatri
 
     CalculateAll( rLeftHandSideMatrix, rRightHandSideVector, rCurrentProcessInfo );
 }
-
+//************************************************************************************
+//***********************************************************************************
+void PenaltyStiffnessShell::CalculateDampingMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_TRY
+    rDampMatrix.resize(0,0,false);
+    KRATOS_CATCH("")
+}
 //***********************************************************************************
 //***********************************************************************************
 void PenaltyStiffnessShell::CalculateAll( MatrixType& rLeftHandSideMatrix,

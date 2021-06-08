@@ -231,7 +231,14 @@ void FaceLoadIsogeometric::CalculateLocalSystem( MatrixType& rLeftHandSideMatrix
     CalculateAll( rLeftHandSideMatrix, rRightHandSideVector, rCurrentProcessInfo,
                   CalculateStiffnessMatrixFlag, CalculateResidualVectorFlag );
 }
-
+//***********************************************************************************
+//***********************************************************************************
+void FaceLoadIsogeometric::CalculateDampingMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_TRY
+    rDampMatrix.resize(0,0,false);
+    KRATOS_CATCH("")
+}
 //***********************************************************************************
 //***********************************************************************************
 void FaceLoadIsogeometric::CalculateAll( MatrixType& rLeftHandSideMatrix,

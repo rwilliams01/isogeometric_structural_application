@@ -309,7 +309,14 @@ void SlaveContactFace3DIsogeometric::CalculateRightHandSide( VectorType& rRightH
 
     rRightHandSideVector = ZeroVector( ndof );
 }
-
+//************************************************************************************
+//***********************************************************************************
+void SlaveContactFace3DIsogeometric::CalculateDampingMatrix(MatrixType& rDampMatrix, const ProcessInfo& rCurrentProcessInfo)
+{
+    KRATOS_TRY
+    rDampMatrix.resize(0,0,false);
+    KRATOS_CATCH("")
+}
 //************************************************************************************
 //************************************************************************************
 /**
